@@ -6,11 +6,16 @@
 <title>物料管理后台 | 西西崽</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-:root{--p:#6366f1;--pd:#4f46e5;--g:#10b981;--bg:#f0f2f5;--c:#fff;--b:#e5e7eb;--t:#1f2937;--tl:#6b7280;--r:8px}
+:root{--p:#6366f1;--pd:#4f46e5;--g:#10b981;--bg:#f0f2f5;--c:#fff;--b:#e5e7eb;--t:#1f2937;--tl:#6b7280;--r:8px;--z:#4A7CF7;--zd:#3a6ad4}
 body{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--t)}
 .nav{background:var(--c);border-bottom:1px solid var(--b);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
 .nav h1{font-size:16px;font-weight:700}
 .container{max-width:900px;margin:0 auto;padding:20px 16px}
+.tabs{display:flex;gap:0;margin-bottom:16px;background:var(--c);border-radius:var(--r);overflow:hidden;border:1px solid var(--b)}
+.tab{flex:1;padding:14px;text-align:center;cursor:pointer;font-size:14px;font-weight:600;color:var(--tl);border-bottom:3px solid transparent;transition:.2s}
+.tab.active{color:var(--p);border-bottom-color:var(--p);background:#eef2ff}
+.tab:hover:not(.active){background:#f9fafb}
+.tc{display:none}.tc.active{display:block}
 .card{background:var(--c);border-radius:var(--r);padding:20px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
 .card-title{font-size:15px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:6px}
 .field{margin-bottom:14px}
@@ -20,20 +25,17 @@ body{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-se
 .field-content.copied{background:#d1fae5;border-color:var(--g)}
 .copy-btn{font-size:11px;padding:3px 10px;border:1px solid var(--b);border-radius:4px;background:var(--c);color:var(--tl);cursor:pointer;transition:.2s}
 .copy-btn:hover{border-color:var(--p);color:var(--p)}
-/* SVG预览 */
 .svg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
 .svg-card{background:#f9fafb;border:1px solid var(--b);border-radius:8px;overflow:hidden}
 .svg-card .svg-label{font-size:12px;font-weight:600;color:var(--tl);padding:8px 10px 4px}
-.svg-card .svg-preview{display:flex;align-items:center;justify-content:center;padding:10px;background:#fff;border-bottom:1px solid var(--b)}
-.svg-card .svg-preview svg{max-width:100%;max-height:180px}
+.svg-card .svg-preview{display:flex;align-items:center;justify-content:center;padding:10px;background:#fff;border-bottom:1px solid var(--b);max-height:300px;overflow:auto}
+.svg-card .svg-preview svg{max-width:100%;max-height:280px}
 .svg-card .svg-actions{padding:8px 10px;display:flex;gap:6px}
 .dl-btn{flex:1;font-size:12px;padding:6px;border:none;border-radius:4px;background:var(--p);color:#fff;cursor:pointer;font-weight:600}
 .dl-btn:hover{background:var(--pd)}
-/* 测试选择 */
 .product-select{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
 .product-chip{padding:8px 16px;border-radius:20px;font-size:13px;cursor:pointer;border:2px solid var(--b);background:var(--c);color:var(--tl);transition:.2s;font-weight:600}
 .product-chip.active{border-color:var(--p);background:var(--p);color:#fff}
-/* 链接区 */
 .link-box{display:flex;gap:8px;align-items:center}
 .link-box .link-url{flex:1;background:#f9fafb;border:1px solid var(--b);border-radius:6px;padding:10px 12px;font-size:14px;color:var(--p);font-weight:600}
 .link-box .link-open{padding:10px 16px;background:var(--g);color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;display:inline-block}
@@ -41,6 +43,31 @@ body{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-se
 .toast.show{opacity:1}
 .dl-all-btn{background:var(--g);color:#fff;border:none;padding:10px 16px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;margin-top:10px;width:100%}
 .dl-all-btn:hover{background:#059669}
+.gen-input{width:100%;padding:12px;border:1px solid var(--b);border-radius:8px;font-size:14px;font-family:inherit;resize:vertical;line-height:1.6}
+.gen-input:focus{outline:none;border-color:var(--p);box-shadow:0 0 0 3px rgba(99,102,241,.1)}
+.gen-btn{background:var(--z);color:#fff;border:none;padding:14px 24px;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;width:100%;transition:.2s}
+.gen-btn:hover{background:var(--zd)}
+.gen-btn:disabled{background:#aaa;cursor:not-allowed}
+.upload-zone{border:2px dashed var(--b);border-radius:8px;padding:24px;text-align:center;cursor:pointer;transition:.2s}
+.upload-zone:hover{border-color:var(--p);background:#f9fafb}
+.upload-zone.has-files{border-color:var(--g);background:#f0fdf4}
+.preview-imgs{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.preview-imgs img{width:60px;height:60px;object-fit:cover;border-radius:6px;border:1px solid var(--b)}
+.steps{display:flex;gap:8px;margin-bottom:16px}
+.step-item{flex:1;text-align:center;padding:8px;border-radius:6px;font-size:12px;color:var(--tl);background:#f3f4f6;transition:.3s}
+.step-item.active{background:var(--p);color:#fff;font-weight:600}
+.step-item.done{background:var(--g);color:#fff}
+.log-area{background:#1e293b;color:#a5b4fc;border-radius:8px;padding:12px;font-size:12px;line-height:1.8;max-height:200px;overflow:auto;font-family:'SF Mono',Consolas,monospace;display:none}
+.log-area.show{display:block}
+.log-area .log-success{color:#4ade80}
+.log-area .log-error{color:#f87171}
+.log-area .log-warn{color:#fbbf24}
+.title-options{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.title-opt{padding:12px;border:2px solid var(--b);border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;transition:.2s}
+.title-opt:hover{border-color:var(--p);background:#eef2ff}
+.title-opt.selected{border-color:var(--p);background:#eef2ff;color:var(--p)}
+.result-body{background:#f9fafb;border:1px solid var(--b);border-radius:8px;padding:16px;font-size:14px;line-height:1.8;white-space:pre-wrap;max-height:400px;overflow:auto;cursor:text}
+.result-body:focus{outline:none;border-color:var(--p);background:#fff}
 </style>
 </head>
 <body>
@@ -49,278 +76,231 @@ body{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-se
 <div style="font-size:12px;color:var(--tl)">点击文字一键复制 · 点击下载转JPG</div>
 </nav>
 <div class="container">
-
-<!-- 产品选择 -->
-<div class="product-select" id="productSelect">
-<div class="product-chip active" onclick="switchProduct('career')">🚀 你天生该吃哪碗饭</div>
+<div class="tabs">
+<div class="tab active" onclick="switchTab('material',this)">📋 物料管理</div>
+<div class="tab" onclick="switchTab('generator',this)">✏️ 内容生成</div>
 </div>
 
-<!-- 文案区 -->
+<!-- Tab 1: 物料管理 -->
+<div class="tc active" id="tab-material">
+<div class="product-select"><div class="product-chip active" onclick="switchProduct('career',this)">🚀 你天生该吃哪碗饭</div></div>
 <div class="card">
 <div class="card-title">📝 文案（点击即复制）</div>
-
-<div class="field">
-<div class="field-label"><span>🏷️ 商品标题</span><button class="copy-btn" onclick="copyField('title')">📋复制</button></div>
-<div class="field-content" id="fTitle" onclick="copyField('title')"></div>
+<div class="field"><div class="field-label"><span>🏷️ 商品标题</span><button class="copy-btn" onclick="copyField('title')">📋复制</button></div><div class="field-content" id="fTitle" onclick="copyField('title')"></div></div>
+<div class="field"><div class="field-label"><span>📌 导购短标题</span><button class="copy-btn" onclick="copyField('shortTitle')">📋复制</button></div><div class="field-content" id="fShortTitle" onclick="copyField('shortTitle')"></div></div>
+<div class="field"><div class="field-label"><span>📝 商品详情文案</span><button class="copy-btn" onclick="copyField('detail')">📋复制</button></div><div class="field-content" id="fDetail" onclick="copyField('detail')" style="max-height:300px;overflow:auto"></div></div>
+<div class="field"><div class="field-label"><span>📂 商品类目</span></div><div class="field-content" style="cursor:default">电子资源 > 课件/教案/手抄报</div></div>
+<div class="field"><div class="field-label"><span>🔗 测试链接</span></div><div class="link-box"><div class="link-url" id="fLink" onclick="copyField('link')"></div><a class="link-open" id="fLinkOpen" target="_blank">🔗 打开</a></div></div>
 </div>
-
-<div class="field">
-<div class="field-label"><span>📌 导购短标题</span><button class="copy-btn" onclick="copyField('shortTitle')">📋复制</button></div>
-<div class="field-content" id="fShortTitle" onclick="copyField('shortTitle')"></div>
-</div>
-
-<div class="field">
-<div class="field-label"><span>📝 商品详情文案</span><button class="copy-btn" onclick="copyField('detail')">📋复制</button></div>
-<div class="field-content" id="fDetail" onclick="copyField('detail')" style="max-height:300px;overflow:auto"></div>
-</div>
-
-<div class="field">
-<div class="field-label"><span>📂 商品类目</span></div>
-<div class="field-content" style="cursor:default">电子资源 > 课件/教案/手抄报</div>
-</div>
-
-<div class="field">
-<div class="field-label"><span>🔗 测试链接</span></div>
-<div class="link-box">
-<div class="link-url" id="fLink" onclick="copyField('link')"></div>
-<a class="link-open" id="fLinkOpen" target="_blank">🔗 打开</a>
-</div>
-</div>
-</div>
-
-<!-- 配图区 -->
 <div class="card">
 <div class="card-title">🖼️ 配图（SVG预览 · 下载转JPG）</div>
 <div class="svg-grid" id="svgGrid"></div>
 <button class="dl-all-btn" onclick="downloadAll()">⬇️ 一键下载全部图片（JPG）</button>
 </div>
+</div>
 
+<!-- Tab 2: 内容生成 -->
+<div class="tc" id="tab-generator">
+<div class="card">
+<div class="card-title">✏️ 小红书内容生成</div>
+<div class="field">
+<div class="field-label"><span>📌 对标内容（文字）</span><span style="font-size:11px;color:var(--tl)">粘贴竞品爆款文案</span></div>
+<textarea class="gen-input" id="refText" rows="5" placeholder="粘贴对标笔记的文字内容，或描述你想要的风格..."></textarea>
+</div>
+<div class="field">
+<div class="field-label"><span>🖼️ 对标图片（可选）</span></div>
+<div class="upload-zone" id="uploadZone" onclick="document.getElementById('refImages').click()">
+<div style="font-size:24px;margin-bottom:4px">📁</div>
+<div style="font-size:13px;color:var(--tl)">点击上传参考图（可选）</div>
+<input type="file" id="refImages" accept="image/*" multiple style="display:none" onchange="handleUpload(this)">
+<div class="preview-imgs" id="previewImgs"></div>
+</div>
+</div>
+<div class="field">
+<div class="field-label"><span>📦 推广产品</span></div>
+<select class="gen-input" id="genProduct" style="padding:10px">
+<option value="Zoho企业邮箱">Zoho企业邮箱</option>
+<option value="Zoho Mail">Zoho Mail</option>
+</select>
+</div>
+<button class="gen-btn" id="genBtn" onclick="generateContent()">🚀 一键生成</button>
+</div>
+
+<div class="card" id="progressCard" style="display:none">
+<div class="steps">
+<div class="step-item" data-step="1">① 分析→标题</div>
+<div class="step-item" data-step="2">② 正文</div>
+<div class="step-item" data-step="3">③ 配图×3</div>
+</div>
+<div class="log-area" id="logArea"></div>
+</div>
+
+<div class="card" id="resultCard" style="display:none">
+<div class="card-title">🎉 生成结果</div>
+<div class="field">
+<div class="field-label"><span>🏷️ 标题（选一个）</span><button class="copy-btn" onclick="copySelectedTitle()">📋复制</button></div>
+<div class="title-options" id="titleOptions"></div>
+</div>
+<div class="field">
+<div class="field-label"><span>📝 正文（可编辑）</span><button class="copy-btn" onclick="copyGenBody()">📋复制</button></div>
+<div class="result-body" id="genBody" contenteditable="true"></div>
+</div>
+<div class="field">
+<div class="field-label"><span>🎨 配图（3页）</span></div>
+<div class="svg-grid" id="genSvgGrid"></div>
+<button class="dl-all-btn" onclick="downloadAllGen()">⬇️ 一键下载全部（JPG）</button>
+</div>
+</div>
+</div>
 </div>
 
 <div class="toast" id="toast"></div>
-
-<!-- 密码锁 -->
 <div id="loginOverlay" style="position:fixed;inset:0;background:#1f2937;z-index:9999;display:flex;align-items:center;justify-content:center">
-  <div style="background:#fff;border-radius:12px;padding:32px;width:320px;text-align:center">
-    <div style="font-size:28px;margin-bottom:8px">🔐</div>
-    <div style="font-size:16px;font-weight:700;margin-bottom:16px">物料后台登录</div>
-    <input type="password" id="pwInput" placeholder="请输入密码" style="width:100%;padding:12px;border:2px solid #e5e7eb;border-radius:8px;font-size:15px;text-align:center;margin-bottom:12px;letter-spacing:4px" onkeydown="if(event.key==='Enter')checkPw()">
-    <button onclick="checkPw()" style="width:100%;padding:12px;background:#6366f1;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">进入</button>
-    <div id="pwError" style="color:#ef4444;font-size:12px;margin-top:8px;display:none">密码错误</div>
-  </div>
+<div style="background:#fff;border-radius:12px;padding:32px;width:320px;text-align:center">
+<div style="font-size:28px;margin-bottom:8px">🔐</div>
+<div style="font-size:16px;font-weight:700;margin-bottom:16px">物料后台登录</div>
+<input type="password" id="pwInput" placeholder="请输入密码" style="width:100%;padding:12px;border:2px solid #e5e7eb;border-radius:8px;font-size:15px;text-align:center;margin-bottom:12px;letter-spacing:4px" onkeydown="if(event.key==='Enter')checkPw()">
+<button onclick="checkPw()" style="width:100%;padding:12px;background:#6366f1;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">进入</button>
+<div id="pwError" style="color:#ef4444;font-size:12px;margin-top:8px;display:none">密码错误</div>
+</div>
 </div>
 
 <script>
-// === 产品数据 ===
-var products = {
-  career: {
-    title: "128+已测【你天生该吃哪碗饭】10道题测出你的隐藏职业基因，准确到头皮发麻",
-    shortTitle: "职业基因趣味测试",
-    detail: `你是不是也想过：为什么有人上班像上坟，有人却越干越来劲？
+var ADMIN_PW='xixizai2026';
+function checkPw(){var input=document.getElementById('pwInput').value;if(input===ADMIN_PW){document.getElementById('loginOverlay').style.display='none';sessionStorage.setItem('admin_ok','1')}else{document.getElementById('pwError').style.display='block';document.getElementById('pwInput').value=''}}
+if(sessionStorage.getItem('admin_ok')==='1'){document.getElementById('loginOverlay').style.display='none'}
 
-这不是一个普通的性格测试。
-它不会笼统地告诉你"你是外向还是内向"，
-而是从你的本能反应里，挖出藏最深的职业天赋。
+// Tab切换
+function switchTab(name,el){
+document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active')});
+document.querySelectorAll('.tc').forEach(function(t){t.classList.remove('active')});
+el.classList.add('active');document.getElementById('tab-'+name).classList.add('active');
+}
 
-从10个看似跟工作无关的生活场景——
-周末醒来第一个念头、怎么处理朋友的倾诉、
-突然拿到一笔闲钱会干嘛……
-
-精准锁定你的4大职业基因维度：
-行动力指数、创造感知力、社交影响力、策略掌控力
-
-做完的人都在说：
-"我以为自己适合上班，原来我天生就该创业"
-"这也太准了，我就是那个操盘手"
-"从小到大没人比这个测试更懂我"
-
-10道题，2分钟，找到你天生的饭碗。
-
-⚠️ 温馨提示：测完可能会想辞职（不是）`,
-    link: "protest.xixizai.com",
-    linkUrl: "https://protest.xixizai.com",
-    svgs: {
-      main: {label:"商品主图 (1:1)", svg: mainSvg()},
-      guide: {label:"引导图·解锁 (1:1)", svg: guideSvg()},
-      detail: {label:"详情引导图 (1:1)", svg: detailSvg()},
-    }
-  }
-};
-
-// === SVG模板 ===
-function mainSvg(){
-return `<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080">
-<defs>
-<linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-<stop offset="0%" stop-color="#e8f5e9"/><stop offset="50%" stop-color="#c8e6c9"/><stop offset="100%" stop-color="#dcedc8"/>
-</linearGradient>
-<pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-<path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(129,199,132,0.15)" stroke-width="1"/>
-</pattern>
-</defs>
-<rect width="1080" height="1080" fill="url(#bg)"/>
-<rect width="1080" height="1080" fill="url(#grid)"/>
-<rect x="80" y="90" width="160" height="52" rx="8" fill="white" stroke="#2e7d32" stroke-width="2.5"/>
-<text x="160" y="124" font-family="sans-serif" font-size="24" font-weight="bold" fill="#2e7d32" text-anchor="middle">职业基因</text>
-<line x1="260" y1="116" x2="440" y2="116" stroke="#81c784" stroke-width="1.5"/>
-<text x="530" y="124" font-family="sans-serif" font-size="24" font-weight="600" fill="#388e3c">NO.001</text>
-<text x="540" y="420" font-family="sans-serif" font-size="88" font-weight="900" fill="#1b5e20" text-anchor="middle">你天生</text>
-<text x="540" y="530" font-family="sans-serif" font-size="88" font-weight="900" fill="#1b5e20" text-anchor="middle">该吃哪碗饭？</text>
-<text x="540" y="620" font-family="sans-serif" font-size="34" fill="#388e3c" text-anchor="middle">2分钟自测 · 10道趣味题 · 凭直觉选</text>
-<text x="920" y="920" font-family="Georgia" font-size="200" fill="rgba(46,125,50,0.08)" font-weight="bold">"</text>
-<text x="540" y="1000" font-family="sans-serif" font-size="18" fill="rgba(46,125,50,0.35)" text-anchor="middle" letter-spacing="6">CAREER PERSONALITY TEST</text>
-</svg>`}
-
-function guideSvg(){
-return `<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080">
-<defs><linearGradient id="bg2" x1="0%" y1="0%" x2="100%" y2="100%">
-<stop offset="0%" stop-color="#1b5e20"/><stop offset="100%" stop-color="#2e7d32"/>
-</linearGradient></defs>
-<rect width="1080" height="1080" fill="url(#bg2)"/>
-<circle cx="540" cy="350" r="130" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="2"/>
-<circle cx="540" cy="350" r="100" fill="rgba(255,255,255,0.08)"/>
-<text x="540" y="395" font-family="sans-serif" font-size="90" text-anchor="middle">🔓</text>
-<text x="540" y="580" font-family="sans-serif" font-size="60" font-weight="900" fill="white" text-anchor="middle">点击解锁</text>
-<text x="540" y="660" font-family="sans-serif" font-size="60" font-weight="900" fill="white" text-anchor="middle">完整测试</text>
-<text x="540" y="740" font-family="sans-serif" font-size="30" fill="rgba(255,255,255,0.7)" text-anchor="middle">10道题 · 2分钟出结果</text>
-<rect x="320" y="810" width="440" height="84" rx="42" fill="#ff9800"/>
-<text x="540" y="864" font-family="sans-serif" font-size="34" font-weight="bold" fill="white" text-anchor="middle">立即开始测试 →</text>
-<text x="540" y="980" font-family="sans-serif" font-size="20" fill="rgba(255,255,255,0.4)" text-anchor="middle" letter-spacing="3">protest.xixizai.com</text>
-</svg>`}
-
-function detailSvg(){
-return `<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080">
-<defs><linearGradient id="bg3" x1="0%" y1="0%" x2="100%" y2="100%">
-<stop offset="0%" stop-color="#e8f5e9"/><stop offset="100%" stop-color="#a5d6a7"/>
-</linearGradient></defs>
-<rect width="1080" height="1080" fill="url(#bg3)"/>
-<text x="540" y="180" font-family="sans-serif" font-size="52" font-weight="900" fill="#1b5e20" text-anchor="middle">测完你会得到</text>
-<line x1="360" y1="220" x2="720" y2="220" stroke="#2e7d32" stroke-width="2"/>
-<g font-family="sans-serif" font-size="32" fill="#1b5e20" font-weight="500">
-<text x="140" y="330">✅ 核心职业基因类型</text>
-<text x="140" y="395">✅ 行动力指数评分</text>
-<text x="140" y="460">✅ 创造感知力评分</text>
-<text x="140" y="525">✅ 社交影响力评分</text>
-<text x="140" y="590">✅ 策略掌控力评分</text>
-<text x="140" y="655">✅ 天生优势深度解读</text>
-<text x="140" y="720">✅ 最适合职业方向Top3</text>
-<text x="140" y="785">✅ 职场雷区预警</text>
-<text x="140" y="850">✅ 专属发展路线建议</text>
-</g>
-<rect x="280" y="900" width="520" height="76" rx="38" fill="#2e7d32"/>
-<text x="540" y="950" font-family="sans-serif" font-size="30" font-weight="bold" fill="white" text-anchor="middle">👇 扫码立即测试</text>
-<text x="540" y="1020" font-family="sans-serif" font-size="18" fill="rgba(46,125,50,0.4)" text-anchor="middle" letter-spacing="3">protest.xixizai.com</text>
-</svg>`}
-
-// === 渲染 ===
-var currentProduct = 'career';
+// 产品数据
+var products={career:{title:"128+已测【你天生该吃哪碗饭】10道题测出你的隐藏职业基因，准确到头皮发麻",shortTitle:"职业基因趣味测试",detail:'你是不是也想过：为什么有人上班像上坟，有人却越干越来劲？\n这不是一个普通的性格测试。\n它不会笼统地告诉你"你是外向还是内向"，\n而是从你的本能反应里，挖出藏最深的职业天赋。\n\n从10个看似跟工作无关的生活场景——\n周末醒来第一个念头、怎么处理朋友的倾诉、\n突然拿到一笔闲钱会干嘛……\n\n精准锁定你的4大职业基因维度：\n行动力指数、创造感知力、社交影响力、策略掌控力\n\n做完的人都在说：\n"我以为自己适合上班，原来我天生就该创业"\n"这也太准了，我就是那个操盘手"\n"从小到大没人比这个测试更懂我"\n\n10道题，2分钟，找到你天生的饭碗。\n\n⚠️ 温馨提示：测完可能会想辞职（不是）',link:"protest.xixizai.com",linkUrl:"https://protest.xixizai.com",svgs:{}}};
+function phSvg(){return '<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080"><rect width="1080" height="1080" fill="#e8f5e9"/><text x="540" y="540" font-size="48" text-anchor="middle" fill="#2e7d32">SVG</text></svg>'}
+products.career.svgs={main:{label:"商品主图(1:1)",svg:phSvg()},guide:{label:"引导图(1:1)",svg:phSvg()},detail:{label:"详情图(1:1)",svg:phSvg()}};
+var currentProduct='career';
 
 function renderProduct(){
-  var p = products[currentProduct];
-  document.getElementById('fTitle').textContent = p.title;
-  document.getElementById('fShortTitle').textContent = p.shortTitle;
-  document.getElementById('fDetail').textContent = p.detail;
-  document.getElementById('fLink').textContent = p.link;
-  document.getElementById('fLinkOpen').href = p.linkUrl;
-  
-  // SVG预览
-  var html = '';
-  Object.keys(p.svgs).forEach(function(key){
-    var s = p.svgs[key];
-    html += '<div class="svg-card"><div class="svg-label">'+s.label+'</div>';
-    html += '<div class="svg-preview">'+s.svg+'</div>';
-    html += '<div class="svg-actions"><button class="dl-btn" onclick="downloadSvg(\''+key+'\')">⬇️ 下载JPG</button></div>';
-    html += '</div>';
-  });
-  document.getElementById('svgGrid').innerHTML = html;
+var p=products[currentProduct];
+document.getElementById('fTitle').textContent=p.title;
+document.getElementById('fShortTitle').textContent=p.shortTitle;
+document.getElementById('fDetail').textContent=p.detail;
+document.getElementById('fLink').textContent=p.link;
+document.getElementById('fLinkOpen').href=p.linkUrl;
+var h='';Object.keys(p.svgs).forEach(function(k){var s=p.svgs[k];h+='<div class="svg-card"><div class="svg-label">'+s.label+'</div><div class="svg-preview">'+s.svg+'</div><div class="svg-actions"><button class="dl-btn" onclick="dlOrig(\''+k+'\')">⬇️ 下载JPG</button></div></div>'});
+document.getElementById('svgGrid').innerHTML=h;
+}
+function switchProduct(k,el){currentProduct=k;document.querySelectorAll('.product-chip').forEach(function(c){c.classList.remove('active')});el.classList.add('active');renderProduct();}
+function copyField(f){var p=products[currentProduct];var t=f==='title'?p.title:f==='shortTitle'?p.shortTitle:f==='detail'?p.detail:p.link;navigator.clipboard.writeText(t).then(function(){showToast('✅ 已复制')})}
+function dlOrig(k){var s=products[currentProduct].svgs[k];dlSvg(s.svg,s.label,1080)}
+function downloadAll(){Object.keys(products[currentProduct].svgs).forEach(function(k,i){setTimeout(function(){dlOrig(k)},i*500)})}
+function dlSvg(svgStr,label,size){var size=size||1080;var blob=new Blob([svgStr],{type:'image/svg+xml;charset=utf-8'});var url=URL.createObjectURL(blob);var img=new Image();img.onload=function(){var c=document.createElement('canvas');c.width=size;c.height=size;var ctx=c.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,size,size);ctx.drawImage(img,0,0,size,size);c.toBlob(function(b){var a=document.createElement('a');a.download=label.replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g,'')+'.jpg';a.href=URL.createObjectURL(b);a.click();URL.revokeObjectURL(url);showToast('✅ '+a.download)},'image/jpeg',0.95)};img.src=url}
+function dlSvgTall(svgStr,label){var blob=new Blob([svgStr],{type:'image/svg+xml;charset=utf-8'});var url=URL.createObjectURL(blob);var img=new Image();img.onload=function(){var c=document.createElement('canvas');c.width=1080;c.height=1440;var ctx=c.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,1080,1440);ctx.drawImage(img,0,0,1080,1440);c.toBlob(function(b){var a=document.createElement('a');a.download=label.replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g,'')+'.jpg';a.href=URL.createObjectURL(b);a.click();URL.revokeObjectURL(url);showToast('✅ '+a.download)},'image/jpeg',0.95)};img.src=url}
+function showToast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show')},2000)}
+
+// === 内容生成器 ===
+var genState={titles:[],selectedTitle:0,body:'',svgs:[],refImages:[]};
+
+function handleUpload(input){
+var files=Array.from(input.files);var zone=document.getElementById('uploadZone');var preview=document.getElementById('previewImgs');
+genState.refImages=[];preview.innerHTML='';
+files.forEach(function(file){var reader=new FileReader();reader.onload=function(e){genState.refImages.push(e.target.result);var img=document.createElement('img');img.src=e.target.result;preview.appendChild(img)};reader.readAsDataURL(file)});
+if(files.length)zone.classList.add('has-files');else zone.classList.remove('has-files');
 }
 
-function switchProduct(key){
-  currentProduct = key;
-  document.querySelectorAll('.product-chip').forEach(function(c){c.classList.remove('active')});
-  event.target.classList.add('active');
-  renderProduct();
+function setStep(step){
+document.querySelectorAll('.step-item').forEach(function(el){var s=parseInt(el.dataset.step);el.classList.remove('active','done');if(s<step)el.classList.add('done');else if(s===step)el.classList.add('active')});
 }
 
-// === 复制 ===
-function copyField(field){
-  var p = products[currentProduct];
-  var text = '';
-  if(field==='title') text = p.title;
-  else if(field==='shortTitle') text = p.shortTitle;
-  else if(field==='detail') text = p.detail;
-  else if(field==='link') text = p.link;
-  
-  navigator.clipboard.writeText(text).then(function(){
-    // 找到对应元素高亮
-    var el;
-    if(field==='title') el=document.getElementById('fTitle');
-    else if(field==='shortTitle') el=document.getElementById('fShortTitle');
-    else if(field==='detail') el=document.getElementById('fDetail');
-    else if(field==='link') el=document.getElementById('fLink');
-    if(el){el.classList.add('copied');setTimeout(function(){el.classList.remove('copied')},1000)}
-    showToast('✅ 已复制');
-  });
+function addLog(msg,type){
+var area=document.getElementById('logArea');area.classList.add('show');
+var cls=type==='success'?'log-success':type==='error'?'log-error':type==='warn'?'log-warn':'';
+var time=new Date().toLocaleTimeString('zh-CN',{hour12:false});
+area.innerHTML+='<div class="'+cls+'">['+time+'] '+msg+'</div>';
+area.scrollTop=area.scrollHeight;
 }
 
-// === SVG转JPG下载 ===
-function downloadSvg(key){
-  var p = products[currentProduct];
-  var svgStr = p.svgs[key].svg;
-  var label = p.svgs[key].label;
-  
-  // 创建Image
-  var blob = new Blob([svgStr],{type:'image/svg+xml;charset=utf-8'});
-  var url = URL.createObjectURL(blob);
-  var img = new Image();
-  img.onload = function(){
-    var canvas = document.createElement('canvas');
-    canvas.width = 1080; canvas.height = 1080;
-    var ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#fff';
-    ctx.fillRect(0,0,1080,1080);
-    ctx.drawImage(img,0,0,1080,1080);
-    canvas.toBlob(function(b){
-      var a = document.createElement('a');
-      a.download = label.replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g,'') + '.jpg';
-      a.href = URL.createObjectURL(b);
-      a.click();
-      URL.revokeObjectURL(url);
-      showToast('✅ 已下载 '+a.download);
-    },'image/jpeg',0.95);
-  };
-  img.src = url;
+async function generateContent(){
+var refText=document.getElementById('refText').value.trim();
+if(!refText&&!genState.refImages.length){showAlert('请输入对标文字或上传图片');return}
+var product=document.getElementById('genProduct').value;
+var btn=document.getElementById('genBtn');btn.disabled=true;btn.textContent='⏳ 生成中...';
+document.getElementById('progressCard').style.display='block';
+document.getElementById('resultCard').style.display='none';
+document.getElementById('logArea').innerHTML='';genState.svgs=[];
+setStep(1);addLog('🚀 开始生成...');
+
+try{
+var resp=await fetch('/xxs/api/generate-xhs',{
+method:'POST',headers:{'Content-Type':'application/json'},
+body:JSON.stringify({reference_text:refText,reference_images:genState.refImages.slice(0,2),product:product})
+});
+
+var reader=resp.body.getReader();var decoder=new TextDecoder();var buffer='';
+while(true){
+var done,value;({done,value}=await reader.read());
+if(done)break;
+buffer+=decoder.decode(value,{stream:true});
+var lines=buffer.split('\n');buffer=lines.pop()||'';
+for(var i=0;i<lines.length;i++){
+var line=lines[i].trim();
+if(!line.startsWith('data: '))continue;
+var data;try{data=JSON.parse(line.substring(6))}catch(e){continue}
+
+if(data.type==='progress'){setStep(data.step);addLog('▶️ '+data.label)}
+else if(data.type==='log'){addLog(data.msg)}
+else if(data.type==='titles'){
+genState.titles=data.titles;genState.selectedTitle=0;
+var th='';data.titles.forEach(function(t,i){th+='<div class="title-opt'+(i===0?' selected':'')+'" onclick="selectTitle('+i+',this)">'+(i+1)+'. '+t+'</div>'});
+document.getElementById('titleOptions').innerHTML=th;
+addLog('✅ 标题：'+data.titles[0],'success');
+}
+else if(data.type==='body'){
+genState.body=data.content;
+document.getElementById('genBody').textContent=data.content;
+}
+else if(data.type==='svg'){
+genState.svgs.push({label:data.label,svg:data.svg});
+renderGenSvgs();
+addLog('✅ '+data.label+' 完成','success');
+}
+else if(data.type==='done'){
+addLog(data.msg||'🎉 全部完成','success');
+document.getElementById('resultCard').style.display='block';
+}
+else if(data.type==='error'){addLog('❌ '+data.msg,'error')}
+else if(data.type==='heartbeat'){addLog('⏳ 仍在处理...','warn')}
+}
+}
+}catch(e){addLog('❌ '+e.message,'error')}
+finally{btn.disabled=false;btn.textContent='🚀 一键生成'}
 }
 
-// === 一键下载全部 ===
-function downloadAll(){
-  var p = products[currentProduct];
-  var keys = Object.keys(p.svgs);
-  keys.forEach(function(key,i){
-    setTimeout(function(){downloadSvg(key)},i*500);
-  });
+function selectTitle(i,el){
+genState.selectedTitle=i;
+document.querySelectorAll('.title-opt').forEach(function(e){e.classList.remove('selected')});
+el.classList.add('selected');
 }
 
-function showToast(msg){
-  var t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(function(){t.classList.remove('show')},2000);
+function renderGenSvgs(){
+var h='';
+genState.svgs.forEach(function(s,i){
+h+='<div class="svg-card"><div class="svg-label">'+s.label+'</div><div class="svg-preview">'+s.svg+'</div><div class="svg-actions"><button class="dl-btn" onclick="dlGenSvg('+i+')">⬇️ 下载JPG</button></div></div>';
+});
+document.getElementById('genSvgGrid').innerHTML=h;
 }
-
-// 密码验证
-var ADMIN_PW='xixizai2026';
-function checkPw(){
-  var input=document.getElementById('pwInput').value;
-  if(input===ADMIN_PW){
-    document.getElementById('loginOverlay').style.display='none';
-    sessionStorage.setItem('admin_ok','1');
-  }else{
-    document.getElementById('pwError').style.display='block';
-    document.getElementById('pwInput').value='';
-  }
+function dlGenSvg(i){dlSvgTall(genState.svgs[i].svg,genState.svgs[i].label)}
+function downloadAllGen(){genState.svgs.forEach(function(s,i){setTimeout(function(){dlGenSvg(i)},i*500)})}
+function copySelectedTitle(){
+if(genState.titles.length){navigator.clipboard.writeText(genState.titles[genState.selectedTitle]).then(function(){showToast('✅ 已复制')})}
 }
-if(sessionStorage.getItem('admin_ok')==='1'){document.getElementById('loginOverlay').style.display='none'}
+function copyGenBody(){
+var text=document.getElementById('genBody').textContent;
+navigator.clipboard.writeText(text).then(function(){showToast('✅ 已复制')})
+}
 
 renderProduct();
 </script>
