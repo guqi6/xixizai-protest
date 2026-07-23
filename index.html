@@ -53,7 +53,7 @@ body{
 .quiz{display:none;flex-direction:column;min-height:100vh;padding:32px 24px}
 .quiz .progress-wrap{margin-bottom:40px}
 .quiz .progress-bar{height:6px;background:rgba(255,255,255,.5);border-radius:3px;overflow:hidden}
-.quiz .progress-fill{height:100%;background:var(--primary);border-radius:3px;transition:width .4s ease}
+.quiz .progress-fill{height:100%;background:var(--primary);border-radius:3px;transition:width .2s ease}
 .quiz .progress-text{display:flex;justify-content:space-between;margin-top:8px;font-size:12px;color:var(--text-l)}
 .quiz .q-num{font-size:13px;color:var(--primary);font-weight:600;margin-bottom:8px}
 .quiz .q-title{font-size:24px;font-weight:800;color:var(--primary-d);line-height:1.4;margin-bottom:32px}
@@ -109,7 +109,7 @@ body{
 
 @keyframes bounceIn{0%{transform:scale(0);opacity:0}60%{transform:scale(1.2)}100%{transform:scale(1);opacity:1}}
 @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-.fadeIn{animation:fadeIn .4s ease}
+.fadeIn{animation:fadeIn .2s ease}
 </style>
 </head>
 <body>
@@ -320,7 +320,7 @@ function renderQuestion(){
   var optsHtml = '';
   var labels = ['A','B','C','D'];
   q.opts.forEach(function(o,i){
-    optsHtml += '<div class="option fadeIn" style="animation-delay:'+(i*0.08)+'s" onclick="selectOption(\''+o.type+'\')">' +
+    optsHtml += '<div class="option" onclick="selectOption(\''+o.type+'\')">' +
       '<div class="opt-label">'+labels[i]+'</div>' +
       '<div class="opt-text">'+o.t+'</div>' +
       '</div>';
@@ -334,9 +334,9 @@ function selectOption(type){
   if(currentQ >= questions.length){
     showResult();
   } else {
-    // 滚动到顶部再渲染
-    window.scrollTo({top:0,behavior:'smooth'});
-    setTimeout(renderQuestion, 200);
+    // 直接渲染下一题
+    window.scrollTo(0,0);
+    renderQuestion();
   }
 }
 
