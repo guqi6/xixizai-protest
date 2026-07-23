@@ -3,61 +3,472 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>西西崽测评 | 专业产品评测推荐</title>
-<meta name="description" content="西西崽测评 - 为你提供客观、专业、有料的产品评测和推荐">
+<title>你天生该吃哪碗饭？ | 西西崽测评</title>
+<meta name="description" content="一分钟趣味心理测试，测出你天生的职业基因">
 <style>
-:root{--p:#6366f1;--pd:#4f46e5;--bg:#f8fafc;--c:#fff;--b:#e2e8f0;--t:#1e293b;--tl:#64748b;--r:12px;--g:#10b981;--y:#f59e0b;--r2:#ef4444}
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--t);line-height:1.6}
-.nav{background:var(--c);border-bottom:1px solid var(--b);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
-.nav .logo{font-size:20px;font-weight:800;color:var(--p)}
-.nav .logo span{color:var(--t)}
-.container{max-width:1000px;margin:0 auto;padding:24px 16px}
-.hero{text-align:center;padding:60px 20px 40px}
-.hero h1{font-size:36px;font-weight:800;margin-bottom:12px;background:linear-gradient(135deg,var(--p),var(--g));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.hero p{font-size:16px;color:var(--tl);max-width:600px;margin:0 auto}
-.section-title{font-size:22px;font-weight:700;margin:40px 0 16px;display:flex;align-items:center;gap:8px}
-.section-title::before{content:"";width:4px;height:24px;background:var(--p);border-radius:2px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px}
-.card{background:var(--c);border-radius:var(--r);padding:24px;box-shadow:0 1px 3px rgba(0,0,0,.06);transition:.2s;border:1px solid var(--b)}
-.card:hover{box-shadow:0 8px 24px rgba(99,102,241,.12);transform:translateY(-2px)}
-.card .badge{display:inline-block;font-size:11px;padding:2px 10px;border-radius:10px;margin-bottom:8px}
-.badge-hot{background:#fef3c7;color:#92400e}
-.badge-new{background:#dbeafe;color:#1e40af}
-.badge-top{background:#d1fae5;color:#065f46}
-.card h3{font-size:17px;font-weight:700;margin-bottom:6px}
-.card .desc{font-size:13px;color:var(--tl);margin-bottom:12px}
-.card .meta{display:flex;justify-content:space-between;align-items:center;font-size:12px}
-.card .score{font-size:20px;font-weight:800;color:var(--p)}
-.card .score small{font-size:12px;color:var(--tl);font-weight:400}
-.footer{text-align:center;padding:40px 20px;color:var(--tl);font-size:13px;border-top:1px solid var(--b);margin-top:40px}
-.coming{text-align:center;padding:80px 20px}
-.coming .emoji{font-size:64px;margin-bottom:16px}
-.coming h2{font-size:24px;font-weight:700;margin-bottom:8px}
-.coming p{color:var(--tl);font-size:15px}
+:root{
+  --bg1:#e8f5e9;--bg2:#c8e6c9;--bg3:#a5d6a7;
+  --primary:#2e7d32;--primary-d:#1b5e20;--primary-l:#4caf50;
+  --accent:#ff9800;--card-bg:rgba(255,255,255,.92);
+  --text:#1b5e20;--text-l:#388e3c;--text-d:#000;
+  --border:#81c784;--shadow:0 8px 32px rgba(46,125,50,.12);
+}
+body{
+  font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+  min-height:100vh;color:var(--text);overflow-x:hidden;
+}
+/* 渐变网格背景 */
+.bg{position:fixed;inset:0;z-index:-1;
+  background:linear-gradient(135deg,#e8f5e9 0%,#c8e6c9 40%,#dcedc8 100%);
+}
+.bg::before{content:"";position:absolute;inset:0;
+  background-image:
+    linear-gradient(rgba(129,199,132,.15) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(129,199,132,.15) 1px,transparent 1px);
+  background-size:30px 30px;
+}
+.app{max-width:500px;margin:0 auto;min-height:100vh;position:relative}
+
+/* === 封面页 === */
+.cover{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:40px 24px;text-align:center}
+.cover .tag{display:inline-flex;align-items:center;gap:8px;margin-bottom:32px}
+.cover .tag-label{border:1.5px solid var(--primary);border-radius:6px;padding:3px 14px;font-size:13px;color:var(--primary);background:#fff;font-weight:600}
+.cover .tag-num{font-size:13px;color:var(--text-l);font-weight:600}
+.cover .tag-line{flex:1;width:60px;height:1px;background:var(--border)}
+.cover h1{font-size:38px;font-weight:900;color:var(--primary-d);line-height:1.3;margin-bottom:20px;letter-spacing:-1px}
+.cover .subtags{display:flex;flex-direction:column;gap:6px;margin-bottom:48px}
+.cover .subtag{font-size:15px;color:var(--text-l)}
+.cover .quote-deco{position:absolute;right:24px;bottom:120px;font-size:64px;color:rgba(46,125,50,.08);font-weight:900;line-height:1}
+.cover .footer-en{position:absolute;bottom:24px;left:0;right:0;text-align:center;font-size:11px;color:rgba(46,125,50,.35);letter-spacing:3px}
+.btn-start{
+  background:var(--primary);color:#fff;border:none;
+  padding:16px 56px;border-radius:50px;font-size:17px;font-weight:700;
+  cursor:pointer;transition:.3s;box-shadow:0 4px 20px rgba(46,125,50,.3);
+}
+.btn-start:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(46,125,50,.4);background:var(--primary-d)}
+.btn-start:active{transform:translateY(0)}
+
+/* === 答题页 === */
+.quiz{display:none;flex-direction:column;min-height:100vh;padding:32px 24px}
+.quiz .progress-wrap{margin-bottom:40px}
+.quiz .progress-bar{height:6px;background:rgba(255,255,255,.5);border-radius:3px;overflow:hidden}
+.quiz .progress-fill{height:100%;background:var(--primary);border-radius:3px;transition:width .4s ease}
+.quiz .progress-text{display:flex;justify-content:space-between;margin-top:8px;font-size:12px;color:var(--text-l)}
+.quiz .q-num{font-size:13px;color:var(--primary);font-weight:600;margin-bottom:8px}
+.quiz .q-title{font-size:24px;font-weight:800;color:var(--primary-d);line-height:1.4;margin-bottom:32px}
+.quiz .options{display:flex;flex-direction:column;gap:12px}
+.quiz .option{
+  background:var(--card-bg);border:2px solid transparent;
+  border-radius:16px;padding:18px 20px;font-size:16px;color:var(--text);
+  cursor:pointer;transition:.25s;display:flex;align-items:center;gap:14px;
+  box-shadow:0 2px 12px rgba(0,0,0,.04);
+}
+.quiz .option:hover{border-color:var(--primary);transform:translateX(4px);box-shadow:var(--shadow)}
+.quiz .option:active{transform:scale(.98)}
+.quiz .option .opt-label{
+  width:36px;height:36px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:15px;font-weight:700;background:rgba(46,125,50,.1);color:var(--primary);
+  transition:.25s;
+}
+.quiz .option:hover .opt-label{background:var(--primary);color:#fff}
+.quiz .option .opt-text{flex:1;font-weight:500}
+
+/* === 结果页 === */
+.result{display:none;flex-direction:column;align-items:center;min-height:100vh;padding:40px 24px;text-align:center}
+.result .r-icon{font-size:72px;margin-bottom:16px;animation:bounceIn .6s ease}
+.result .r-label{font-size:14px;color:var(--text-l);margin-bottom:8px}
+.result .r-title{font-size:36px;font-weight:900;color:var(--primary-d);margin-bottom:8px;line-height:1.3}
+.result .r-badge{display:inline-block;background:var(--primary);color:#fff;font-size:12px;padding:4px 16px;border-radius:14px;margin-bottom:24px}
+.result .r-desc{
+  background:var(--card-bg);border-radius:16px;padding:24px;
+  font-size:15px;line-height:1.8;color:var(--text);margin-bottom:24px;
+  box-shadow:var(--shadow);text-align:left;
+}
+.result .r-traits{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:32px}
+.result .r-trait{background:rgba(46,125,50,.1);color:var(--primary-d);font-size:13px;padding:6px 16px;border-radius:16px;font-weight:600}
+.result .r-actions{display:flex;flex-direction:column;gap:12px;width:100%;max-width:300px;margin-bottom:24px}
+.btn-share{background:var(--accent);color:#fff;border:none;padding:14px;border-radius:50px;font-size:15px;font-weight:700;cursor:pointer;transition:.3s;box-shadow:0 4px 16px rgba(255,152,0,.3)}
+.btn-share:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(255,152,0,.4)}
+.btn-retry{background:transparent;color:var(--primary);border:2px solid var(--primary);padding:12px;border-radius:50px;font-size:14px;font-weight:600;cursor:pointer;transition:.3s}
+.btn-retry:hover{background:var(--primary);color:#fff}
+
+/* 分享图弹窗 */
+.share-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:999;align-items:center;justify-content:center;padding:20px}
+.share-modal.show{display:flex}
+.share-card{
+  background:#fff;border-radius:20px;overflow:hidden;max-width:360px;width:100%;
+  box-shadow:0 20px 60px rgba(0,0,0,.3);
+}
+.share-card-img{width:100%;display:block}
+.share-card-actions{padding:16px;display:flex;gap:12px}
+.share-card-actions button{flex:1;padding:10px;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer}
+.btn-dl{background:var(--primary);color:#fff}
+.btn-close{background:#f0f0f0;color:#333}
+
+@keyframes bounceIn{0%{transform:scale(0);opacity:0}60%{transform:scale(1.2)}100%{transform:scale(1);opacity:1}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.fadeIn{animation:fadeIn .4s ease}
 </style>
 </head>
 <body>
-<nav class="nav">
-<div class="logo">西西崽 <span>· 测评</span></div>
-<div style="font-size:13px;color:var(--tl)">专业 · 客观 · 有料</div>
-</nav>
+<div class="bg"></div>
+<div class="app">
 
-<div class="container">
-<div class="hero">
-<h1>西西崽测评</h1>
-<p>为你筛选值得用的产品，每一项测评都基于真实体验和数据分析</p>
+<!-- 封面页 -->
+<div class="cover" id="page-cover">
+  <div class="tag">
+    <span class="tag-label">职业基因</span>
+    <span class="tag-line"></span>
+    <span class="tag-num">NO.001</span>
+  </div>
+  <h1>你天生该吃哪碗饭？</h1>
+  <div class="subtags">
+    <div class="subtag">⏱️ 两分钟自测</div>
+    <div class="subtag">📝 10道趣味题</div>
+    <div class="subtag">✨ 凭第一直觉选</div>
+  </div>
+  <button class="btn-start" onclick="startQuiz()">开始测试 →</button>
+  <div class="quote-deco">"</div>
+  <div class="footer-en">CAREER PERSONALITY TEST</div>
 </div>
 
-<div class="coming">
-<div class="emoji">🔨</div>
-<h2>测评内容即将上线</h2>
-<p>我们正在准备最硬核的测评内容，敬请期待！</p>
+<!-- 答题页 -->
+<div class="quiz" id="page-quiz">
+  <div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-text">
+      <span id="progressLabel">第 1 题</span>
+      <span id="progressCount">1 / 10</span>
+    </div>
+  </div>
+  <div class="q-num" id="qNum">问题 1</div>
+  <div class="q-title" id="qTitle">加载中...</div>
+  <div class="options" id="qOptions"></div>
 </div>
 
-<div class="footer">
-<p>© 2026 xixizai.com · 西西崽测评 · 保留所有权利</p>
+<!-- 结果页 -->
+<div class="result" id="page-result">
+  <div class="r-icon" id="rIcon">🔥</div>
+  <div class="r-label">你的职业基因是</div>
+  <div class="r-title" id="rTitle">天生的创业者</div>
+  <div class="r-badge" id="rBadge">ESTP型</div>
+  <div class="r-desc" id="rDesc"></div>
+  <div class="r-traits" id="rTraits"></div>
+  <div class="r-actions">
+    <button class="btn-share" onclick="showShare()">📸 生成分享图</button>
+    <button class="btn-retry" onclick="resetQuiz()">🔄 再测一次</button>
+  </div>
+  <div style="font-size:12px;color:rgba(46,125,50,.4);margin-top:16px">更多测试请访问 protest.xixizai.com</div>
 </div>
+
 </div>
+
+<!-- 分享图弹窗 -->
+<div class="share-modal" id="shareModal">
+  <div class="share-card">
+    <canvas id="shareCanvas" class="share-card-img" width="360" height="540"></canvas>
+    <div class="share-card-actions">
+      <button class="btn-dl" onclick="downloadShare()">💾 保存图片</button>
+      <button class="btn-close" onclick="closeShare()">关闭</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// === 测试数据（全部原创） ===
+var questions = [
+  {q:"周末早上醒来，你的第一个念头是？",
+   opts:[
+     {t:"今天能把那个想法落地了",type:"A"},
+     {t:"终于可以睡到自然醒",type:"B"},
+     {t:"约谁出去玩呢？",type:"C"},
+     {t:"列个今日计划表",type:"D"}
+   ]},
+  {q:"朋友找你诉苦，你通常？",
+   opts:[
+     {t:"帮他分析问题出在哪",type:"D"},
+     {t:"陪他一起骂，先爽了再说",type:"C"},
+     {t:"默默听着，给个拥抱",type:"B"},
+     {t:"你上次也这样，后来我这样解决了...",type:"A"}
+   ]},
+  {q:"团队讨论时，你经常扮演的角色是？",
+   opts:[
+     {t:"提新方向的人",type:"A"},
+     {t:"活跃气氛的人",type:"C"},
+     {t:"调和矛盾的人",type:"B"},
+     {t:"把控进度的人",type:"D"}
+   ]},
+  {q:"突然给你一万块闲钱，你第一反应？",
+   opts:[
+     {t:"投到我的项目里滚雪球",type:"A"},
+     {t:"请朋友吃顿大的",type:"C"},
+     {t:"存起来，有安全感",type:"B"},
+     {t:"买课程或工具提升自己",type:"D"}
+   ]},
+  {q:"你最受不了哪种领导？",
+   opts:[
+     {t:"朝令夕改，没有方向",type:"D"},
+     {t:"管太细，让人窒息",type:"A"},
+     {t:"冷冰冰，不讲人情",type:"B"},
+     {t:"开会念稿子两小时",type:"C"}
+   ]},
+  {q:"学一个新技能，你的方式是？",
+   opts:[
+     {t:"先干起来，遇到问题再查",type:"A"},
+     {t:"找个有趣的教学视频跟着玩",type:"C"},
+     {t:"从基础开始，一步步稳扎稳打",type:"B"},
+     {t:"系统看教程，做笔记，列思维导图",type:"D"}
+   ]},
+  {q:"深夜刷手机，你最容易陷进去的是？",
+   opts:[
+     {t:"行业大佬的创业故事",type:"A"},
+     {t:"搞笑段子、脱口秀",type:"C"},
+     {t:"治愈系vlog、美食视频",type:"B"},
+     {t:"干货帖、知识科普",type:"D"}
+   ]},
+  {q:"朋友说你最大的缺点是？",
+   opts:[
+     {t:"太折腾，停不下来",type:"A"},
+     {t:"太敏感，容易内耗",type:"B"},
+     {t:"太闹腾，静不下来",type:"C"},
+     {t:"太较真，不近人情",type:"D"}
+   ]},
+  {q:"如果拍一部关于你的电影，片名会是？",
+   opts:[
+     {t:"《不服输的人》",type:"A"},
+     {t:"《温柔的力量的》",type:"B"},
+     {t:"《人间值得好玩》",type:"C"},
+     {t:"《掌控一切》",type:"D"}
+   ]},
+  {q:"十年后的理想生活状态是？",
+   opts:[
+     {t:"有自己的事业帝国，还在不断拓展",type:"A"},
+     {t:"生活安稳，有时间做自己喜欢的事",type:"B"},
+     {t:"世界各地都有朋友，走到哪都不无聊",type:"C"},
+     {t:"在某个领域成为权威，受人尊敬",type:"D"}
+   ]}
+];
+
+// === 结果类型 ===
+var results = {
+  A:{icon:"🚀",title:"天生的创业者",badge:"行动派",
+     desc:"你骨子里就不是一个安分的人。别人还在犹豫的时候，你已经开干了。你不怕失败，怕的是无聊。你的行动力远超分析欲，天生适合从0到1把事情做成。\n\n你最大的武器是「先干了再说」的魄力——这个世界永远奖励先动手的人。但也要记得：偶尔停下来看看方向，别只顾着狂奔。",
+     traits:["行动力爆表","不怕冒险","天生领袖","讨厌墨迹"]},
+  B:{icon:"🌿",title:"天生的创作者",badge:"感受派",
+     desc:"你有一颗极度敏感的心，能感知到别人忽略的细节和情绪。这种敏感不是缺点，而是你的天赋——好的内容、好的设计、好的故事，都从这种感知力中来。\n\n你不是为竞争而生的，你是为创造而生的。安静地打磨自己的手艺，你的作品会替你说话。\n\n记住：敏感是你的超能力，不是软肋。",
+     traits:["共情力强","审美在线","内心丰富","适合独立创作"]},
+  C:{icon:"🎉",title:"天生的连接者",badge:"社交派",
+     desc:"你是天生的「人际枢纽」。有你在的场合永远不会冷场，你能把陌生人变成朋友，把尴尬化为笑声。你的价值不在具体技能，而在于你能连接谁。\n\n市场、公关、社群运营、活动策划——所有需要「搞定人」的事情，你都有天然优势。\n\n你的秘诀很简单：对人真诚，对生活有热情。这种能量会吸引资源主动来找你。",
+     traits:["社交天花板","气氛制造机","人脉资源王","天生感染力"]},
+  D:{icon:"💎",title:"天生的操盘手",badge:"策略派",
+     desc:"你是那种让混乱变有序的人。给你一堆乱麻，你天然地就想找到线头在哪里。你的逻辑、规划能力和执行力让你成为任何团队都需要的「定海神针」。\n\n你不追求舞台上的聚光灯，你要的是「一切尽在掌握」的确定性。运营、管理、投资分析——越是复杂的系统，越能体现你的价值。\n\n你的核心竞争力：别人看到混乱，你看到结构。",
+     traits:["逻辑严密","执行力强","掌控全局","天生管理者"]}
+};
+
+// === 测试逻辑 ===
+var currentQ = 0;
+var scores = {A:0,B:0,C:0,D:0};
+
+function startQuiz(){
+  currentQ = 0;
+  scores = {A:0,B:0,C:0,D:0};
+  document.getElementById('page-cover').style.display='none';
+  document.getElementById('page-result').style.display='none';
+  document.getElementById('page-quiz').style.display='flex';
+  renderQuestion();
+}
+
+function renderQuestion(){
+  var q = questions[currentQ];
+  var total = questions.length;
+  var progress = ((currentQ) / total) * 100;
+  
+  document.getElementById('progressFill').style.width = progress + '%';
+  document.getElementById('progressLabel').textContent = '第 ' + (currentQ+1) + ' 题';
+  document.getElementById('progressCount').textContent = (currentQ+1) + ' / ' + total;
+  document.getElementById('qNum').textContent = '问题 ' + (currentQ+1);
+  document.getElementById('qTitle').textContent = q.q;
+  
+  var optsHtml = '';
+  var labels = ['A','B','C','D'];
+  q.opts.forEach(function(o,i){
+    optsHtml += '<div class="option fadeIn" style="animation-delay:'+(i*0.08)+'s" onclick="selectOption(\''+o.type+'\')">' +
+      '<div class="opt-label">'+labels[i]+'</div>' +
+      '<div class="opt-text">'+o.t+'</div>' +
+      '</div>';
+  });
+  document.getElementById('qOptions').innerHTML = optsHtml;
+}
+
+function selectOption(type){
+  scores[type]++;
+  currentQ++;
+  if(currentQ >= questions.length){
+    showResult();
+  } else {
+    // 滚动到顶部再渲染
+    window.scrollTo({top:0,behavior:'smooth'});
+    setTimeout(renderQuestion, 200);
+  }
+}
+
+function showResult(){
+  // 找出分数最高的类型
+  var maxType = 'A', maxScore = 0;
+  for(var k in scores){
+    if(scores[k] > maxScore){maxScore = scores[k]; maxType = k;}
+  }
+  var r = results[maxType];
+  
+  document.getElementById('page-quiz').style.display='none';
+  document.getElementById('page-result').style.display='flex';
+  document.getElementById('rIcon').textContent = r.icon;
+  document.getElementById('rTitle').textContent = r.title;
+  document.getElementById('rBadge').textContent = r.badge;
+  document.getElementById('rDesc').textContent = r.desc;
+  
+  var traitsHtml = r.traits.map(function(t){return '<span class="r-trait">'+t+'</span>'}).join('');
+  document.getElementById('rTraits').innerHTML = traitsHtml;
+}
+
+function resetQuiz(){
+  document.getElementById('page-result').style.display='none';
+  document.getElementById('page-cover').style.display='flex';
+}
+
+// === 分享图生成 ===
+function showShare(){
+  var modal = document.getElementById('shareModal');
+  modal.classList.add('show');
+  drawShareCard();
+}
+
+function closeShare(){
+  document.getElementById('shareModal').classList.remove('show');
+}
+
+function drawShareCard(){
+  var canvas = document.getElementById('shareCanvas');
+  var ctx = canvas.getContext('2d');
+  var W = 360, H = 540;
+  
+  // 背景
+  var grad = ctx.createLinearGradient(0,0,W,H);
+  grad.addColorStop(0,'#e8f5e9');
+  grad.addColorStop(0.5,'#c8e6c9');
+  grad.addColorStop(1,'#dcedc8');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0,0,W,H);
+  
+  // 网格纹理
+  ctx.strokeStyle = 'rgba(129,199,132,0.12)';
+  ctx.lineWidth = 1;
+  for(var x=0;x<W;x+=30){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(var y=0;y<H;y+=30){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+  
+  // 顶部标签
+  ctx.fillStyle = '#fff';
+  ctx.strokeStyle = '#2e7d32';
+  ctx.lineWidth = 1.5;
+  var tagText = '职业基因';
+  ctx.font = '12px sans-serif';
+  var tw = ctx.measureText(tagText).width + 24;
+  roundRect(ctx, 28, 36, tw, 26, 5);
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = '#2e7d32';
+  ctx.font = 'bold 12px sans-serif';
+  ctx.fillText(tagText, 40, 53);
+  
+  ctx.fillStyle = '#388e3c';
+  ctx.font = '12px sans-serif';
+  ctx.fillText('NO.001', W-70, 53);
+  
+  // 分隔线
+  ctx.strokeStyle = '#81c784';
+  ctx.lineWidth = 1;
+  ctx.beginPath();ctx.moveTo(110,49);ctx.lineTo(W-90,49);ctx.stroke();
+  
+  // 结果图标
+  ctx.font = '56px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(document.getElementById('rIcon').textContent, W/2, 160);
+  
+  // "你的结果是"
+  ctx.fillStyle = '#388e3c';
+  ctx.font = '13px sans-serif';
+  ctx.fillText('你的职业基因是', W/2, 200);
+  
+  // 结果标题
+  ctx.fillStyle = '#1b5e20';
+  ctx.font = 'bold 30px sans-serif';
+  ctx.fillText(document.getElementById('rTitle').textContent, W/2, 240);
+  
+  // badge
+  ctx.fillStyle = '#2e7d32';
+  ctx.font = 'bold 12px sans-serif';
+  var badgeText = document.getElementById('rBadge').textContent;
+  var bw = ctx.measureText(badgeText).width + 24;
+  ctx.fillStyle = '#2e7d32';
+  roundRect(ctx, (W-bw)/2, 260, bw, 26, 13);
+  ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.fillText(badgeText, W/2, 277);
+  
+  // traits
+  ctx.fillStyle = '#1b5e20';
+  ctx.font = '13px sans-serif';
+  var traits = document.getElementById('rTraits').innerText;
+  ctx.fillText(traits.replace(/\n/g,' · '), W/2, 320);
+  
+  // 描述前3行
+  var desc = document.getElementById('rDesc').textContent;
+  ctx.fillStyle = 'rgba(27,94,32,0.7)';
+  ctx.font = '13px sans-serif';
+  ctx.textAlign = 'left';
+  var lines = desc.split('\n')[0].match(/.{1,18}/g) || [];
+  lines.slice(0,4).forEach(function(line,i){
+    ctx.fillText(line, 40, 370 + i*22);
+  });
+  
+  // 二维码占位
+  ctx.fillStyle = '#fff';
+  roundRect(ctx, W/2-40, 440, 80, 80, 12);
+  ctx.fill();
+  ctx.fillStyle = '#2e7d32';
+  ctx.font = '11px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('扫码来测', W/2, 470);
+  ctx.font = 'bold 22px sans-serif';
+  ctx.fillText('🐾', W/2, 500);
+  
+  // 底部
+  ctx.fillStyle = 'rgba(27,94,32,0.3)';
+  ctx.font = '10px sans-serif';
+  ctx.fillText('protest.xixizai.com', W/2, 530);
+  
+  ctx.textAlign = 'left';
+}
+
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+}
+
+function downloadShare(){
+  var canvas = document.getElementById('shareCanvas');
+  var link = document.createElement('a');
+  link.download = '我的职业基因测试结果.png';
+  link.href = canvas.toDataURL();
+  link.click();
+}
+</script>
 </body>
 </html>
