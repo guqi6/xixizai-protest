@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>物料管理后台 | 西西崽</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--p:#6366f1;--pd:#4f46e5;--g:#10b981;--bg:#f0f2f5;--c:#fff;--b:#e5e7eb;--t:#1f2937;--tl:#6b7280;--r:8px}
+body{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--t)}
+.nav{background:var(--c);border-bottom:1px solid var(--b);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.nav h1{font-size:16px;font-weight:700}
+.container{max-width:900px;margin:0 auto;padding:20px 16px}
+.card{background:var(--c);border-radius:var(--r);padding:20px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.card-title{font-size:15px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:6px}
+.field{margin-bottom:14px}
+.field-label{font-size:12px;font-weight:600;color:var(--tl);margin-bottom:4px;display:flex;justify-content:space-between;align-items:center}
+.field-content{background:#f9fafb;border:1px solid var(--b);border-radius:6px;padding:10px 12px;font-size:14px;line-height:1.6;color:var(--t);cursor:pointer;transition:.2s;white-space:pre-wrap;word-break:break-all}
+.field-content:hover{border-color:var(--p);background:#eef2ff}
+.field-content.copied{background:#d1fae5;border-color:var(--g)}
+.copy-btn{font-size:11px;padding:3px 10px;border:1px solid var(--b);border-radius:4px;background:var(--c);color:var(--tl);cursor:pointer;transition:.2s}
+.copy-btn:hover{border-color:var(--p);color:var(--p)}
+/* SVG预览 */
+.svg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
+.svg-card{background:#f9fafb;border:1px solid var(--b);border-radius:8px;overflow:hidden}
+.svg-card .svg-label{font-size:12px;font-weight:600;color:var(--tl);padding:8px 10px 4px}
+.svg-card .svg-preview{display:flex;align-items:center;justify-content:center;padding:10px;background:#fff;border-bottom:1px solid var(--b)}
+.svg-card .svg-preview svg{max-width:100%;max-height:180px}
+.svg-card .svg-actions{padding:8px 10px;display:flex;gap:6px}
+.dl-btn{flex:1;font-size:12px;padding:6px;border:none;border-radius:4px;background:var(--p);color:#fff;cursor:pointer;font-weight:600}
+.dl-btn:hover{background:var(--pd)}
+/* 测试选择 */
+.product-select{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.product-chip{padding:8px 16px;border-radius:20px;font-size:13px;cursor:pointer;border:2px solid var(--b);background:var(--c);color:var(--tl);transition:.2s;font-weight:600}
+.product-chip.active{border-color:var(--p);background:var(--p);color:#fff}
+/* 链接区 */
+.link-box{display:flex;gap:8px;align-items:center}
+.link-box .link-url{flex:1;background:#f9fafb;border:1px solid var(--b);border-radius:6px;padding:10px 12px;font-size:14px;color:var(--p);font-weight:600}
+.link-box .link-open{padding:10px 16px;background:var(--g);color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;display:inline-block}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1f2937;color:#fff;padding:8px 20px;border-radius:8px;font-size:13px;z-index:9999;opacity:0;transition:.3s}
+.toast.show{opacity:1}
+.dl-all-btn{background:var(--g);color:#fff;border:none;padding:10px 16px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;margin-top:10px;width:100%}
+.dl-all-btn:hover{background:#059669}
+</style>
+</head>
+<body>
+<nav class="nav">
+<h1>📦 西西崽物料后台</h1>
+<div style="font-size:12px;color:var(--tl)">点击文字一键复制 · 点击下载转JPG</div>
+</nav>
+<div class="container">
+
+<!-- 产品选择 -->
+<div class="product-select" id="productSelect">
+<div class="product-chip active" onclick="switchProduct('career')">🚀 你天生该吃哪碗饭</div>
+</div>
+
+<!-- 文案区 -->
+<div class="card">
+<div class="card-title">📝 文案（点击即复制）</div>
+
+<div class="field">
+<div class="field-label"><span>🏷️ 商品标题</span><button class="copy-btn" onclick="copyField('title')">📋复制</button></div>
+<div class="field-content" id="fTitle" onclick="copyField('title')"></div>
+</div>
+
+<div class="field">
+<div class="field-label"><span>📌 导购短标题</span><button class="copy-btn" onclick="copyField('shortTitle')">📋复制</button></div>
+<div class="field-content" id="fShortTitle" onclick="copyField('shortTitle')"></div>
+</div>
+
+<div class="field">
+<div class="field-label"><span>📝 商品详情文案</span><button class="copy-btn" onclick="copyField('detail')">📋复制</button></div>
+<div class="field-content" id="fDetail" onclick="copyField('detail')" style="max-height:300px;overflow:auto"></div>
+</div>
+
+<div class="field">
+<div class="field-label"><span>📂 商品类目</span></div>
+<div class="field-content" style="cursor:default">电子资源 > 课件/教案/手抄报</div>
+</div>
+
+<div class="field">
+<div class="field-label"><span>🔗 测试链接</span></div>
+<div class="link-box">
+<div class="link-url" id="fLink" onclick="copyField('link')"></div>
+<a class="link-open" id="fLinkOpen" target="_blank">🔗 打开</a>
+</div>
+</div>
+</div>
+
+<!-- 配图区 -->
+<div class="card">
+<div class="card-title">🖼️ 配图（SVG预览 · 下载转JPG）</div>
+<div class="svg-grid" id="svgGrid"></div>
+<button class="dl-all-btn" onclick="downloadAll()">⬇️ 一键下载全部图片（JPG）</button>
+</div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// === 产品数据 ===
+var products = {
+  career: {
+    title: "128+已测【你天生该吃哪碗饭】10道题测出你的隐藏职业基因，准确到头皮发麻",
+    shortTitle: "职业基因趣味测试",
+    detail: `你是不是也想过：为什么有人上班像上坟，有人却越干越来劲？
+
+这不是一个普通的性格测试。
+它不会笼统地告诉你"你是外向还是内向"，
+而是从你的本能反应里，挖出藏最深的职业天赋。
+
+从10个看似跟工作无关的生活场景——
+周末醒来第一个念头、怎么处理朋友的倾诉、
+突然拿到一笔闲钱会干嘛……
+
+精准锁定你的4大职业基因维度：
+行动力指数、创造感知力、社交影响力、策略掌控力
+
+做完的人都在说：
+"我以为自己适合上班，原来我天生就该创业"
+"这也太准了，我就是那个操盘手"
+"从小到大没人比这个测试更懂我"
+
+10道题，2分钟，找到你天生的饭碗。
+
+⚠️ 温馨提示：测完可能会想辞职（不是）`,
+    link: "protest.xixizai.com",
+    linkUrl: "https://protest.xixizai.com",
+    svgs: {
+      main: {label:"商品主图 (1:1)", svg: mainSvg()},
+      guide: {label:"引导图·解锁 (1:1)", svg: guideSvg()},
+      detail: {label:"详情引导图 (1:1)", svg: detailSvg()},
+    }
+  }
+};
+
+// === SVG模板 ===
+function mainSvg(){
+return `<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080">
+<defs>
+<linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+<stop offset="0%" stop-color="#e8f5e9"/><stop offset="50%" stop-color="#c8e6c9"/><stop offset="100%" stop-color="#dcedc8"/>
+</linearGradient>
+<pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+<path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(129,199,132,0.15)" stroke-width="1"/>
+</pattern>
+</defs>
+<rect width="1080" height="1080" fill="url(#bg)"/>
+<rect width="1080" height="1080" fill="url(#grid)"/>
+<rect x="80" y="90" width="160" height="52" rx="8" fill="white" stroke="#2e7d32" stroke-width="2.5"/>
+<text x="160" y="124" font-family="sans-serif" font-size="24" font-weight="bold" fill="#2e7d32" text-anchor="middle">职业基因</text>
+<line x1="260" y1="116" x2="440" y2="116" stroke="#81c784" stroke-width="1.5"/>
+<text x="530" y="124" font-family="sans-serif" font-size="24" font-weight="600" fill="#388e3c">NO.001</text>
+<text x="540" y="420" font-family="sans-serif" font-size="88" font-weight="900" fill="#1b5e20" text-anchor="middle">你天生</text>
+<text x="540" y="530" font-family="sans-serif" font-size="88" font-weight="900" fill="#1b5e20" text-anchor="middle">该吃哪碗饭？</text>
+<text x="540" y="620" font-family="sans-serif" font-size="34" fill="#388e3c" text-anchor="middle">2分钟自测 · 10道趣味题 · 凭直觉选</text>
+<text x="920" y="920" font-family="Georgia" font-size="200" fill="rgba(46,125,50,0.08)" font-weight="bold">"</text>
+<text x="540" y="1000" font-family="sans-serif" font-size="18" fill="rgba(46,125,50,0.35)" text-anchor="middle" letter-spacing="6">CAREER PERSONALITY TEST</text>
+</svg>`}
+
+function guideSvg(){
+return `<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080">
+<defs><linearGradient id="bg2" x1="0%" y1="0%" x2="100%" y2="100%">
+<stop offset="0%" stop-color="#1b5e20"/><stop offset="100%" stop-color="#2e7d32"/>
+</linearGradient></defs>
+<rect width="1080" height="1080" fill="url(#bg2)"/>
+<circle cx="540" cy="350" r="130" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="2"/>
+<circle cx="540" cy="350" r="100" fill="rgba(255,255,255,0.08)"/>
+<text x="540" y="395" font-family="sans-serif" font-size="90" text-anchor="middle">🔓</text>
+<text x="540" y="580" font-family="sans-serif" font-size="60" font-weight="900" fill="white" text-anchor="middle">点击解锁</text>
+<text x="540" y="660" font-family="sans-serif" font-size="60" font-weight="900" fill="white" text-anchor="middle">完整测试</text>
+<text x="540" y="740" font-family="sans-serif" font-size="30" fill="rgba(255,255,255,0.7)" text-anchor="middle">10道题 · 2分钟出结果</text>
+<rect x="320" y="810" width="440" height="84" rx="42" fill="#ff9800"/>
+<text x="540" y="864" font-family="sans-serif" font-size="34" font-weight="bold" fill="white" text-anchor="middle">立即开始测试 →</text>
+<text x="540" y="980" font-family="sans-serif" font-size="20" fill="rgba(255,255,255,0.4)" text-anchor="middle" letter-spacing="3">protest.xixizai.com</text>
+</svg>`}
+
+function detailSvg(){
+return `<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080">
+<defs><linearGradient id="bg3" x1="0%" y1="0%" x2="100%" y2="100%">
+<stop offset="0%" stop-color="#e8f5e9"/><stop offset="100%" stop-color="#a5d6a7"/>
+</linearGradient></defs>
+<rect width="1080" height="1080" fill="url(#bg3)"/>
+<text x="540" y="180" font-family="sans-serif" font-size="52" font-weight="900" fill="#1b5e20" text-anchor="middle">测完你会得到</text>
+<line x1="360" y1="220" x2="720" y2="220" stroke="#2e7d32" stroke-width="2"/>
+<g font-family="sans-serif" font-size="32" fill="#1b5e20" font-weight="500">
+<text x="140" y="330">✅ 核心职业基因类型</text>
+<text x="140" y="395">✅ 行动力指数评分</text>
+<text x="140" y="460">✅ 创造感知力评分</text>
+<text x="140" y="525">✅ 社交影响力评分</text>
+<text x="140" y="590">✅ 策略掌控力评分</text>
+<text x="140" y="655">✅ 天生优势深度解读</text>
+<text x="140" y="720">✅ 最适合职业方向Top3</text>
+<text x="140" y="785">✅ 职场雷区预警</text>
+<text x="140" y="850">✅ 专属发展路线建议</text>
+</g>
+<rect x="280" y="900" width="520" height="76" rx="38" fill="#2e7d32"/>
+<text x="540" y="950" font-family="sans-serif" font-size="30" font-weight="bold" fill="white" text-anchor="middle">👇 扫码立即测试</text>
+<text x="540" y="1020" font-family="sans-serif" font-size="18" fill="rgba(46,125,50,0.4)" text-anchor="middle" letter-spacing="3">protest.xixizai.com</text>
+</svg>`}
+
+// === 渲染 ===
+var currentProduct = 'career';
+
+function renderProduct(){
+  var p = products[currentProduct];
+  document.getElementById('fTitle').textContent = p.title;
+  document.getElementById('fShortTitle').textContent = p.shortTitle;
+  document.getElementById('fDetail').textContent = p.detail;
+  document.getElementById('fLink').textContent = p.link;
+  document.getElementById('fLinkOpen').href = p.linkUrl;
+  
+  // SVG预览
+  var html = '';
+  Object.keys(p.svgs).forEach(function(key){
+    var s = p.svgs[key];
+    html += '<div class="svg-card"><div class="svg-label">'+s.label+'</div>';
+    html += '<div class="svg-preview">'+s.svg+'</div>';
+    html += '<div class="svg-actions"><button class="dl-btn" onclick="downloadSvg(\''+key+'\')">⬇️ 下载JPG</button></div>';
+    html += '</div>';
+  });
+  document.getElementById('svgGrid').innerHTML = html;
+}
+
+function switchProduct(key){
+  currentProduct = key;
+  document.querySelectorAll('.product-chip').forEach(function(c){c.classList.remove('active')});
+  event.target.classList.add('active');
+  renderProduct();
+}
+
+// === 复制 ===
+function copyField(field){
+  var p = products[currentProduct];
+  var text = '';
+  if(field==='title') text = p.title;
+  else if(field==='shortTitle') text = p.shortTitle;
+  else if(field==='detail') text = p.detail;
+  else if(field==='link') text = p.link;
+  
+  navigator.clipboard.writeText(text).then(function(){
+    // 找到对应元素高亮
+    var el;
+    if(field==='title') el=document.getElementById('fTitle');
+    else if(field==='shortTitle') el=document.getElementById('fShortTitle');
+    else if(field==='detail') el=document.getElementById('fDetail');
+    else if(field==='link') el=document.getElementById('fLink');
+    if(el){el.classList.add('copied');setTimeout(function(){el.classList.remove('copied')},1000)}
+    showToast('✅ 已复制');
+  });
+}
+
+// === SVG转JPG下载 ===
+function downloadSvg(key){
+  var p = products[currentProduct];
+  var svgStr = p.svgs[key].svg;
+  var label = p.svgs[key].label;
+  
+  // 创建Image
+  var blob = new Blob([svgStr],{type:'image/svg+xml;charset=utf-8'});
+  var url = URL.createObjectURL(blob);
+  var img = new Image();
+  img.onload = function(){
+    var canvas = document.createElement('canvas');
+    canvas.width = 1080; canvas.height = 1080;
+    var ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0,0,1080,1080);
+    ctx.drawImage(img,0,0,1080,1080);
+    canvas.toBlob(function(b){
+      var a = document.createElement('a');
+      a.download = label.replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g,'') + '.jpg';
+      a.href = URL.createObjectURL(b);
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('✅ 已下载 '+a.download);
+    },'image/jpeg',0.95);
+  };
+  img.src = url;
+}
+
+// === 一键下载全部 ===
+function downloadAll(){
+  var p = products[currentProduct];
+  var keys = Object.keys(p.svgs);
+  keys.forEach(function(key,i){
+    setTimeout(function(){downloadSvg(key)},i*500);
+  });
+}
+
+function showToast(msg){
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function(){t.classList.remove('show')},2000);
+}
+
+renderProduct();
+</script>
+</body>
+</html>
