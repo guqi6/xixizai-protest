@@ -155,6 +155,16 @@ body{
   <div class="r-title" id="rTitle">天生的创业者</div>
   <div class="r-badge" id="rBadge">ESTP型</div>
   <div class="r-desc" id="rDesc"></div>
+  
+  <!-- 天赋指数+4维度评分 -->
+  <div class="r-desc" id="rScores" style="margin-bottom:16px"></div>
+  
+  <!-- 最适合职业 -->
+  <div class="r-desc" id="rCareers" style="margin-bottom:16px"></div>
+  
+  <!-- 职场雷区 -->
+  <div class="r-desc" id="rTraps" style="margin-bottom:16px"></div>
+  
   <div class="r-traits" id="rTraits"></div>
   <div class="r-actions">
     <button class="btn-share" onclick="showShare()">📸 生成分享图</button>
@@ -254,16 +264,32 @@ var questions = [
 // === 结果类型 ===
 var results = {
   A:{icon:"🚀",title:"天生的创业者",badge:"行动派",
+     scores:{action:95,create:70,social:60,strategy:75},
      desc:"你骨子里就不是一个安分的人。别人还在犹豫的时候，你已经开干了。你不怕失败，怕的是无聊。你的行动力远超分析欲，天生适合从0到1把事情做成。\n\n你最大的武器是「先干了再说」的魄力——这个世界永远奖励先动手的人。但也要记得：偶尔停下来看看方向，别只顾着狂奔。",
+     quote:"你不是太冲动，是别人太犹豫。",
+     careers:["创业者/合伙人","自媒体/IP主理人","销售/BD负责人"],
+     traps:["容易三分钟热度，启动太多项目收不住","不喜欢做细节工作，容易虎头蛇尾","对「按部就班」的人缺乏耐心"],
      traits:["行动力爆表","不怕冒险","天生领袖","讨厌墨迹"]},
   B:{icon:"🌿",title:"天生的创作者",badge:"感受派",
+     scores:{action:60,create:95,social:55,strategy:50},
      desc:"你有一颗极度敏感的心，能感知到别人忽略的细节和情绪。这种敏感不是缺点，而是你的天赋——好的内容、好的设计、好的故事，都从这种感知力中来。\n\n你不是为竞争而生的，你是为创造而生的。安静地打磨自己的手艺，你的作品会替你说话。\n\n记住：敏感是你的超能力，不是软肋。",
+     quote:"别人看到表面的热闹，你看到背后的故事。",
+     careers:["内容创作者/作者","设计师/创意工作者","心理咨询师/疗愈师"],
+     traps:["容易陷入完美主义，迟迟不敢发布","对负面评价过于敏感","容易在独处时陷入内耗"],
      traits:["共情力强","审美在线","内心丰富","适合独立创作"]},
   C:{icon:"🎉",title:"天生的连接者",badge:"社交派",
+     scores:{action:70,create:65,social:95,strategy:60},
      desc:"你是天生的「人际枢纽」。有你在的场合永远不会冷场，你能把陌生人变成朋友，把尴尬化为笑声。你的价值不在具体技能，而在于你能连接谁。\n\n市场、公关、社群运营、活动策划——所有需要「搞定人」的事情，你都有天然优势。\n\n你的秘诀很简单：对人真诚，对生活有热情。这种能量会吸引资源主动来找你。",
+     quote:"你的竞争力不是技能，是你认识谁。",
+     careers:["市场/品牌营销","社群运营/KOL","活动策划/公关"],
+     traps:["容易把精力分散在太多社交上","不喜欢深度钻研，专业感不足","害怕独处，容易用社交逃避问题"],
      traits:["社交天花板","气氛制造机","人脉资源王","天生感染力"]},
   D:{icon:"💎",title:"天生的操盘手",badge:"策略派",
+     scores:{action:75,create:55,social:50,strategy:95},
      desc:"你是那种让混乱变有序的人。给你一堆乱麻，你天然地就想找到线头在哪里。你的逻辑、规划能力和执行力让你成为任何团队都需要的「定海神针」。\n\n你不追求舞台上的聚光灯，你要的是「一切尽在掌握」的确定性。运营、管理、投资分析——越是复杂的系统，越能体现你的价值。\n\n你的核心竞争力：别人看到混乱，你看到结构。",
+     quote:"别人看到混乱，你看到结构。",
+     careers:["运营/项目管理","投资分析师/顾问","产品经理/技术管理"],
+     traps:["过度分析，错过最佳行动时机","对不确定性强的事情焦虑","不太擅长处理情绪化的沟通"],
      traits:["逻辑严密","执行力强","掌控全局","天生管理者"]}
 };
 
@@ -315,20 +341,50 @@ function selectOption(type){
 }
 
 function showResult(){
-  // 找出分数最高的类型
   var maxType = 'A', maxScore = 0;
   for(var k in scores){
     if(scores[k] > maxScore){maxScore = scores[k]; maxType = k;}
   }
   var r = results[maxType];
+  // 计算总分(0-100)
+  var total = Math.round((scores.A*r.scores.action + scores.B*r.scores.create + scores.C*r.scores.social + scores.D*r.scores.strategy) / 10);
+  total = Math.min(99, Math.max(60, total + 20));
   
   document.getElementById('page-quiz').style.display='none';
   document.getElementById('page-result').style.display='flex';
   document.getElementById('rIcon').textContent = r.icon;
   document.getElementById('rTitle').textContent = r.title;
   document.getElementById('rBadge').textContent = r.badge;
-  document.getElementById('rDesc').textContent = r.desc;
   
+  // 描述
+  var descHtml = r.desc.split('\n').map(function(p){return p.trim()?'<p style="margin-bottom:10px">'+p+'</p>':''}).join('');
+  if(r.quote) descHtml += '<blockquote style="border-left:3px solid var(--primary);background:rgba(46,125,50,.06);padding:12px 16px;margin:16px 0;border-radius:0 8px 8px 0;font-style:italic;color:var(--primary-d)">「'+r.quote+'」</blockquote>';
+  document.getElementById('rDesc').innerHTML = descHtml;
+  
+  // 天赋指数
+  var scoreHtml = '<div style="font-size:14px;font-weight:700;color:var(--primary-d);margin-bottom:12px">📊 职业天赋指数</div>';
+  scoreHtml += '<div style="font-size:56px;font-weight:900;color:var(--primary);margin-bottom:4px">'+total+'<span style="font-size:18px;color:var(--text-l)">/100</span></div>';
+  scoreHtml += '<div style="font-size:12px;color:var(--text-l);margin-bottom:20px">你的综合职业天赋水平</div>';
+  // 4维度评分条
+  var dims = [{k:'action',n:'行动力'},{k:'create',n:'创造力'},{k:'social',n:'社交力'},{k:'strategy',n:'策略力'}];
+  dims.forEach(function(d){
+    var v = r.scores[d.k];
+    var label = v>=85?'极强':v>=70?'中高':v>=55?'中等':'偏弱';
+    scoreHtml += '<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px"><span style="color:var(--text);font-weight:600">'+d.n+'</span><span style="color:var(--primary);font-weight:700">'+label+' '+v+'</span></div><div style="height:6px;background:rgba(46,125,50,.1);border-radius:3px;overflow:hidden"><div style="height:100%;width:'+v+'%;background:var(--primary);border-radius:3px"></div></div></div>';
+  });
+  document.getElementById('rScores').innerHTML = scoreHtml;
+  
+  // 最适合职业
+  var careerHtml = '<div style="font-size:14px;font-weight:700;color:var(--primary-d);margin-bottom:10px">🎯 最适合你的职业方向 Top'+r.careers.length+'</div>';
+  r.careers.forEach(function(c,i){careerHtml += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span style="width:24px;height:24px;border-radius:50%;background:var(--primary);color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;font-weight:700">'+(i+1)+'</span><span style="font-size:14px;color:var(--text)">'+c+'</span></div>'});
+  document.getElementById('rCareers').innerHTML = careerHtml;
+  
+  // 职场雷区
+  var trapHtml = '<div style="font-size:14px;font-weight:700;color:#e65100;margin-bottom:10px">⚠️ 你容易踩的职场雷区</div>';
+  r.traps.forEach(function(t){trapHtml += '<div style="font-size:13px;color:#bf360c;margin-bottom:6px;padding-left:16px;position:relative"><span style="position:absolute;left:0">•</span>'+t+'</div>'});
+  document.getElementById('rTraps').innerHTML = trapHtml;
+  
+  // 特质标签
   var traitsHtml = r.traits.map(function(t){return '<span class="r-trait">'+t+'</span>'}).join('');
   document.getElementById('rTraits').innerHTML = traitsHtml;
 }
