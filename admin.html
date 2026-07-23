@@ -99,6 +99,17 @@ body{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-se
 
 <div class="toast" id="toast"></div>
 
+<!-- 密码锁 -->
+<div id="loginOverlay" style="position:fixed;inset:0;background:#1f2937;z-index:9999;display:flex;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:12px;padding:32px;width:320px;text-align:center">
+    <div style="font-size:28px;margin-bottom:8px">🔐</div>
+    <div style="font-size:16px;font-weight:700;margin-bottom:16px">物料后台登录</div>
+    <input type="password" id="pwInput" placeholder="请输入密码" style="width:100%;padding:12px;border:2px solid #e5e7eb;border-radius:8px;font-size:15px;text-align:center;margin-bottom:12px;letter-spacing:4px" onkeydown="if(event.key==='Enter')checkPw()">
+    <button onclick="checkPw()" style="width:100%;padding:12px;background:#6366f1;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">进入</button>
+    <div id="pwError" style="color:#ef4444;font-size:12px;margin-top:8px;display:none">密码错误</div>
+  </div>
+</div>
+
 <script>
 // === 产品数据 ===
 var products = {
@@ -296,6 +307,20 @@ function showToast(msg){
   t.classList.add('show');
   setTimeout(function(){t.classList.remove('show')},2000);
 }
+
+// 密码验证
+var ADMIN_PW='xixizai2026';
+function checkPw(){
+  var input=document.getElementById('pwInput').value;
+  if(input===ADMIN_PW){
+    document.getElementById('loginOverlay').style.display='none';
+    sessionStorage.setItem('admin_ok','1');
+  }else{
+    document.getElementById('pwError').style.display='block';
+    document.getElementById('pwInput').value='';
+  }
+}
+if(sessionStorage.getItem('admin_ok')==='1'){document.getElementById('loginOverlay').style.display='none'}
 
 renderProduct();
 </script>
