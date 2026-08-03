@@ -113,6 +113,15 @@ body{
 </style>
 </head>
 <body>
+<script>
+// 域名路由：pua.xixizai.com → 跳转PUA测评
+if(location.hostname==='pua.xixizai.com'&&location.pathname==='/'){
+  location.replace('/pua.html');
+}
+if(location.hostname==='talent.xixizai.com'&&location.pathname==='/'){
+  location.replace('/talent.html');
+}
+</script>
 <div class="bg"></div>
 <div class="app">
 
