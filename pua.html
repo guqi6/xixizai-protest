@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>你的职场PUA免疫力有多强？ | 西西崽测评</title>
+<meta name="description" content="10道职场场景模拟，测出你的PUA免疫力指数">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg1:#fef3f2;--bg2:#fee4e2;--bg3:#fde0dd;
+  --primary:#b42318;--primary-d:#7a271a;--primary-l:#d92d20;
+  --accent:#f79009;--card-bg:rgba(255,255,255,.94);
+  --text:#7a271a;--text-l:#b5471f;--text-d:#000;
+  --border:#fda29b;--shadow:0 8px 32px rgba(180,35,24,.10);
+  --safe:#12b76a;--safe-bg:#ecfdf3;
+}
+body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;min-height:100vh;color:var(--text);overflow-x:hidden}
+.bg{position:fixed;inset:0;z-index:-1;background:linear-gradient(135deg,#fef3f2 0%,#fee4e2 40%,#fef0f0 100%)}
+.bg::before{content:"";position:absolute;inset:0;
+  background-image:linear-gradient(rgba(253,162,155,.12) 1px,transparent 1px),linear-gradient(90deg,rgba(253,162,155,.12) 1px,transparent 1px);
+  background-size:30px 30px}
+.app{max-width:500px;margin:0 auto;min-height:100vh;position:relative}
+
+/* 封面页 */
+.cover{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:40px 24px;text-align:center}
+.cover .tag{display:inline-flex;align-items:center;gap:8px;margin-bottom:32px}
+.cover .tag-label{border:1.5px solid var(--primary);border-radius:6px;padding:3px 14px;font-size:13px;color:var(--primary);background:#fff;font-weight:600}
+.cover .tag-num{font-size:13px;color:var(--text-l);font-weight:600}
+.cover .tag-line{flex:1;width:60px;height:1px;background:var(--border)}
+.cover h1{font-size:34px;font-weight:900;color:var(--primary-d);line-height:1.35;margin-bottom:16px;letter-spacing:-1px}
+.cover .subtags{display:flex;flex-direction:column;gap:6px;margin-bottom:48px}
+.cover .subtag{font-size:15px;color:var(--text-l)}
+.cover .quote-deco{position:absolute;right:24px;bottom:120px;font-size:64px;color:rgba(180,35,24,.08);font-weight:900;line-height:1}
+.cover .footer-en{position:absolute;bottom:24px;left:0;right:0;text-align:center;font-size:11px;color:rgba(180,35,24,.3);letter-spacing:3px}
+.btn-start{background:var(--primary);color:#fff;border:none;padding:16px 56px;border-radius:50px;font-size:17px;font-weight:700;cursor:pointer;transition:.3s;box-shadow:0 4px 20px rgba(180,35,24,.3)}
+.btn-start:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(180,35,24,.4);background:var(--primary-d)}
+.btn-start:active{transform:translateY(0)}
+
+/* 答题页 */
+.quiz{display:none;flex-direction:column;min-height:100vh;padding:32px 24px}
+.quiz .progress-wrap{margin-bottom:36px}
+.quiz .progress-bar{height:6px;background:rgba(255,255,255,.5);border-radius:3px;overflow:hidden}
+.quiz .progress-fill{height:100%;background:var(--primary);border-radius:3px;transition:width .2s ease}
+.quiz .progress-text{display:flex;justify-content:space-between;margin-top:8px;font-size:12px;color:var(--text-l)}
+.quiz .q-num{font-size:13px;color:var(--primary);font-weight:600;margin-bottom:8px}
+.quiz .q-title{font-size:23px;font-weight:800;color:var(--primary-d);line-height:1.45;margin-bottom:16px}
+.quiz .q-scenario{background:var(--card-bg);border-radius:12px;padding:14px 16px;font-size:14px;line-height:1.7;color:var(--text-l);margin-bottom:24px;box-shadow:var(--shadow);border-left:3px solid var(--primary)}
+.quiz .q-scenario::before{content:"💬 场景";display:block;font-size:11px;color:var(--primary);font-weight:700;margin-bottom:6px;letter-spacing:1px}
+.quiz .options{display:flex;flex-direction:column;gap:12px}
+.quiz .option{background:var(--card-bg);border:2px solid transparent;border-radius:16px;padding:16px 18px;font-size:15px;color:var(--text);cursor:pointer;transition:.25s;display:flex;align-items:center;gap:14px;box-shadow:0 2px 12px rgba(0,0,0,.04)}
+.quiz .option:hover{border-color:var(--primary);transform:translateX(4px);box-shadow:var(--shadow)}
+.quiz .option:active{transform:scale(.98)}
+.quiz .option .opt-label{width:34px;height:34px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;background:rgba(180,35,24,.1);color:var(--primary);transition:.25s}
+.quiz .option:hover .opt-label{background:var(--primary);color:#fff}
+.quiz .option .opt-text{flex:1;font-weight:500;line-height:1.4}
+
+/* 结果页 */
+.result{display:none;flex-direction:column;align-items:center;min-height:100vh;padding:40px 24px;text-align:center}
+.result .r-immunity-ring{width:140px;height:140px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;margin-bottom:16px;animation:bounceIn .6s ease;position:relative}
+.result .r-immunity-ring::before{content:"";position:absolute;inset:-6px;border-radius:50%;border:3px solid currentColor;opacity:.2}
+.result .r-immunity-num{font-size:42px;font-weight:900;line-height:1}
+.result .r-immunity-label{font-size:11px;margin-top:2px;letter-spacing:1px}
+.result .r-label{font-size:14px;color:var(--text-l);margin-bottom:8px}
+.result .r-title{font-size:32px;font-weight:900;margin-bottom:8px;line-height:1.3}
+.result .r-badge{display:inline-block;font-size:12px;padding:4px 16px;border-radius:14px;margin-bottom:24px;font-weight:600}
+.result .r-desc{background:var(--card-bg);border-radius:16px;padding:24px;font-size:15px;line-height:1.8;color:var(--text);margin-bottom:24px;box-shadow:var(--shadow);text-align:left}
+.result .r-traits{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:32px}
+.result .r-trait{font-size:13px;padding:6px 16px;border-radius:16px;font-weight:600}
+.result .r-actions{display:flex;flex-direction:column;gap:12px;width:100%;max-width:300px;margin-bottom:24px}
+.btn-share{background:var(--accent);color:#fff;border:none;padding:14px;border-radius:50px;font-size:15px;font-weight:700;cursor:pointer;transition:.3s;box-shadow:0 4px 16px rgba(247,144,9,.3)}
+.btn-share:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(247,144,9,.4)}
+.btn-retry{background:transparent;color:var(--primary);border:2px solid var(--primary);padding:12px;border-radius:50px;font-size:14px;font-weight:600;cursor:pointer;transition:.3s}
+.btn-retry:hover{background:var(--primary);color:#fff}
+.result .r-scores{background:var(--card-bg);border-radius:16px;padding:20px;margin-bottom:16px;box-shadow:var(--shadow);width:100%}
+.result .r-tips{background:var(--card-bg);border-radius:16px;padding:20px;margin-bottom:16px;box-shadow:var(--shadow);width:100%;text-align:left}
+
+/* 分享弹窗 */
+.share-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:999;align-items:center;justify-content:center;padding:20px}
+.share-modal.show{display:flex}
+.share-card{background:#fff;border-radius:20px;overflow:hidden;max-width:360px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.share-card-img{width:100%;display:block}
+.share-card-actions{padding:16px;display:flex;gap:12px}
+.share-card-actions button{flex:1;padding:10px;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer}
+.btn-dl{background:var(--primary);color:#fff}
+.btn-close{background:#f0f0f0;color:#333}
+
+@keyframes bounceIn{0%{transform:scale(0);opacity:0}60%{transform:scale(1.2)}100%{transform:scale(1);opacity:1}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.fadeIn{animation:fadeIn .2s ease}
+</style>
+</head>
+<body>
+<div class="bg"></div>
+<div class="app">
+
+<!-- 封面页 -->
+<div class="cover" id="page-cover">
+  <div class="tag">
+    <span class="tag-label">职场免疫</span>
+    <span class="tag-line"></span>
+    <span class="tag-num">NO.002</span>
+  </div>
+  <h1>你的职场PUA免疫力<br>有多强？</h1>
+  <div class="subtags">
+    <div class="subtag">🛡️ 10个真实职场场景</div>
+    <div class="subtag">⏱️ 两分钟出结果</div>
+    <div class="subtag">✨ 凭第一反应选</div>
+  </div>
+  <button class="btn-start" onclick="startQuiz()">开始测试 →</button>
+  <div class="quote-deco">"</div>
+  <div class="footer-en">WORKPLACE PUA IMMUNITY TEST</div>
+</div>
+
+<!-- 答题页 -->
+<div class="quiz" id="page-quiz">
+  <div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-text">
+      <span id="progressLabel">第 1 题</span>
+      <span id="progressCount">1 / 10</span>
+    </div>
+  </div>
+  <div class="q-num" id="qNum">问题 1</div>
+  <div class="q-title" id="qTitle">加载中...</div>
+  <div class="q-scenario" id="qScenario"></div>
+  <div class="options" id="qOptions"></div>
+</div>
+
+<!-- 结果页 -->
+<div class="result" id="page-result">
+  <div class="r-immunity-ring" id="rRing">
+    <div class="r-immunity-num" id="rImmunityNum">85</div>
+    <div class="r-immunity-label">免疫力指数</div>
+  </div>
+  <div class="r-label" id="rLabel">你的职场段位是</div>
+  <div class="r-title" id="rTitle">人间清醒</div>
+  <div class="r-badge" id="rBadge">反PUA战士</div>
+  <div class="r-desc" id="rDesc"></div>
+
+  <!-- 4维度评分 -->
+  <div class="r-scores" id="rScores"></div>
+
+  <!-- 自保建议 -->
+  <div class="r-tips" id="rTips"></div>
+
+  <div class="r-traits" id="rTraits"></div>
+  <div class="r-actions">
+    <button class="btn-share" onclick="showShare()">📸 生成分享图</button>
+    <button class="btn-retry" onclick="resetQuiz()">🔄 再测一次</button>
+  </div>
+  <div style="font-size:12px;color:rgba(122,39,26,.35);margin-top:16px">更多测试请访问 pua.xixizai.com</div>
+</div>
+
+</div>
+
+<!-- 分享弹窗 -->
+<div class="share-modal" id="shareModal">
+  <div class="share-card">
+    <canvas id="shareCanvas" class="share-card-img" width="360" height="540"></canvas>
+    <div class="share-card-actions">
+      <button class="btn-dl" onclick="downloadShare()">💾 保存图片</button>
+      <button class="btn-close" onclick="closeShare()">关闭</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// === 测试数据（全部原创） ===
+var questions = [
+  {q:"领导对你说：「你最近状态不太行啊，大家都看出来了」",
+   scenario:"季度谈话，领导皱着眉看着你。但你明明最近项目都按时交付了。",
+   opts:[
+     {t:"心里咯噔一下，开始反思自己是不是真的不行",type:"B"},
+     {t:"他说得对吗？拿出数据：这季度我完成了X个项目",type:"A"},
+     {t:"直接问：具体哪件事让您觉得不行？",type:"D"},
+     {t:"笑着说：好的领导我会注意的，然后该干嘛干嘛",type:"C"}
+   ]},
+  {q:"领导说：「我批评你是因为看重你，别人我都不说」",
+   scenario:"刚被骂完一顿，领导拍了拍你的肩膀。",
+   opts:[
+     {t:"感动，领导果然还是看重我的",type:"B"},
+     {t:"冷静——这是经典的打一巴掌给一颗枣",type:"A"},
+     {t:"心想：那您倒是说说具体哪里不好啊",type:"D"},
+     {t:"哦，谢谢领导。出了门该怎么干怎么干",type:"C"}
+   ]},
+  {q:"下班时间，领导在群里@你：「这个方案今晚改一下」",
+   scenario:"已经晚上8点，你已经收拾好东西准备走了。",
+   opts:[
+     {t:"叹口气，打开电脑继续改",type:"B"},
+     {t:"回复：好的领导，明天一早第一件事处理可以吗？",type:"A"},
+     {t:"回复：收到，然后假装没看到，明早再改",type:"C"},
+     {t:"回复：领导我现在在外面，具体需求说一下我记下来明早改",type:"D"}
+   ]},
+  {q:"领导在会上说：「咱们团队不需要不够主动的人」",
+   scenario:"整个会议室安静了，你感觉是在点你。",
+   opts:[
+     {t:"会后找领导单独聊：我哪里不够主动了？",type:"D"},
+     {t:"紧张地开始想：是不是该多主动加班了",type:"B"},
+     {t:"心想：又来了，用愧疚感驱动加班",type:"A"},
+     {t:"左耳进右耳出，开完会该摸鱼摸鱼",type:"C"}
+   ]},
+  {q:"领导说：「你看看小王，人家多拼，天天加班到10点」",
+   scenario:"小王确实加班多，但产出并不比你高。",
+   opts:[
+     {t:"羞愧，觉得应该向小王学习",type:"B"},
+     {t:"心想：加班和产出是两码事，领导这是偷换概念",type:"A"},
+     {t:"嘴上说是是是，心里翻白眼",type:"C"},
+     {t:"下次汇报时特意展示自己的产出数据",type:"D"}
+   ]},
+  {q:"领导说：「这个项目很重要，做好了给你涨薪」",
+   scenario:"已经听到第三次类似的承诺了，前两次都没兑现。",
+   opts:[
+     {t:"兴奋地加倍努力",type:"B"},
+     {t:"先问清楚：涨薪多少？什么时候？有什么标准？",type:"D"},
+     {t:"听听就好，画饼又不是第一次了",type:"A"},
+     {t:"活照干，但开始更新简历了",type:"C"}
+   ]},
+  {q:"同事悄悄问你：「你不觉得领导对我们太严了吗？」",
+   scenario:"茶水间，同事压低声音。",
+   opts:[
+     {t:"附和：是啊太过分了！然后该怎样怎样",type:"C"},
+     {t:"警觉——这是不是在试探我？笑而不语",type:"A"},
+     {t:"认真讨论：我们一起想想怎么办吧",type:"D"},
+     {t:"有点慌，怕被人听到，赶紧转移话题",type:"B"}
+   ]},
+  {q:"领导说：「你这个年纪/学历/背景，能有这份工作就不错了」",
+   scenario:"年度面谈，领导语气语重心长。",
+   opts:[
+     {t:"感到自卑，确实自己条件不算好",type:"B"},
+     {t:"微笑：我的能力匹配这个岗位，这一点公司录用我时就确认了",type:"D"},
+     {t:"当场就想摔门走人",type:"C"},
+     {t:"记住这句话，这是典型PUA话术，收集证据",type:"A"}
+   ]},
+  {q:"你犯了错，领导当着全组的面批评你",
+   scenario:"错误不大，但领导说了足足5分钟。",
+   opts:[
+     {t:"恨不得找个地缝钻进去，一直内耗",type:"B"},
+     {t:"会后找领导：我接受批评，但希望以后一对一沟通",type:"D"},
+     {t:"认错，但心里记住了：这种领导不值得跟",type:"C"},
+     {t:"分析：这是管理方式问题，不是我的能力问题",type:"A"}
+   ]},
+  {q:"你决定离职，领导说：「你出去也找不到更好的」",
+   scenario:"提了离职，领导突然变脸。",
+   opts:[
+     {t:"动摇了，万一真的找不到更好的呢",type:"B"},
+     {t:"笑了：谢谢领导关心，我对自己的选择有信心",type:"A"},
+     {t:"不争论，赶紧走人",type:"C"},
+     {t:"心想：如果我真的不行，你为什么要挽留我？逻辑不自洽",type:"D"}
+   ]}
+];
+
+// === 结果类型 ===
+var results = {
+  A:{icon:"🛡️",title:"人间清醒",badge:"反PUA战士",color:"#b42318",bg:"#fef3f2",
+     scores:{awareness:95,boundary:85,emotion:60,action:70},
+     immunity:88,
+     desc:"你是职场里的清醒者。领导画饼你听听就好，PUA话术你一眼就能看穿。你不是不努力，你只是不被人牵着鼻子走。\n\n你的核心武器是「逻辑清醒」——当别人被情绪裹挟时，你已经在分析「他说的到底成不成立」。\n\n但注意：清醒有时也是一种孤独。看透不代表要说破，学会在清醒和配合之间找到平衡。",
+     quote:"你不是不上进，你是不愿意被操纵着上进。",
+     tips:["继续用数据说话，不要被情绪带入","看清了不一定要说破，保存实力","遇到真正的好领导要珍惜","定期更新技能库，清醒的人最有底气"],
+     traits:["逻辑天花板","情绪稳定","一眼看穿","人间清醒"]},
+  B:{icon:"🫶",title:"暖心老实人",badge:"容易被拿捏",color:"#f79009",bg:"#fffbeb",
+     scores:{awareness:35,boundary:30,emotion:80,action:50},
+     immunity:32,
+     desc:"你是一个善良、认真、愿意反思的人。这些品质很珍贵，但在职场里，它们也让你容易成为被PUA的对象。\n\n你不是能力不行，你是太容易把别人的评价当真。领导皱个眉你就焦虑一周，同事说句阴阳怪气你能内耗三天。\n\n好消息是：你只需要学会一件事——把别人的评价和自己的价值分开。你的价值不是领导说了算的。",
+     quote:"你的善良值得被善待，但首先要学会善待自己。",
+     tips:["每次被批评后问自己：这是事实还是对方的主观判断？","学会说「我考虑一下」而不是立刻道歉","不要在情绪上头时做决定","记录自己的工作成果，用事实对抗PUA"],
+     traits:["善良认真","容易内耗","自我反思","需要边界"]},
+  C:{icon:"😎",title:"佛系生存者",badge:"糊弄学大师",color:"#12b76a",bg:"#ecfdf3",
+     scores:{awareness:65,boundary:90,emotion:70,action:40},
+     immunity:70,
+     desc:"你是职场生存大师。领导画饼？听着。PUA话术？过耳不过心。你深谙「不抵抗也不配合」的艺术。\n\n你的策略很有效——情绪上不受伤害，但长期来看，这种「混」的态度也会让你错失真正的成长机会。\n\n你的免疫力够用，但你的上限远不止于此。找到一个真正值得努力的方向，你会发现认真也挺好的。",
+     quote:"你不在乎，所以伤不到你。但人生值得你在乎点什么。",
+     tips:["佛系没问题，但别浪费自己的时间","找一件你真正想做好的事情","保持糊弄技能的同时，给自己留一条退路","可以不在乎工作，但要在乎自己的人生"],
+     traits:["情绪稳定","糊弄大师","不为所动","佛系生存"]},
+  D:{icon:"⚔️",title:"正面对抗型",badge:"刚正面选手",color:"#4a7cf7",bg:"#eff6ff",
+     scores:{awareness:80,boundary:95,emotion:45,action:90},
+     immunity:76,
+     desc:"你不会默默忍受任何不公平。面对PUA，你选择正面刚——找领导谈、要数据、问标准、讲道理。\n\n这种勇气很了不起，大多数打工人都不敢做。但要注意：刚正面不等于树敌。你的目标是不被PUA，不是赢过领导。\n\n学会在硬刚和柔软之间切换，你会成为职场里真正的强者。",
+     quote:"你的勇气是稀缺品，但聪明地勇敢比莽撞地勇敢更有力量。",
+     tips:["沟通前先冷静10分钟，避免情绪上头","用提问代替对抗：「您说的具体是指？」","记录每次沟通的内容和结果","学会选择战场——不是所有事都值得刚"],
+     traits:["勇往直前","不怕冲突","敢说真话","需要策略"]}
+};
+
+// === 测试逻辑 ===
+var currentQ = 0;
+var scores = {A:0,B:0,C:0,D:0};
+
+function startQuiz(){
+  currentQ=0;scores={A:0,B:0,C:0,D:0};
+  document.getElementById('page-cover').style.display='none';
+  document.getElementById('page-result').style.display='none';
+  document.getElementById('page-quiz').style.display='flex';
+  renderQuestion();
+}
+
+function renderQuestion(){
+  var q=questions[currentQ];var total=questions.length;
+  var progress=(currentQ/total)*100;
+  document.getElementById('progressFill').style.width=progress+'%';
+  document.getElementById('progressLabel').textContent='第 '+(currentQ+1)+' 题';
+  document.getElementById('progressCount').textContent=(currentQ+1)+' / '+total;
+  document.getElementById('qNum').textContent='问题 '+(currentQ+1);
+  document.getElementById('qTitle').textContent=q.q;
+  document.getElementById('qScenario').innerHTML=q.scenario||'';
+  var optsHtml='';var labels=['A','B','C','D'];
+  q.opts.forEach(function(o,i){
+    optsHtml+='<div class="option" onclick="selectOption(\''+o.type+'\')"><div class="opt-label">'+labels[i]+'</div><div class="opt-text">'+o.t+'</div></div>';
+  });
+  document.getElementById('qOptions').innerHTML=optsHtml;
+}
+
+function selectOption(type){
+  scores[type]++;
+  currentQ++;
+  if(currentQ>=questions.length){showResult();}
+  else{window.scrollTo(0,0);renderQuestion();}
+}
+
+function showResult(){
+  var maxType='A',maxScore=-1;
+  for(var k in scores){if(scores[k]>maxScore){maxScore=scores[k];maxType=k;}}
+  var r=results[maxType];
+  
+  document.getElementById('page-quiz').style.display='none';
+  document.getElementById('page-result').style.display='flex';
+  
+  // 免疫力圆环
+  var ring=document.getElementById('rRing');
+  ring.style.color=r.color;
+  ring.style.background=r.bg;
+  document.getElementById('rImmunityNum').textContent=r.immunity;
+  
+  document.getElementById('rTitle').textContent=r.title;
+  document.getElementById('rTitle').style.color=r.color;
+  var badge=document.getElementById('rBadge');
+  badge.textContent=r.badge;
+  badge.style.background=r.color;
+  badge.style.color='#fff';
+  
+  // 描述
+  var descHtml=r.desc.split('\n').map(function(p){return p.trim()?'<p style="margin-bottom:10px">'+p+'</p>':''}).join('');
+  if(r.quote)descHtml+='<blockquote style="border-left:3px solid '+r.color+';background:'+r.bg+';padding:12px 16px;margin:16px 0;border-radius:0 8px 8px 0;font-style:italic;color:'+r.color+'">「'+r.quote+'」</blockquote>';
+  document.getElementById('rDesc').innerHTML=descHtml;
+  
+  // 4维度评分
+  var dims=[{k:'awareness',n:'认知清醒度'},{k:'boundary',n:'边界感'},{k:'emotion',n:'情绪管理'},{k:'action',n:'行动力'}];
+  var scoresHtml='<div style="font-size:14px;font-weight:700;color:'+r.color+';margin-bottom:14px;text-align:left">📊 你的PUA防御力分析</div>';
+  dims.forEach(function(d){
+    var v=r.scores[d.k];
+    var label=v>=85?'极强':v>=70?'中高':v>=50?'中等':v>=35?'偏弱':'较弱';
+    var barColor=v>=70?'#12b76a':v>=50?'#f79009':'#d92d20';
+    scoresHtml+='<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px"><span style="color:#333;font-weight:600">'+d.n+'</span><span style="color:'+barColor+';font-weight:700">'+label+' '+v+'</span></div><div style="height:6px;background:#f0f0f0;border-radius:3px;overflow:hidden"><div style="height:100%;width:'+v+'%;background:'+barColor+';border-radius:3px"></div></div></div>';
+  });
+  document.getElementById('rScores').innerHTML=scoresHtml;
+  
+  // 建议
+  var tipsHtml='<div style="font-size:14px;font-weight:700;color:'+r.color+';margin-bottom:12px">💡 给你的自保建议</div>';
+  r.tips.forEach(function(t){tipsHtml+='<div style="font-size:13px;color:#555;margin-bottom:8px;padding-left:18px;position:relative"><span style="position:absolute;left:0;color:'+r.color+'">✓</span>'+t+'</div>'});
+  document.getElementById('rTips').innerHTML=tipsHtml;
+  
+  // 特质
+  var traitsHtml=r.traits.map(function(t){return '<span class="r-trait" style="background:'+r.bg+';color:'+r.color+'">'+t+'</span>'}).join('');
+  document.getElementById('rTraits').innerHTML=traitsHtml;
+}
+
+function resetQuiz(){
+  document.getElementById('page-result').style.display='none';
+  document.getElementById('page-cover').style.display='flex';
+}
+
+// === 分享图 ===
+function showShare(){document.getElementById('shareModal').classList.add('show');drawShareCard();}
+function closeShare(){document.getElementById('shareModal').classList.remove('show');}
+
+function drawShareCard(){
+  var canvas=document.getElementById('shareCanvas');var ctx=canvas.getContext('2d');
+  var W=360,H=540;
+  var grad=ctx.createLinearGradient(0,0,W,H);
+  grad.addColorStop(0,'#fef3f2');grad.addColorStop(0.5,'#fee4e2');grad.addColorStop(1,'#fef0f0');
+  ctx.fillStyle=grad;ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle='rgba(253,162,155,0.12)';ctx.lineWidth=1;
+  for(var x=0;x<W;x+=30){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(var y=0;y<H;y+=30){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+  
+  // 免疫力数字
+  var num=document.getElementById('rImmunityNum').textContent;
+  ctx.fillStyle=document.getElementById('rTitle').style.color||'#b42318';
+  ctx.font='bold 56px sans-serif';ctx.textAlign='center';
+  ctx.fillText(num,W/2,130);
+  ctx.font='12px sans-serif';ctx.fillStyle='#999';
+  ctx.fillText('PUA免疫力指数',W/2,155);
+  
+  // 标题
+  ctx.fillStyle=document.getElementById('rTitle').style.color||'#b42318';
+  ctx.font='bold 28px sans-serif';
+  ctx.fillText(document.getElementById('rTitle').textContent,W/2,210);
+  
+  // badge
+  ctx.font='bold 12px sans-serif';ctx.fillStyle='#666';
+  ctx.fillText(document.getElementById('rBadge').textContent,W/2,240);
+  
+  // traits
+  ctx.font='13px sans-serif';ctx.fillStyle='#333';
+  var traits=document.getElementById('rTraits').innerText.replace(/\n/g,' · ');
+  ctx.fillText(traits,W/2,290);
+  
+  // 二维码占位
+  ctx.fillStyle='#fff';
+  ctx.beginPath();ctx.roundRect?(ctx.roundRect(W/2-40,400,80,80,12)):(ctx.rect(W/2-40,400,80,80));
+  ctx.fill();
+  ctx.fillStyle='#b42318';ctx.font='11px sans-serif';
+  ctx.fillText('扫码来测',W/2,430);
+  ctx.font='bold 22px sans-serif';ctx.fillText('🐾',W/2,460);
+  
+  ctx.fillStyle='rgba(122,39,26,.3)';ctx.font='10px sans-serif';
+  ctx.fillText('pua.xixizai.com',W/2,520);
+  
+  ctx.textAlign='left';
+}
+
+function downloadShare(){
+  var link=document.createElement('a');
+  link.download='我的职场PUA免疫力测试.png';
+  link.href=document.getElementById('shareCanvas').toDataURL();
+  link.click();
+}
+</script>
+</body>
+</html>
