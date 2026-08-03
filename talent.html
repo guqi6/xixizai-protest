@@ -571,21 +571,22 @@ function selectOption(idx){
 function determineType(){
   var sorted = Object.keys(dimConfig).sort(function(a,b){return dimScores[b]-dimScores[a];});
   var top1 = sorted[0], top2 = sorted[1];
-  var combo = top1 + '+' + top2;
-  var map = {
-    'create+decide':'breaker','decide+create':'breaker',
-    'decide+insight':'sniper','insight+decide':'sniper',
-    'social+resilience':'resonator','resilience+social':'resonator',
-    'decide+social':'flash','social+decide':'flash',
-    'insight+social':'navigator','social+insight':'navigator',
-    'insight+resilience':'cultivator','resilience+insight':'cultivator',
-    'create+social':'butterfly','social+create':'butterfly',
-    'resilience+social':'guardian','resilience+decide':'guardian','resilience+create':'guardian','resilience+insight':'guardian'
+  var set = top1 < top2 ? top1+'+'+top2 : top2+'+'+top1;
+  var pairMap = {
+    'create+decide':'breaker',
+    'decide+insight':'sniper',
+    'resilience+social':'resonator',
+    'decide+social':'flash',
+    'insight+social':'navigator',
+    'insight+resilience':'cultivator',
+    'create+social':'butterfly',
+    'create+insight':'navigator',
+    'create+resilience':'guardian',
+    'decide+resilience':'guardian'
   };
-  // 优先匹配精确组合
-  if(map[combo]) return map[combo];
-  // 兜底
-  if(top1==='create'||top1==='decide') return 'breaker';
+  if(pairMap[set]) return pairMap[set];
+  if(top1==='create') return 'breaker';
+  if(top1==='decide') return 'flash';
   if(top1==='social') return 'resonator';
   if(top1==='insight') return 'navigator';
   return 'guardian';
