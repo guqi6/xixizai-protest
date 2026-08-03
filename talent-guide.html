@@ -132,41 +132,31 @@ body{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-se
 
 <!-- Tabs -->
 <div class="tabs" id="tabBar">
-<div class="tab active" onclick="switchTab('xray',this)"><span class="tab-icon">🔬</span>天赋X光片</div>
-<div class="tab" onclick="switchTab('career',this)"><span class="tab-icon">🧭</span>职业路径</div>
-<div class="tab" onclick="switchTab('blind',this)"><span class="tab-icon">⚠️</span>成长盲区</div>
-<div class="tab" onclick="switchTab('match',this)"><span class="tab-icon">🤝</span>天赋搭档</div>
+<div class="tab active" onclick="switchTab('xray',this)"><span class="tab-icon">🚀</span>天赋激活</div>
+<div class="tab" onclick="switchTab('career',this)"><span class="tab-icon">🗺️</span>职业路线</div>
+<div class="tab" onclick="switchTab('blind',this)"><span class="tab-icon">🔍</span>陷阱自查</div>
+<div class="tab" onclick="switchTab('match',this)"><span class="tab-icon">👥</span>应用指南</div>
 <div class="tab" onclick="switchTab('action',this)"><span class="tab-icon">📅</span>7天行动</div>
 </div>
 
-<!-- Tab 1: 天赋X光片 -->
+<!-- Tab 1: 天赋激活指南 -->
 <div class="section active" id="sec-xray">
 <div class="card">
-<div class="card-title">🔬 5大天赋维度详解</div>
-<div id="dimBars"></div>
-</div>
-<div class="card">
-<div class="card-title">💎 核心优势</div>
-<div id="strengthsList"></div>
+<div class="card-title">🚀 天赋激活指南</div>
+<p style="font-size:13px;color:var(--tl);margin-bottom:14px;line-height:1.6">同样一份天赋，在不同人生阶段用法完全不同。这是为你量身定制的天赋使用时间轴——从现在到未来，每一步该做什么。</p>
+<div id="activationList"></div>
 </div>
 <div class="quote-box" id="quoteBox">
 <div class="quote-text" id="quoteText"></div>
 </div>
-<div class="card">
-<div class="card-title">🎭 特质标签</div>
-<div class="famous-tags" id="traitTags"></div>
-</div>
 </div>
 
-<!-- Tab 2: 职业发展路径 -->
+<!-- Tab 2: 职业发展路线图 -->
 <div class="section" id="sec-career">
 <div class="card">
-<div class="card-title">✅ 最适合你的职业方向</div>
-<div id="careerList"></div>
-</div>
-<div class="card">
-<div class="card-title">⚠️ 最不适合你的职业</div>
-<div id="avoidList"></div>
+<div class="card-title">🗺️ 职业发展路线图</div>
+<p style="font-size:13px;color:var(--tl);margin-bottom:14px;line-height:1.6">不是告诉你适合做什么，而是告诉你从现在到目标的具体路径。每一步都有明确的时间节点和行动指引。</p>
+<div id="roadmapList"></div>
 </div>
 <div class="card">
 <div class="card-title">🌟 你的高光时刻</div>
@@ -176,27 +166,25 @@ body{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-se
 </div>
 </div>
 
-<!-- Tab 3: 成长盲区 -->
+<!-- Tab 3: 天赋陷阱自查清单 -->
 <div class="section" id="sec-blind">
 <div class="card">
-<div class="card-title">⚠️ 你最容易踩的5个盲区</div>
-<div id="trapsList"></div>
-</div>
-<div class="card">
-<div class="card-title">🚀 突破瓶颈的5条建议</div>
-<div id="growthList"></div>
+<div class="card-title">🔍 天赋陷阱自查清单</div>
+<p style="font-size:13px;color:var(--tl);margin-bottom:14px;line-height:1.6">10个问题，帮你快速检查自己是否正在踩坑。诚实回答，每个问题花10秒想一想。</p>
+<div id="selfcheckList"></div>
 </div>
 </div>
 
-<!-- Tab 4: 天赋搭档 -->
+<!-- Tab 4: 团队组建指南 -->
 <div class="section" id="sec-match">
 <div class="card">
-<div class="card-title">🤝 天赋搭档指南</div>
-<div class="match-grid" id="matchGrid"></div>
+<div class="card-title">🤝 天赋应用指南</div>
+<p style="font-size:13px;color:var(--tl);margin-bottom:14px;line-height:1.6">无论你是管理者还是打工人，你的天赋都需要跟互补的人配合才能最大化。以下是针对你的型格的具体建议。</p>
+<div id="teamList"></div>
 </div>
 <div class="card">
-<div class="card-title">🌟 同型格代表人物</div>
-<div class="famous-tags" id="famousTags"></div>
+<div class="card-title">🤝 天赋搭档</div>
+<div class="match-grid" id="matchGrid"></div>
 </div>
 </div>
 
@@ -204,7 +192,7 @@ body{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-se
 <div class="section" id="sec-action">
 <div class="card">
 <div class="card-title">📅 7天微行动计划</div>
-<p style="font-size:13px;color:var(--tl);margin-bottom:14px">每天做一个小动作，7天后你会对自己的天赋有全新的认识。点击圆框标记完成 ✓</p>
+<p style="font-size:13px;color:var(--tl);margin-bottom:14px;line-height:1.8">这份计划根据你的天赋型格定制，不是那种早起冥想读好书的正确废话。<br/>而是7个精准的小动作，每天5分钟，帮你重新激活可能已经休眠的天赋信号。<br/>做完第7天，你会清楚地知道：你的天赋该往哪个方向使劲。<br/>📌 进度自动保存，不用一口气做完。</p>
 <div id="actionList"></div>
 </div>
 </div>
@@ -505,24 +493,20 @@ document.getElementById('heroRarity').textContent=t.rarity;
 // Update selector
 document.getElementById('typeSelect').value=type;
 
-// Tab 1: X-Ray
-renderDimBars(t);
-renderStrengths(t);
+// Tab 1: Activation guide
+renderActivation(t);
 document.getElementById('quoteText').textContent=t.quote;
-renderTraits(t);
 
-// Tab 2: Career
-renderCareers(t);
-renderAvoidCareers(t);
+// Tab 2: Roadmap
+renderRoadmap(t);
 document.getElementById('sceneText').textContent=t.scene;
 
-// Tab 3: Blind spots
-renderTraps(t);
-renderGrowth(t);
+// Tab 3: Self-check
+renderSelfcheck(t,type);
 
-// Tab 4: Match
+// Tab 4: Team guide + Match
+renderTeam(t);
 renderMatch(t);
-renderFamous(t);
 
 // Tab 5: Action plan
 renderActions(t,type);
