@@ -593,8 +593,23 @@ function determineType(){
 }
 
 function showResult(){
+  try {
   var typeKey = determineType();
+  console.log('determineType result:', typeKey, 'dimScores:', JSON.stringify(dimScores));
+  if(!typeKey || !types[typeKey]){
+    console.error('型格判定失败! typeKey=', typeKey);
+    typeKey = 'breaker';
+  }
   var t = types[typeKey];
+  if(!t){
+    console.error('型格数据不存在!', typeKey);
+    document.getElementById('page-quiz').style.display='none';
+    document.getElementById('page-result').style.display='flex';
+    document.getElementById('rIcon').textContent = '🔮';
+    document.getElementById('rTitle').textContent = '测试出错';
+    document.getElementById('rDesc').innerHTML = '<p>抱歉，测试结果加载失败。请刷新页面重试。</p>';
+    return;
+  }
   document.getElementById('page-quiz').style.display='none';
   document.getElementById('page-result').style.display='flex';
   document.getElementById('rIcon').textContent = t.icon;
@@ -686,6 +701,14 @@ function showResult(){
       setTimeout(function(){el.style.width = w;},50);
     });
   },100);
+  } catch(e){
+    console.error('showResult错误:', e.message, e.stack);
+    document.getElementById('page-quiz').style.display='none';
+    document.getElementById('page-result').style.display='flex';
+    document.getElementById('rIcon').textContent='🔮';
+    document.getElementById('rTitle').textContent='测试出错';
+    document.getElementById('rDesc').innerHTML='<p>抱歉，结果加载失败:'+e.message+'</p><p>请刷新页面重试，或换个选择再测一次</p>';
+  }
 }
 
 function resetQuiz(){
