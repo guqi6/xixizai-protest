@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>天赋型格测评 NO.003 — 物料包</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--primary:#7c3aed;--primary-d:#5b21b6;--primary-l:#8b5cf6;--bg:#faf5ff;--card:#fff;--text:#1f2937;--border:#e9d5ff;--shadow:0 4px 20px rgba(124,58,237,.08)}
+body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);line-height:1.6;padding:16px;padding-bottom:60px}
+.header{text-align:center;padding:24px 0 20px;border-bottom:2px solid var(--border);margin-bottom:24px}
+.header h1{font-size:20px;color:var(--primary-d);font-weight:800;margin-bottom:6px}
+.header p{font-size:13px;color:var(--primary-l)}
+.section{background:var(--card);border-radius:12px;padding:20px;margin-bottom:16px;box-shadow:var(--shadow);border:1px solid var(--border)}
+.section-title{font-size:16px;font-weight:700;color:var(--primary-d);margin-bottom:14px;display:flex;align-items:center;gap:8px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.section-title .num{background:var(--primary);color:#fff;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.title-list{display:flex;flex-direction:column;gap:10px}
+.title-item{background:#f9f5ff;border-radius:8px;padding:14px 16px;border-left:3px solid var(--primary);cursor:pointer;transition:.2s;position:relative}
+.title-item:hover,.title-item:active{background:#f3e8ff}
+.title-item .t-num{font-size:11px;color:var(--primary-l);font-weight:600;margin-bottom:4px}
+.title-item .t-text{font-size:15px;color:var(--text);font-weight:600;line-height:1.5}
+.title-item .copy-hint{font-size:11px;color:var(--primary);margin-top:6px;opacity:0;transition:.2s}
+.title-item:active .copy-hint{opacity:1}
+.info-block{margin-bottom:14px}
+.info-label{font-size:13px;font-weight:700;color:var(--primary);margin-bottom:6px}
+.info-text{font-size:14px;color:var(--text);line-height:1.7}
+.info-list{list-style:none;padding:0}
+.info-list li{font-size:14px;color:var(--text);padding:6px 0 6px 20px;position:relative;line-height:1.6}
+.info-list li::before{content:'✓';position:absolute;left:0;color:var(--primary);font-weight:700}
+.feature-list li::before{content:'★'}
+.tag-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.tag{background:rgba(124,58,237,.1);color:var(--primary-d);font-size:12px;padding:4px 12px;border-radius:12px;font-weight:600}
+.copy-btn{background:var(--primary);color:#fff;border:none;padding:8px 20px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;margin-top:10px}
+.copy-btn:active{background:var(--primary-d)}
+.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.8);color:#fff;padding:10px 24px;border-radius:20px;font-size:14px;z-index:999;opacity:0;transition:.3s;pointer-events:none}
+.toast.show{opacity:1}
+.rules{background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:14px;margin-top:8px}
+.rules .info-label{color:#ea580c}
+.rules .info-list li::before{content:'⚠️';font-size:12px}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🎁 天赋型格测评 NO.003</h1>
+  <p>小红书商品物料包 · 点击文案可复制</p>
+</div>
+
+<div class="section">
+  <div class="section-title"><span class="num">1</span>商品标题（点击复制）</div>
+  <div class="title-list" id="titleList"></div>
+</div>
+
+<div class="section">
+  <div class="section-title"><span class="num">2</span>商品详情正文</div>
+  <div id="detailContent" style="font-size:14px;line-height:1.8;color:var(--text)">
+    <div class="info-block">
+      <div class="info-label">📌 测评简介</div>
+      <div class="info-text">20道精心设计的场景题，5分钟测出你的核心天赋型格。<br><br>基于创造力、决策力、社交力、韧性、洞察力5大维度，将你的天赋精准归入8种型格之一。每种型格都有独特的职业方向、成长建议和搭配指南。</div>
+    </div>
+    <div class="info-block">
+      <div class="info-label">👥 适合人群</div>
+      <ul class="info-list">
+        <li>经常觉得自己"跟别人不一样"的人</li>
+        <li>不知道自己到底擅长什么的人</li>
+        <li>在职业选择上犹豫不决的人</li>
+        <li>想要更深入了解自己的人</li>
+        <li>对MBTI/盖洛普等测评感兴趣的人</li>
+      </ul>
+    </div>
+    <div class="info-block">
+      <div class="info-label">🎁 你将获得</div>
+      <ul class="info-list">
+        <li>🔍 5大天赋维度评分 + 每个维度的深度解读</li>
+        <li>🎯 8种天赋型格精准匹配，找到你的专属型格</li>
+        <li>💼 6个最适合你的职业方向（附详细解释为什么适合）</li>
+        <li>🚫 4个最不适合你的职业方向（告诉你为什么痛苦）</li>
+        <li>⚠️ 你最容易踩的5个盲区</li>
+        <li>🌱 5条突破瓶颈的具体建议</li>
+        <li>✨ 你的高光时刻场景描写</li>
+        <li>🤝 跟其他型格的最佳搭档与最大冲突</li>
+        <li>🌟 同型格代表人物</li>
+      </ul>
+    </div>
+    <div class="info-block">
+      <div class="info-label">✨ 测评特色</div>
+      <ul class="info-list feature-list">
+        <li>比15题测评更精准：20题×4选项，区分度更高</li>
+        <li>不是只给你一个标签：每个结论都有深度解释</li>
+        <li>不只告诉你"你是谁"：还告诉你该避开什么、怎么变更好</li>
+        <li>全原创题目，不照搬任何现有测评</li>
+      </ul>
+    </div>
+    <div class="info-block">
+      <div class="info-label">📊 技术参数</div>
+      <div class="tag-row">
+        <span class="tag">20道题</span>
+        <span class="tag">约5分钟</span>
+        <span class="tag">5大维度</span>
+        <span class="tag">8种型格</span>
+      </div>
+    </div>
+  </div>
+  <button class="copy-btn" onclick="copyText('detailContent')">📋 复制全部详情</button>
+</div>
+
+<div class="section">
+  <div class="section-title"><span class="num">3</span>注意事项</div>
+  <div class="rules">
+    <ul class="info-list">
+      <li>测试链接不放入商品详情</li>
+      <li>不写痛点场景（容易让用户出戏）</li>
+      <li>结果页评分项和详情承诺一致（5维度+8型格）</li>
+      <li>题目全部原创，不照搬竞品</li>
+    </ul>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title"><span class="num">4</span>8种型格速览</div>
+  <div id="typesOverview" style="display:flex;flex-direction:column;gap:8px"></div>
+</div>
+
+<div style="text-align:center;padding:20px 0;color:var(--primary-l);font-size:12px">
+  西西崽测评 · protest.xixizai.com
+</div>
+
+<div class="toast" id="toast">已复制 ✓</div>
+
+<script>
+var titles = [
+  "测出你的隐藏天赋型格，比MBTI更准更深入",
+  "你为什么跟别人不一样？20题测出你的天赋密码",
+  "每个人都有天赋，但96%的人用错了方向",
+  "不是你不够好，是你没找到属于自己的赛道",
+  "5分钟深度自测：你的核心天赋到底是什么？"
+];
+
+var typesData = [
+  {icon:"🔥",name:"破局者",badge:"从0到1的先锋",desc:"想到就做，不被框架束缚的天生开拓者"},
+  {icon:"🎯",name:"精算师",badge:"精准狙击手",desc:"谋定而后动，靠数据和逻辑精准命中"},
+  {icon:"🌊",name:"共振者",badge:"人际粘合剂",desc:"天生的人际磁铁，高共情高社交"},
+  {icon:"⚡",name:"闪电手",badge:"唯快不破",desc:"执行力爆表，想到就做做完就算"},
+  {icon:"🧭",name:"领航员",badge:"战略操盘手",desc:"站在高处看全局，天然的战略眼光"},
+  {icon:"🏔️",name:"深耕者",badge:"长期主义者",desc:"认准一件事做到极致，十年磨一剑"},
+  {icon:"🦋",name:"灵动者",badge:"创意连接器",desc:"跨界思维王者，创意无限连接万物"},
+  {icon:"🛡️",name:"守护者",badge:"值得信赖的基石",desc:"稳如磐石，团队最可靠的安全网"}
+];
+
+var titleList = document.getElementById('titleList');
+titles.forEach(function(t,i){
+  var div = document.createElement('div');
+  div.className = 'title-item';
+  div.innerHTML = '<div class="t-num">标题 '+(i+1)+'</div><div class="t-text">'+t+'</div><div class="copy-hint">点击复制</div>';
+  div.onclick = function(){
+    navigator.clipboard.writeText(t);
+    showToast();
+  };
+  titleList.appendChild(div);
+});
+
+var typesDiv = document.getElementById('typesOverview');
+typesData.forEach(function(t){
+  var div = document.createElement('div');
+  div.style.cssText = 'background:#f9f5ff;border-radius:8px;padding:12px 14px;display:flex;align-items:center;gap:12px';
+  div.innerHTML = '<span style="font-size:24px">'+t.icon+'</span><div><div style="font-weight:700;font-size:14px;color:#5b21b6">'+t.name+' · '+t.badge+'</div><div style="font-size:12px;color:#666;margin-top:2px">'+t.desc+'</div></div>';
+  typesDiv.appendChild(div);
+});
+
+function copyText(id){
+  var el = document.getElementById(id);
+  var text = el.innerText;
+  navigator.clipboard.writeText(text);
+  showToast();
+}
+
+function showToast(){
+  var toast = document.getElementById('toast');
+  toast.classList.add('show');
+  setTimeout(function(){toast.classList.remove('show');},1500);
+}
+</script>
+</body>
+</html>
