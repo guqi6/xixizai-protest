@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>你的天赋型格是什么？ | 西西崽测评</title>
+<meta name="description" content="三分钟测出你的核心天赋型格">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg1:#f3e8ff;--bg2:#e9d5ff;--bg3:#ddd6fe;
+  --primary:#7c3aed;--primary-d:#5b21b6;--primary-l:#8b5cf6;
+  --accent:#f59e0b;--card-bg:rgba(255,255,255,.92);
+  --text:#5b21b6;--text-l:#7c3aed;--text-d:#1f2937;
+  --border:#c4b5fd;--shadow:0 8px 32px rgba(124,58,237,.12);
+  --danger:#dc2626;--warning:#ea580c;
+}
+body{
+  font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+  min-height:100vh;color:var(--text-d);overflow-x:hidden;
+}
+.bg{position:fixed;inset:0;z-index:-1;
+  background:linear-gradient(135deg,#f5f3ff 0%,#ede9fe 40%,#ddd6fe 100%);
+}
+.bg::before{content:"";position:absolute;inset:0;
+  background-image:
+    linear-gradient(rgba(139,92,246,.12) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(139,92,246,.12) 1px,transparent 1px);
+  background-size:30px 30px;
+}
+.app{max-width:500px;margin:0 auto;min-height:100vh;position:relative}
+
+/* === 封面页 === */
+.cover{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:40px 24px;text-align:center}
+.cover .tag{display:inline-flex;align-items:center;gap:8px;margin-bottom:32px}
+.cover .tag-label{border:1.5px solid var(--primary);border-radius:6px;padding:3px 14px;font-size:13px;color:var(--primary);background:#fff;font-weight:600}
+.cover .tag-num{font-size:13px;color:var(--text-l);font-weight:600}
+.cover .tag-line{flex:1;width:60px;height:1px;background:var(--border)}
+.cover h1{font-size:38px;font-weight:900;color:var(--primary-d);line-height:1.3;margin-bottom:20px;letter-spacing:-1px}
+.cover .subtags{display:flex;flex-direction:column;gap:6px;margin-bottom:48px}
+.cover .subtag{font-size:15px;color:var(--text-l)}
+.cover .quote-deco{position:absolute;right:24px;bottom:120px;font-size:64px;color:rgba(124,58,237,.08);font-weight:900;line-height:1}
+.cover .footer-en{position:absolute;bottom:24px;left:0;right:0;text-align:center;font-size:11px;color:rgba(124,58,237,.35);letter-spacing:3px}
+.btn-start{
+  background:var(--primary);color:#fff;border:none;
+  padding:16px 56px;border-radius:50px;font-size:17px;font-weight:700;
+  cursor:pointer;transition:.3s;box-shadow:0 4px 20px rgba(124,58,237,.3);
+}
+.btn-start:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(124,58,237,.4);background:var(--primary-d)}
+.btn-start:active{transform:translateY(0)}
+
+/* === 答题页 === */
+.quiz{display:none;flex-direction:column;min-height:100vh;padding:32px 24px}
+.quiz .progress-wrap{margin-bottom:40px}
+.quiz .progress-bar{height:6px;background:rgba(255,255,255,.5);border-radius:3px;overflow:hidden}
+.quiz .progress-fill{height:100%;background:linear-gradient(90deg,var(--primary),var(--primary-l));border-radius:3px;transition:width .3s ease}
+.quiz .progress-text{display:flex;justify-content:space-between;margin-top:8px;font-size:12px;color:var(--text-l)}
+.quiz .q-num{font-size:13px;color:var(--primary);font-weight:600;margin-bottom:8px}
+.quiz .q-title{font-size:24px;font-weight:800;color:var(--primary-d);line-height:1.4;margin-bottom:32px}
+.quiz .options{display:flex;flex-direction:column;gap:12px}
+.quiz .option{
+  background:var(--card-bg);border:2px solid transparent;
+  border-radius:16px;padding:20px;font-size:16px;color:var(--text-d);
+  cursor:pointer;transition:.25s;display:flex;align-items:center;gap:14px;
+  box-shadow:0 2px 12px rgba(0,0,0,.04);position:relative;overflow:hidden;
+}
+.quiz .option:hover{border-color:var(--primary);transform:translateX(4px);box-shadow:var(--shadow)}
+.quiz .option:active{transform:scale(.98)}
+.quiz .option .opt-label{
+  width:36px;height:36px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:15px;font-weight:700;background:rgba(124,58,237,.1);color:var(--primary);
+  transition:.25s;
+}
+.quiz .option:hover .opt-label{background:var(--primary);color:#fff}
+.quiz .option .opt-text{flex:1;font-weight:500;line-height:1.5}
+/* 选中动画 */
+.quiz .option.selected{border-color:var(--primary);background:rgba(124,58,237,.05)}
+.quiz .option.selected .opt-label{background:var(--primary);color:#fff}
+
+/* 维度标签 */
+.dim-label{font-size:12px;color:var(--text-l);margin-bottom:6px;display:flex;align-items:center;gap:6px}
+
+/* === 结果页 === */
+.result{display:none;flex-direction:column;align-items:center;min-height:100vh;padding:40px 24px;text-align:center}
+.result .r-icon{font-size:72px;margin-bottom:16px;animation:bounceIn .6s ease}
+.result .r-label{font-size:14px;color:var(--text-l);margin-bottom:8px}
+.result .r-title{font-size:36px;font-weight:900;color:var(--primary-d);margin-bottom:8px;line-height:1.3}
+.result .r-badge{display:inline-block;background:var(--primary);color:#fff;font-size:13px;padding:5px 18px;border-radius:14px;margin-bottom:24px;font-weight:600}
+.result .r-card{
+  background:var(--card-bg);border-radius:16px;padding:24px;width:100%;
+  font-size:15px;line-height:1.8;color:var(--text-d);margin-bottom:16px;
+  box-shadow:var(--shadow);text-align:left;
+}
+.result .r-card-title{font-size:14px;font-weight:700;color:var(--primary-d);margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.result .r-traits{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:24px}
+.result .r-trait{background:rgba(124,58,237,.1);color:var(--primary-d);font-size:13px;padding:6px 16px;border-radius:16px;font-weight:600}
+.result .r-actions{display:flex;flex-direction:column;gap:12px;width:100%;max-width:300px;margin-bottom:24px}
+.btn-share{background:var(--accent);color:#fff;border:none;padding:14px;border-radius:50px;font-size:15px;font-weight:700;cursor:pointer;transition:.3s;box-shadow:0 4px 16px rgba(245,158,11,.3)}
+.btn-share:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(245,158,11,.4)}
+.btn-retry{background:transparent;color:var(--primary);border:2px solid var(--primary);padding:12px;border-radius:50px;font-size:14px;font-weight:600;cursor:pointer;transition:.3s}
+.btn-retry:hover{background:var(--primary);color:#fff}
+
+/* 维度评分条 */
+.score-row{margin-bottom:10px}
+.score-row-head{display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px}
+.score-row-name{color:var(--text-d);font-weight:600}
+.score-row-val{color:var(--primary);font-weight:700}
+.score-bar{height:6px;background:rgba(124,58,237,.1);border-radius:3px;overflow:hidden}
+.score-bar-fill{height:100%;border-radius:3px;transition:width 1s ease}
+
+/* 分享图弹窗 */
+.share-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:999;align-items:center;justify-content:center;padding:20px}
+.share-modal.show{display:flex}
+.share-card{background:#fff;border-radius:20px;overflow:hidden;max-width:360px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.share-card-img{width:100%;display:block}
+.share-card-actions{padding:16px;display:flex;gap:12px}
+.share-card-actions button{flex:1;padding:10px;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer}
+.btn-dl{background:var(--primary);color:#fff}
+.btn-close{background:#f0f0f0;color:#333}
+
+@keyframes bounceIn{0%{transform:scale(0);opacity:0}60%{transform:scale(1.2)}100%{transform:scale(1);opacity:1}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.fadeIn{animation:fadeIn .3s ease}
+</style>
+</head>
+<body>
+<div class="bg"></div>
+<div class="app">
+
+<!-- 封面页 -->
+<div class="cover" id="page-cover">
+  <div class="tag">
+    <span class="tag-label">天赋型格</span>
+    <span class="tag-line"></span>
+    <span class="tag-num">NO.003</span>
+  </div>
+  <h1>你的天赋型格是什么？</h1>
+  <div class="subtags">
+    <div class="subtag">⏱️ 三分钟自测</div>
+    <div class="subtag">📝 15道场景题</div>
+    <div class="subtag">✨ 8种天赋型格</div>
+    <div class="subtag">🎯 5维度精准分析</div>
+  </div>
+  <button class="btn-start" onclick="startQuiz()">开始测试 →</button>
+  <div class="quote-deco">✦</div>
+  <div class="footer-en">TALENT TYPE TEST</div>
+</div>
+
+<!-- 答题页 -->
+<div class="quiz" id="page-quiz">
+  <div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-text">
+      <span id="progressLabel">第 1 题</span>
+      <span id="progressCount">1 / 15</span>
+    </div>
+  </div>
+  <div class="dim-label" id="dimLabel">✨ 创造力</div>
+  <div class="q-num" id="qNum">问题 1</div>
+  <div class="q-title" id="qTitle">加载中...</div>
+  <div class="options" id="qOptions"></div>
+</div>
+
+<!-- 结果页 -->
+<div class="result" id="page-result">
+  <div class="r-icon" id="rIcon">🔥</div>
+  <div class="r-label">你的天赋型格是</div>
+  <div class="r-title" id="rTitle">破局者</div>
+  <div class="r-badge" id="rBadge">从0到1的先锋</div>
+
+  <div class="r-card" id="rDesc"></div>
+  <div class="r-card" id="rScores"></div>
+  <div class="r-card" id="rStrengths"></div>
+  <div class="r-card" id="rCareers"></div>
+  <div class="r-card" id="rTraps"></div>
+
+  <div class="r-traits" id="rTraits"></div>
+  <div class="r-actions">
+    <button class="btn-share" onclick="showShare()">📸 生成分享图</button>
+    <button class="btn-retry" onclick="resetQuiz()">🔄 再测一次</button>
+  </div>
+  <div style="font-size:12px;color:rgba(124,58,237,.4);margin-top:16px">更多测试请访问 protest.xixizai.com</div>
+</div>
+
+</div>
+
+<!-- 分享图弹窗 -->
+<div class="share-modal" id="shareModal">
+  <div class="share-card">
+    <canvas id="shareCanvas" class="share-card-img" width="360" height="540"></canvas>
+    <div class="share-card-actions">
+      <button class="btn-dl" onclick="downloadShare()">💾 保存图片</button>
+      <button class="btn-close" onclick="closeShare()">关闭</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// === 题目数据（5维度×3题=15题）===
+var questions = [
+  // ① 创造力
+  {dim:"创造力",dimIcon:"🎨",q:"朋友邀请你一起做个项目，你更兴奋的是哪种？",
+   opts:[{t:"一个没人做过的全新方向，一切从零开始",dim:"create",val:"A"},
+         {t:"一个已有雏形的项目，你来把它做大做精",dim:"create",val:"B"}]},
+  {dim:"创造力",dimIcon:"🎨",q:"周末有空闲时间，你更想怎么度过？",
+   opts:[{t:"尝试一个从没体验过的新事物",dim:"create",val:"A"},
+         {t:"把这周没做完的事收尾，或优化已有流程",dim:"create",val:"B"}]},
+  {dim:"创造力",dimIcon:"🎨",q:"下面哪种情况更让你有成就感？",
+   opts:[{t:"想到了一个别人都没想到的点子",dim:"create",val:"A"},
+         {t:"把一个想法落地执行，拿到了具体结果",dim:"create",val:"B"}]},
+  // ② 社交力
+  {dim:"社交力",dimIcon:"🤝",q:"开完一整天的会，你晚上的状态是？",
+   opts:[{t:"还想找人聊聊今天的收获，越聊越精神",dim:"social",val:"A"},
+         {t:"想一个人静静，需要独处才能恢复能量",dim:"social",val:"B"}]},
+  {dim:"社交力",dimIcon:"🤝",q:"在一个完全陌生的社交场合，你的真实感受是？",
+   opts:[{t:"有点紧张但更多是期待，可能认识有趣的人",dim:"social",val:"A"},
+         {t:"想找理由离开，或者找到一个角落待着",dim:"social",val:"B"}]},
+  {dim:"社交力",dimIcon:"🤝",q:"面对一个难题，你的第一反应是？",
+   opts:[{t:"找人聊聊，碰撞一下思路",dim:"social",val:"A"},
+         {t:"先自己想清楚，有了答案再找人讨论",dim:"social",val:"B"}]},
+  // ③ 决策力
+  {dim:"决策力",dimIcon:"⚡",q:"看到一个机会但信息不完整，你的倾向是？",
+   opts:[{t:"先干了再说，边做边调整",dim:"decide",val:"A"},
+         {t:"先搞清楚关键信息再动手",dim:"decide",val:"B"}]},
+  {dim:"决策力",dimIcon:"⚡",q:"做一个重要决定时，你更依赖什么？",
+   opts:[{t:"直觉和经验——很多时候第一感觉就是对的",dim:"decide",val:"A"},
+         {t:"数据和分析——决策要有依据",dim:"decide",val:"B"}]},
+  {dim:"决策力",dimIcon:"⚡",q:"朋友说你做了一个『很你』的决定，大概率是因为？",
+   opts:[{t:"你又冲动了一把，但事后看结果还不错",dim:"decide",val:"A"},
+         {t:"你做了详细的利弊分析，选了性价比最高的路",dim:"decide",val:"B"}]},
+  // ④ 韧性
+  {dim:"韧性",dimIcon:"💪",q:"面对『高风险高回报』和『稳定但有天花板』的路，你会选？",
+   opts:[{t:"高风险高回报——人生嘛，搏一搏",dim:"resilience",val:"A"},
+         {t:"稳定的路——先确保下限，再考虑上限",dim:"resilience",val:"B"}]},
+  {dim:"韧性",dimIcon:"💪",q:"遇到一个重大挫折，你的恢复节奏是？",
+   opts:[{t:"可能当天就翻篇了，挫折不影响下一件事",dim:"resilience",val:"A"},
+         {t:"会反复复盘很久，需要一段时间才能放下",dim:"resilience",val:"B"}]},
+  {dim:"韧性",dimIcon:"💪",q:"你更佩服哪种人？",
+   opts:[{t:"敢于孤注一掷、押上一切去追梦的人",dim:"resilience",val:"A"},
+         {t:"稳扎稳打、每一步都算数、最终厚积薄发的人",dim:"resilience",val:"B"}]},
+  // ⑤ 洞察力
+  {dim:"洞察力",dimIcon:"🔮",q:"进入一个新领域，你更倾向于？",
+   opts:[{t:"先搞懂整个行业的格局、趋势和关键玩家",dim:"insight",val:"A"},
+         {t:"先找一个切入点深扎下去，在干中学",dim:"insight",val:"B"}]},
+  {dim:"洞察力",dimIcon:"🔮",q:"看一份报告或文章，你最关注什么？",
+   opts:[{t:"底层逻辑和趋势判断——『这说明什么』",dim:"insight",val:"A"},
+         {t:"具体数据和方法论——『怎么做到的』",dim:"insight",val:"B"}]},
+  {dim:"洞察力",dimIcon:"🔮",q:"你觉得自己更擅长？",
+   opts:[{t:"看到别人看不到的趋势和机会",dim:"insight",val:"A"},
+         {t:"做到别人做不到的细节和深度",dim:"insight",val:"B"}]}
+];
+
+// === 8种天赋型格 ===
+var types = {
+  breaker:{ // 破局者: create_A + decide_A
+    icon:"🔥",title:"破局者",badge:"从0到1的先锋",
+    desc:"你天生就是那个『先干了再说』的人。别人还在权衡利弊的时候，你已经下场了。你的创造力加上果断的决策力，让你成为任何团队里最不可替代的破冰者。\n\n你不怕失败，怕的是无聊。世界上最有趣的项目，都是你这种人启动的。\n\n但记住：破局之后也需要有人守局。找一个跟你互补的搭档，让飞轮转起来。",
+    quote:"你不是太冲动，是别人太犹豫。",
+    strengths:["能在模糊地带快速找到方向","天生的新项目启动器","不被现有框架束缚"],
+    careers:["创业者/联合创始人","产品经理(0-1)","创新业务负责人","自媒体/IP主理人"],
+    traps:["容易同时启动太多事，收不住","对『按部就班』的人缺乏耐心","破局能力强，但运营深耕意愿低"],
+    traits:["敢想敢干","创新思维","天生领袖","不怕冒险"],
+    scores:{create:92,decide:88,social:65,resilience:75,insight:72}
+  },
+  sniper:{ // 精算师: decide_B + insight_B
+    icon:"🎯",title:"精算师",badge:"精准狙击手",
+    desc:"你是那种』谋定而后动『的人。做决定之前，你会把所有数据、逻辑、可能性都过一遍。别人觉得你慢，但你知道——你不出手则已，一出手就是精准命中。\n\n你的分析力和深度洞察力让你在任何需要』正确判断『的场景中碾压别人。\n\n这个世界需要敢冲的人，但更需要像你这样——在关键节点上做对选择的人。",
+    quote:"别人看到运气，你看到概率。",
+    strengths:["数据驱动的决策能力","深度钻研，不浮于表面","关键时刻判断精准"],
+    careers:["投资分析师","战略咨询顾问","数据科学家","风险管理"],
+    traps:["过度分析导致错过时机","对不确定性强的场景焦虑","不太擅长』边跑边看『的敏捷模式"],
+    traits:["逻辑严密","精准判断","深度思考","天生分析师"],
+    scores:{create:55,decide:90,social:48,resilience:62,insight:92}
+  },
+  resonator:{ // 共振者: social_A + resilience_A
+    icon:"🌊",title:"共振者",badge:"人际粘合剂",
+    desc:"你是天生的』人际磁铁『。有你在的场合，氛围永远是热的。你能感知到每个人的情绪，知道什么时候该推一把、什么时候该拉一下。\n\n你的社交力加上强大的心理韧性，让你在高压环境下依然能保持微笑、连接资源、稳定军心。\n\n市场、公关、社群——所有需要』搞定人『的事情，你都有天然优势。你的能量会吸引资源主动来找你。",
+    quote:"你的竞争力不是技能，是你能连接谁。",
+    strengths:["极高的人际敏感度和共情力","抗压能力强，越挫越勇","擅长整合资源和人脉"],
+    careers:["市场/品牌营销","社群运营/KOL","公关负责人","HRBP"],
+    traps:["容易把精力分散在太多社交上","不喜欢深度钻研，专业壁垒不足","害怕独处，容易用社交逃避深度思考"],
+    traits:["社交天花板","共情力强","抗压恢复快","人脉资源王"],
+    scores:{create:62,decide:65,social:95,resilience:88,insight:60}
+  },
+  flash:{ // 闪电手: decide_A + create_B（高执行力的行动派）
+    icon:"⚡",title:"闪电手",badge:"唯快不破",
+    desc:"你是那种『想到就做、做完就算』的人。你的核心竞争力不是想得最深，而是跑得最快。在这个『快鱼吃慢鱼』的时代，你的速度就是最大的壁垒。\n\n你不需要100%的信息才能行动，70%就够了。你相信『在跑的过程中调整方向』，而不是『想清楚了再跑』。\n\n但速度也是双刃剑——偶尔停下来检查方向，会让你跑得更远。",
+    quote:"完成比完美更重要。",
+    strengths:["极强的执行力和交付速度","不纠结、不内耗","擅长在有限资源下快速产出"],
+    careers:["项目经理","运营增长","供应链管理","创业团队早期核心成员"],
+    traps:["速度太快有时忽略质量和风险","不喜欢长周期、深钻研的工作","容易给人『不够深思熟虑』的印象"],
+    traits:["执行力爆表","快速响应","结果导向","不墨迹"],
+    scores:{create:68,decide:85,social:58,resilience:72,insight:55}
+  },
+  navigator:{ // 领航员: insight_A + social_A
+    icon:"🧭",title:"领航员",badge:"战略操盘手",
+    desc:"你是那种『站在高处看全局』的人。你天然就能看到事物之间的联系，别人还在纠结细节，你已经看到了趋势和方向。\n\n加上你强大的社交连接力，你不只是『看到了方向』，还能『带着大家走过去』。你是团队里那个指出北极星的人。\n\n战略、管理、投资——越是复杂的系统，越能体现你的价值。",
+    quote:"别人看到树木，你看到森林。",
+    strengths:["全局视野和战略思维","擅长跨界连接和资源整合","能影响和带动他人"],
+    careers:["战略/业务负责人","投资人/FA","管理咨询","企业高管"],
+    traps:["有时过于关注大局，忽略执行细节","对『只管低头干活』的人不够理解","战略判断需要时间验证，容易在短期被质疑"],
+    traits:["全局视野","战略思维","连接者","影响力"],
+    scores:{create:70,decide:72,social:82,resilience:68,insight:90}
+  },
+  cultivator:{ // 深耕者: insight_B + resilience_B
+    icon:"🏔️",title:"深耕者",badge:"长期主义者",
+    desc:"你是那种『认准了一件事就做到极致』的人。在一个所有人都追逐风口的时代，你的深度和耐心是你最稀缺的竞争力。\n\n你的洞察力帮你找到值得深耕的方向，你的韧性让你在别人放弃的时候还在坚持。十年后回头看，你可能是走得最远的那个人。\n\n这个世界不缺跑得快的人，缺的是像你这样——能扎下根、扛住寂寞、最终长成大树的人。",
+    quote:"慢即是快，少即是多。",
+    strengths:["深度钻研能力，不浮于表面","极强的耐心和长期主义心态","在专业领域建立真正的壁垒"],
+    careers:["科研/学术","技术专家/架构师","精品内容创作者","专业服务(法律/医疗/财务)"],
+    traps:["容易过度打磨，错过市场时机","对『快糙猛』的模式不适应","需要学会在完美和完成之间做取舍"],
+    traits:["深度思考","长期主义","耐得住寂寞","专业壁垒"],
+    scores:{create:65,decide:55,social:50,resilience:90,insight:88}
+  },
+  butterfly:{ // 灵动者: create_A + social_A
+    icon:"🦋",title:"灵动者",badge:"创意连接器",
+    desc:"你的脑子里永远有一百个想法，而你的社交天赋让这些想法不只是停在脑子里——你能找到对的人，把灵感变成现实。\n\n你是那种在任何场合都能找到灵感和机会的人。别人看到的是『不相关的两件事』，你看到的是『可以连起来的两个点』。\n\n你的超能力是『跨界』——把不同领域的东西拼在一起，创造新的可能。",
+    quote:"你的竞争力不是专精一门，是连接万物。",
+    strengths:["无限的创意和灵感来源","擅长跨界思维和连接","社交能力强，资源整合快"],
+    careers:["创意总监/策划","内容/IP操盘手","品牌营销","创业者(创意驱动型)"],
+    traps:["想法太多但落地不够","容易被新鲜感牵着走","需要找一个帮你『收口』的搭档"],
+    traits:["创意无限","跨界思维","灵感体质","天生连接者"],
+    scores:{create:90,decide:62,social:88,resilience:60,insight:70}
+  },
+  guardian:{ // 守护者: resilience_B + social_B（稳健可靠型）
+    icon:"🛡️",title:"守护者",badge:"值得信赖的基石",
+    desc:"你是那种』在任何团队里都不可或缺但容易被忽视『的人。你不追求聚光灯，但所有人遇到问题第一个想到的就是你。\n\n你的稳健和可靠让整个系统正常运转。没有你这种人在，团队就像建在沙子上的楼。你的价值不在于单点爆发，而在于——永远在、永远稳、永远能扛。\n\n记住：你的靠谱不是廉价的。要让世界看到你沉默的重量。",
+    quote:"真正的强大不是爆发，是始终在。",
+    strengths:["极强的稳定性和可靠性","深度的责任感和使命感","在混乱中维持秩序的能力"],
+    careers:["技术运维/基础设施","财务/合规","行政/运营管理","客户成功"],
+    traps:["容易被忽视，不善于展示自己的价值","过于保守，错过该冒险的时机","不善于说『不』，容易被当成万能工具人"],
+    traits:["稳如磐石","深度可靠","系统守护者","默默扛事"],
+    scores:{create:48,decide:58,social:55,resilience:85,insight:65}
+  }
+};
+
+// === 维度配置 ===
+var dimConfig = {
+  create:{name:"创造力",icon:"🎨",aLabel:"创造型",bLabel:"执行型"},
+  social:{name:"社交力",icon:"🤝",aLabel:"社交型",bLabel:"独立型"},
+  decide:{name:"决策力",icon:"⚡",aLabel:"直觉型",bLabel:"分析型"},
+  resilience:{name:"韧性",icon:"💪",aLabel:"冒险型",bLabel:"稳健型"},
+  insight:{name:"洞察力",icon:"🔮",aLabel:"全局型",bLabel:"深度型"}
+};
+
+// === 测试逻辑 ===
+var currentQ = 0;
+var dimScores = {create:0,social:0,decide:0,resilience:0,insight:0};
+var dimCounts = {create:0,social:0,decide:0,resilience:0,insight:0};
+
+function startQuiz(){
+  currentQ = 0;
+  dimScores = {create:0,social:0,decide:0,resilience:0,insight:0};
+  dimCounts = {create:0,social:0,decide:0,resilience:0,insight:0};
+  document.getElementById('page-cover').style.display='none';
+  document.getElementById('page-result').style.display='none';
+  document.getElementById('page-quiz').style.display='flex';
+  renderQuestion();
+}
+
+function renderQuestion(){
+  var q = questions[currentQ];
+  var total = questions.length;
+  var progress = (currentQ / total) * 100;
+  
+  document.getElementById('progressFill').style.width = progress + '%';
+  document.getElementById('progressLabel').textContent = '第 ' + (currentQ+1) + ' 题';
+  document.getElementById('progressCount').textContent = (currentQ+1) + ' / ' + total;
+  document.getElementById('dimLabel').innerHTML = q.dimIcon + ' ' + q.dim;
+  document.getElementById('qNum').textContent = '问题 ' + (currentQ+1);
+  document.getElementById('qTitle').textContent = q.q;
+  document.getElementById('qTitle').classList.remove('fadeIn');
+  void document.getElementById('qTitle').offsetWidth;
+  document.getElementById('qTitle').classList.add('fadeIn');
+  
+  var optsHtml = '';
+  var labels = ['A','B'];
+  q.opts.forEach(function(o,i){
+    optsHtml += '<div class="option fadeIn" onclick="selectOption('+i+')">' +
+      '<div class="opt-label">'+labels[i]+'</div>' +
+      '<div class="opt-text">'+o.t+'</div>' +
+      '</div>';
+  });
+  document.getElementById('qOptions').innerHTML = optsHtml;
+}
+
+function selectOption(idx){
+  var q = questions[currentQ];
+  var opt = q.opts[idx];
+  
+  // 记录分数
+  if(opt.val === 'A'){
+    dimScores[opt.dim] += 1; // A=维度正向
+  }
+  dimCounts[opt.dim] += 1;
+  
+  // 选中动画
+  var options = document.querySelectorAll('.option');
+  options[idx].classList.add('selected');
+  options.forEach(function(o){o.style.pointerEvents='none';});
+  
+  setTimeout(function(){
+    currentQ++;
+    if(currentQ >= questions.length){
+      showResult();
+    } else {
+      window.scrollTo({top:0,behavior:'smooth'});
+      renderQuestion();
+    }
+  },300);
+}
+
+function determineType(){
+  // 判断每个维度是A还是B
+  var dimLabels = {};
+  for(var d in dimConfig){
+    dimLabels[d] = dimScores[d] >= 2 ? 'A' : 'B'; // 3题中2题选A=A型
+  }
+  
+  // 根据维度组合判断型格
+  // 取分数最高的2个维度的组合
+  var sorted = Object.keys(dimConfig).sort(function(a,b){
+    return dimScores[b]-dimScores[a];
+  });
+  
+  // 组合判断
+  var top1 = sorted[0], top2 = sorted[1];
+  
+  // 特殊组合优先
+  if(dimLabels.create==='A' && dimLabels.decide==='A') return 'breaker';
+  if(dimLabels.decide==='B' && dimLabels.insight==='B') return 'sniper';
+  if(dimLabels.social==='A' && dimLabels.resilience==='A') return 'resonator';
+  if(dimLabels.decide==='A' && dimLabels.create==='B') return 'flash';
+  if(dimLabels.insight==='A' && dimLabels.social==='A') return 'navigator';
+  if(dimLabels.insight==='B' && dimLabels.resilience==='B') return 'cultivator';
+  if(dimLabels.create==='A' && dimLabels.social==='A') return 'butterfly';
+  if(dimLabels.resilience==='B' && dimLabels.social==='B') return 'guardian';
+  
+  // 兜底：根据最高维度+第二高判断
+  if(dimScores[top1] >= 2){
+    // 高分维度是A型
+    if(top1==='create'||top1==='decide') return 'breaker';
+    if(top1==='social'||top1==='insight') return 'navigator';
+    return 'resonator';
+  }
+  // 都不高，默认守护者
+  return 'guardian';
+}
+
+function showResult(){
+  var typeKey = determineType();
+  var t = types[typeKey];
+  
+  document.getElementById('page-quiz').style.display='none';
+  document.getElementById('page-result').style.display='flex';
+  document.getElementById('rIcon').textContent = t.icon;
+  document.getElementById('rTitle').textContent = t.title;
+  document.getElementById('rBadge').textContent = t.badge;
+  
+  // 描述
+  var descHtml = t.desc.split('\n').map(function(p){return p.trim()?'<p style="margin-bottom:10px">'+p+'</p>':''}).join('');
+  if(t.quote) descHtml += '<blockquote style="border-left:3px solid var(--primary);background:rgba(124,58,237,.06);padding:12px 16px;margin:16px 0;border-radius:0 8px 8px 0;font-style:italic;color:var(--primary-d)">「'+t.quote+'」</blockquote>';
+  document.getElementById('rDesc').innerHTML = descHtml;
+  
+  // 维度评分
+  var scoreHtml = '<div class="r-card-title">📊 天赋维度雷达</div>';
+  var dims = [{k:'create',n:'创造力',icon:'🎨'},{k:'social',n:'社交力',icon:'🤝'},{k:'decide',n:'决策力',icon:'⚡'},{k:'resilience',n:'韧性',icon:'💪'},{k:'insight',n:'洞察力',icon:'🔮'}];
+  dims.forEach(function(d){
+    var v = t.scores[d.k];
+    var label = v>=85?'极强':v>=70?'中高':v>=55?'中等':'偏弱';
+    var color = v>=85?'var(--primary)':v>=70?'var(--primary-l)':v>=55?'#a78bfa':'#c4b5fd';
+    scoreHtml += '<div class="score-row"><div class="score-row-head"><span class="score-row-name">'+d.icon+' '+d.n+'</span><span class="score-row-val">'+label+' '+v+'</span></div><div class="score-bar"><div class="score-bar-fill" style="width:'+v+'%;background:'+color+'"></div></div></div>';
+  });
+  document.getElementById('rScores').innerHTML = scoreHtml;
+  
+  // 核心优势
+  var strHtml = '<div class="r-card-title">💪 核心优势</div>';
+  t.strengths.forEach(function(s){strHtml += '<div style="font-size:14px;color:var(--text-d);margin-bottom:8px;padding-left:20px;position:relative"><span style="position:absolute;left:0;color:var(--primary)">✦</span>'+s+'</div>'});
+  document.getElementById('rStrengths').innerHTML = strHtml;
+  
+  // 职业方向
+  var careerHtml = '<div class="r-card-title">🎯 最适合的职业方向</div>';
+  t.careers.forEach(function(c,i){careerHtml += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span style="width:24px;height:24px;border-radius:50%;background:var(--primary);color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;font-weight:700">'+(i+1)+'</span><span style="font-size:14px;color:var(--text-d)">'+c+'</span></div>'});
+  document.getElementById('rCareers').innerHTML = careerHtml;
+  
+  // 盲区提醒
+  var trapHtml = '<div class="r-card-title" style="color:var(--warning)">⚠️ 你容易踩的盲区</div>';
+  t.traps.forEach(function(tp){trapHtml += '<div style="font-size:13px;color:#9a3412;margin-bottom:6px;padding-left:16px;position:relative"><span style="position:absolute;left:0">•</span>'+tp+'</div>'});
+  document.getElementById('rTraps').innerHTML = trapHtml;
+  
+  // 特质标签
+  var traitsHtml = t.traits.map(function(tr){return '<span class="r-trait">'+tr+'</span>'}).join('');
+  document.getElementById('rTraits').innerHTML = traitsHtml;
+  
+  // 触发动画
+  setTimeout(function(){
+    document.querySelectorAll('.score-bar-fill').forEach(function(el){
+      var w = el.style.width;
+      el.style.width = '0';
+      setTimeout(function(){el.style.width = w;},50);
+    });
+  },100);
+}
+
+function resetQuiz(){
+  document.getElementById('page-result').style.display='none';
+  document.getElementById('page-cover').style.display='flex';
+}
+
+// === 分享图生成 ===
+function showShare(){
+  document.getElementById('shareModal').classList.add('show');
+  drawShareCard();
+}
+function closeShare(){
+  document.getElementById('shareModal').classList.remove('show');
+}
+function drawShareCard(){
+  var canvas = document.getElementById('shareCanvas');
+  var ctx = canvas.getContext('2d');
+  var W = 360, H = 540;
+  
+  var grad = ctx.createLinearGradient(0,0,W,H);
+  grad.addColorStop(0,'#f5f3ff');
+  grad.addColorStop(0.5,'#ede9fe');
+  grad.addColorStop(1,'#ddd6fe');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0,0,W,H);
+  
+  ctx.strokeStyle = 'rgba(139,92,246,0.1)';
+  ctx.lineWidth = 1;
+  for(var x=0;x<W;x+=30){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(var y=0;y<H;y+=30){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+  
+  ctx.fillStyle = '#fff';
+  ctx.strokeStyle = '#7c3aed';
+  ctx.lineWidth = 1.5;
+  ctx.font = '12px sans-serif';
+  var tw = ctx.measureText('天赋型格').width + 24;
+  roundRect(ctx, 28, 36, tw, 26, 5);
+  ctx.fill();ctx.stroke();
+  ctx.fillStyle = '#7c3aed';
+  ctx.font = 'bold 12px sans-serif';
+  ctx.fillText('天赋型格', 40, 53);
+  
+  ctx.fillStyle = '#7c3aed';
+  ctx.font = '12px sans-serif';
+  ctx.fillText('NO.003', W-70, 53);
+  ctx.strokeStyle = '#c4b5fd';
+  ctx.beginPath();ctx.moveTo(110,49);ctx.lineTo(W-90,49);ctx.stroke();
+  
+  ctx.font = '56px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(document.getElementById('rIcon').textContent, W/2, 160);
+  
+  ctx.fillStyle = '#7c3aed';
+  ctx.font = '13px sans-serif';
+  ctx.fillText('你的天赋型格是', W/2, 200);
+  
+  ctx.fillStyle = '#5b21b6';
+  ctx.font = 'bold 30px sans-serif';
+  ctx.fillText(document.getElementById('rTitle').textContent, W/2, 240);
+  
+  ctx.fillStyle = '#7c3aed';
+  ctx.font = 'bold 12px sans-serif';
+  var bw = ctx.measureText(document.getElementById('rBadge').textContent).width + 24;
+  roundRect(ctx, (W-bw)/2, 260, bw, 26, 13);
+  ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.fillText(document.getElementById('rBadge').textContent, W/2, 277);
+  
+  ctx.fillStyle = '#5b21b6';
+  ctx.font = '13px sans-serif';
+  var traits = document.getElementById('rTraits').innerText;
+  ctx.fillText(traits.replace(/\n/g,' · '), W/2, 320);
+  
+  var desc = document.getElementById('rDesc').textContent;
+  ctx.fillStyle = 'rgba(91,33,182,0.6)';
+  ctx.font = '13px sans-serif';
+  ctx.textAlign = 'left';
+  var lines = desc.split('\n')[0].match(/.{1,18}/g) || [];
+  lines.slice(0,4).forEach(function(line,i){
+    ctx.fillText(line, 40, 370 + i*22);
+  });
+  
+  ctx.fillStyle = '#fff';
+  roundRect(ctx, W/2-40, 440, 80, 80, 12);
+  ctx.fill();
+  ctx.fillStyle = '#7c3aed';
+  ctx.font = '11px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('扫码来测', W/2, 470);
+  ctx.font = 'bold 22px sans-serif';
+  ctx.fillText('🐾', W/2, 500);
+  
+  ctx.fillStyle = 'rgba(91,33,182,0.3)';
+  ctx.font = '10px sans-serif';
+  ctx.fillText('protest.xixizai.com', W/2, 530);
+  ctx.textAlign = 'left';
+}
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+}
+function downloadShare(){
+  var canvas = document.getElementById('shareCanvas');
+  var link = document.createElement('a');
+  link.download = '我的天赋型格测试结果.png';
+  link.href = canvas.toDataURL();
+  link.click();
+}
+</script>
+</body>
+</html>
