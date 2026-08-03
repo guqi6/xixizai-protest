@@ -96,8 +96,6 @@ body{
 .result .r-traits{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:24px}
 .result .r-trait{background:rgba(124,58,237,.1);color:var(--primary-d);font-size:13px;padding:6px 16px;border-radius:16px;font-weight:600}
 .result .r-actions{display:flex;flex-direction:column;gap:12px;width:100%;max-width:300px;margin-bottom:24px}
-.btn-share{background:var(--accent);color:#fff;border:none;padding:14px;border-radius:50px;font-size:15px;font-weight:700;cursor:pointer;transition:.3s;box-shadow:0 4px 16px rgba(245,158,11,.3)}
-.btn-share:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(245,158,11,.4)}
 .btn-retry{background:transparent;color:var(--primary);border:2px solid var(--primary);padding:12px;border-radius:50px;font-size:14px;font-weight:600;cursor:pointer;transition:.3s}
 .btn-retry:hover{background:var(--primary);color:#fff}
 
@@ -110,14 +108,6 @@ body{
 .score-bar-fill{height:100%;border-radius:3px;transition:width 1s ease}
 
 /* 分享图弹窗 */
-.share-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:999;align-items:center;justify-content:center;padding:20px}
-.share-modal.show{display:flex}
-.share-card{background:#fff;border-radius:20px;overflow:hidden;max-width:360px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3)}
-.share-card-img{width:100%;display:block}
-.share-card-actions{padding:16px;display:flex;gap:12px}
-.share-card-actions button{flex:1;padding:10px;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer}
-.btn-dl{background:var(--primary);color:#fff}
-.btn-close{background:#f0f0f0;color:#333}
 
 @keyframes bounceIn{0%{transform:scale(0);opacity:0}60%{transform:scale(1.2)}100%{transform:scale(1);opacity:1}}
 @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
@@ -201,7 +191,6 @@ body{
 
   <div class="r-traits" id="rTraits"></div>
   <div class="r-actions">
-    <button class="btn-share" onclick="showShare()">📸 生成分享图</button>
     <button class="btn-retry" onclick="resetQuiz()">🔄 再测一次</button>
   </div>
   <div style="font-size:12px;color:rgba(124,58,237,.4);margin-top:16px">更多测试请访问 protest.xixizai.com</div>
@@ -210,13 +199,6 @@ body{
 </div>
 
 <!-- 分享图弹窗 -->
-<div class="share-modal" id="shareModal">
-  <div class="share-card">
-    <canvas id="shareCanvas" class="share-card-img" width="360" height="540"></canvas>
-    <div class="share-card-actions">
-      <button class="btn-dl" onclick="downloadShare()">💾 保存图片</button>
-      <button class="btn-close" onclick="closeShare()">关闭</button>
-    </div>
   </div>
 </div>
 
@@ -724,47 +706,6 @@ function resetQuiz(){
 }
 
 // === 分享图 ===
-function showShare(){document.getElementById('shareModal').classList.add('show');drawShareCard();}
-function closeShare(){document.getElementById('shareModal').classList.remove('show');}
-function drawShareCard(){
-  var canvas=document.getElementById('shareCanvas');
-  var ctx=canvas.getContext('2d');
-  var W=360,H=540;
-  var grad=ctx.createLinearGradient(0,0,W,H);
-  grad.addColorStop(0,'#f5f3ff');grad.addColorStop(0.5,'#ede9fe');grad.addColorStop(1,'#ddd6fe');
-  ctx.fillStyle=grad;ctx.fillRect(0,0,W,H);
-  ctx.strokeStyle='rgba(139,92,246,0.1)';ctx.lineWidth=1;
-  for(var x=0;x<W;x+=30){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
-  for(var y=0;y<H;y+=30){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
-  ctx.fillStyle='#fff';ctx.strokeStyle='#7c3aed';ctx.lineWidth=1.5;ctx.font='12px sans-serif';
-  var tw=ctx.measureText('天赋型格').width+24;roundRect(ctx,28,36,tw,26,5);ctx.fill();ctx.stroke();
-  ctx.fillStyle='#7c3aed';ctx.font='bold 12px sans-serif';ctx.fillText('天赋型格',40,53);
-  ctx.fillStyle='#7c3aed';ctx.font='12px sans-serif';ctx.fillText('NO.003',W-70,53);
-  ctx.strokeStyle='#c4b5fd';ctx.beginPath();ctx.moveTo(110,49);ctx.lineTo(W-90,49);ctx.stroke();
-  ctx.font='56px sans-serif';ctx.textAlign='center';
-  ctx.fillText(document.getElementById('rIcon').textContent,W/2,160);
-  ctx.fillStyle='#7c3aed';ctx.font='13px sans-serif';ctx.fillText('你的天赋型格是',W/2,200);
-  ctx.fillStyle='#5b21b6';ctx.font='bold 30px sans-serif';
-  ctx.fillText(document.getElementById('rTitle').textContent,W/2,240);
-  ctx.fillStyle='#7c3aed';ctx.font='bold 12px sans-serif';
-  var bw=ctx.measureText(document.getElementById('rBadge').textContent).width+24;
-  roundRect(ctx,(W-bw)/2,260,bw,26,13);ctx.fill();
-  ctx.fillStyle='#fff';ctx.fillText(document.getElementById('rBadge').textContent,W/2,277);
-  ctx.fillStyle='#5b21b6';ctx.font='13px sans-serif';
-  var traits=document.getElementById('rTraits').innerText;
-  ctx.fillText(traits.replace(/\n/g,' · '),W/2,320);
-  ctx.fillStyle='rgba(91,33,182,0.6)';ctx.font='13px sans-serif';ctx.textAlign='left';
-  var desc=document.getElementById('rDesc').textContent;
-  var lines=desc.split('\n')[0].match(/.{1,18}/g)||[];
-  lines.slice(0,4).forEach(function(line,i){ctx.fillText(line,40,370+i*22);});
-  ctx.fillStyle='#fff';roundRect(ctx,W/2-40,440,80,80,12);ctx.fill();
-  ctx.fillStyle='#7c3aed';ctx.font='11px sans-serif';ctx.textAlign='center';
-  ctx.fillText('扫码来测',W/2,470);ctx.font='bold 22px sans-serif';ctx.fillText('🐾',W/2,500);
-  ctx.fillStyle='rgba(91,33,182,0.3)';ctx.font='10px sans-serif';ctx.fillText('protest.xixizai.com',W/2,530);
-  ctx.textAlign='left';
-}
-function roundRect(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
-function downloadShare(){var canvas=document.getElementById('shareCanvas');var link=document.createElement('a');link.download='我的天赋型格测试结果.png';link.href=canvas.toDataURL();link.click();}
 
 </script>
 </body>
