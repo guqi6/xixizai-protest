@@ -99,6 +99,11 @@ body{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-se
 <div class="field"><div class="field-label"><span>📦 发货说明</span><button class="copy-btn" onclick="copyField('shipping')">📋复制</button></div><div class="field-content" id="fShipping" onclick="copyField('shipping')" style="white-space:pre-wrap"></div></div>
 </div>
 <div class="card">
+<div class="card-title">📌 评论引导话术<span style="font-size:12px;color:var(--tl);font-weight:400"> · 发布后第一时间置顶</span></div>
+<div class="field"><div class="field-label"><span>💬 置顶评论话术</span><button class="copy-btn" onclick="copyField('commentGuide')">📋复制</button></div><div class="field-content" id="fCommentGuide" onclick="copyField('commentGuide')" style="white-space:pre-wrap;background:#fffbeb;border-color:#fde68a"></div></div>
+<div style="font-size:12px;color:var(--tl);margin-top:4px">💡 发笔记后立刻发这条评论，抢占第一条位置</div>
+</div>
+<div class="card">
 <div class="card-title">🖼️ 配图（SVG预览 · 下载转JPG）</div>
 <div class="svg-grid" id="svgGrid"></div>
 <button class="dl-all-btn" onclick="downloadAll()">⬇️ 一键下载全部图片（JPG）</button>
@@ -191,7 +196,7 @@ el.classList.add('active');document.getElementById('tab-'+name).classList.add('a
 var SHIPPING_INFO='感谢购买❤️\n【售后说明】虚拟商品，发货后不支持退换。下单后自动发送链接，若无收到或者有问题请联系我\n【常见问题】Q:链接打不开怎么办？ A:复制链接到浏览器、备忘录、聊天软件打开，不要在小红书内直接点如果出现了加载不出结果，辛苦再试一次， 可能是因为个别手机不兼容';
 
 // 产品数据
-var products={career:{title:"128+已测【你天生该吃哪碗饭】10道题测出你的隐藏职业基因，准确到头皮发麻",shortTitle:"职业基因趣味测试",detail:'你是不是也想过：为什么有人上班像上坟，有人却越干越来劲？\n这不是一个普通的性格测试。\n它不会笼统地告诉你"你是外向还是内向"，\n而是从你的本能反应里，挖出藏最深的职业天赋。\n\n从10个看似跟工作无关的生活场景——\n周末醒来第一个念头、怎么处理朋友的倾诉、\n突然拿到一笔闲钱会干嘛……\n\n精准锁定你的4大职业基因维度：\n行动力指数、创造感知力、社交影响力、策略掌控力\n\n做完的人都在说：\n"我以为自己适合上班，原来我天生就该创业"\n"这也太准了，我就是那个操盘手"\n"从小到大没人比这个测试更懂我"\n\n10道题，2分钟，找到你天生的饭碗。\n\n⚠️ 温馨提示：测完可能会想辞职（不是）',link:"https://protest.xixizai.com",linkUrl:"https://protest.xixizai.com",svgs:{}}};
+var products={career:{title:"128+已测【你天生该吃哪碗饭】10道题测出你的隐藏职业基因，准确到头皮发麻",shortTitle:"职业基因趣味测试",detail:'你是不是也想过：为什么有人上班像上坟，有人却越干越来劲？\n这不是一个普通的性格测试。\n它不会笼统地告诉你"你是外向还是内向"，\n而是从你的本能反应里，挖出藏最深的职业天赋。\n\n从10个看似跟工作无关的生活场景——\n周末醒来第一个念头、怎么处理朋友的倾诉、\n突然拿到一笔闲钱会干嘛……\n\n精准锁定你的4大职业基因维度：\n行动力指数、创造感知力、社交影响力、策略掌控力\n\n做完的人都在说：\n"我以为自己适合上班，原来我天生就该创业"\n"这也太准了，我就是那个操盘手"\n"从小到大没人比这个测试更懂我"\n\n10道题，2分钟，找到你天生的饭碗。\n\n⚠️ 温馨提示：测完可能会想辞职（不是）',link:"https://protest.xixizai.com",linkUrl:"https://protest.xixizai.com",commentGuide:"迷茫的姐妹都来测一下！10道题只要2分钟，测完真的会刷新对自己的认知 👉 笔记同款测评点这里！",svgs:{}}};
 function phSvg(){return '<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080"><rect width="1080" height="1080" fill="#e8f5e9"/><text x="540" y="540" font-size="48" text-anchor="middle" fill="#2e7d32">SVG</text></svg>'}
 products.career.svgs={main:{label:"商品主图(1:1)",svg:phSvg()},guide:{label:"引导图(1:1)",svg:phSvg()},detail:{label:"详情图(1:1)",svg:phSvg()}};
 
@@ -202,6 +207,7 @@ shortTitle:"职场PUA免疫力测试",
 detail:'你有没有过这种感觉：\n领导说完一句话，你明明觉得哪里不对，但又说不上来？\n\n这不是一个普通的职场性格测试。\n它不会笼统地告诉你「你适合什么工作」，\n而是把10个真实职场场景丢到你面前——\n领导画饼、公开批评、情感绑架、比较PUA……\n看你在真实压力下会怎么选。\n\n做完你会清楚知道：\n你的PUA免疫力指数、认知清醒度、边界感、情绪管理、行动力，\n分别在什么段位。\n\n做完的人都在说：\n「我以为自己很刚，原来只是佛系」\n「原来领导那句「我为你好」是经典PUA话术」\n「终于知道为什么每次被骂都内耗三天了」\n\n10道题，2分钟，看清你在职场的真实生存力。\n\n⚠️ 温馨提示：测完可能会想更新简历（不是）',
 link:"https://pua.xixizai.com/pua",
 linkUrl:"https://pua.xixizai.com/pua",
+commentGuide:"职场里受委屈的姐妹一定要做一次这个测试！看看你的PUA免疫力在什么段位 👉 笔记同款测评在这里！",
 svgs:{}
 };
 
@@ -220,6 +226,7 @@ shortTitle:"天赋型格深度测评",
 detail:'你是不是也想过：\n为什么有些人做什么都事半功倍，而你明明很努力却总差点意思？\n\n不是你不够好。\n是你还没找到属于自己的赛道。\n\n这不是一个普通的性格测试。\n它不会笼统地告诉你「你是内向还是外向」，\n而是用20道精心设计的场景题——\n从你的本能反应里，挖出5大天赋维度的真实数据：\n创造力、决策力、社交力、韧性、洞察力。\n\n然后精准锁定你的天赋型格：\n破局者、精算师、共振者、闪电手、领航员、深耕者、灵动者、守护者。\n\n每种型格都有完整的「使用说明书」：\n最适合你的6个职业方向（附详细解释为什么适合）\n最不适合你的4个职业（告诉你为什么痛苦）\n你最容易踩的5个盲区\n突破瓶颈的5条具体建议\n你的高光时刻场景\n跟其他型格的搭档关系\n同型格代表人物\n\n做完的人都在说：\n「原来我不是没有天赋，是一直用错了方向」\n「每个职业推荐都解释了为什么，比职业咨询师还详细」\n「不推荐的职业太准了，我就是踩了那个坑」\n\n20道题，5分钟，找到你的天赋密码。\n\n⚠️ 温馨提示：测完可能会想重新规划职业路线（不是）',
 link:"https://protest.xixizai.com/talent",
 linkUrl:"https://protest.xixizai.com/talent",
+commentGuide:"强烈建议迷茫的人都来做一次天赋测试，或许会有意外惊喜！20道题5分钟出结果 👉 笔记同款测评点这里！",
 svgs:{}
 };
 
@@ -238,11 +245,12 @@ document.getElementById('fDetail').textContent=p.detail;
 document.getElementById('fLink').textContent=p.link;
 document.getElementById('fLinkOpen').href=p.linkUrl;
 document.getElementById('fShipping').textContent=SHIPPING_INFO;
+document.getElementById('fCommentGuide').textContent=p.commentGuide||'';
 var h='';Object.keys(p.svgs).forEach(function(k){var s=p.svgs[k];h+='<div class="svg-card"><div class="svg-label">'+s.label+'</div><div class="svg-preview">'+s.svg+'</div><div class="svg-actions"><button class="dl-btn" onclick="dlOrig(\''+k+'\')">⬇️ 下载JPG</button></div></div>'});
 document.getElementById('svgGrid').innerHTML=h;
 }
 function switchProduct(k,el){currentProduct=k;document.querySelectorAll('.product-chip').forEach(function(c){c.classList.remove('active')});el.classList.add('active');renderProduct();}
-function copyField(f){var p=products[currentProduct];var t=f==='title'?p.title:f==='shortTitle'?p.shortTitle:f==='detail'?p.detail:f==='shipping'?SHIPPING_INFO:p.link;navigator.clipboard.writeText(t).then(function(){showToast('✅ 已复制')})}
+function copyField(f){var p=products[currentProduct];var t=f==='title'?p.title:f==='shortTitle'?p.shortTitle:f==='detail'?p.detail:f==='shipping'?SHIPPING_INFO:f==='commentGuide'?(p.commentGuide||''):p.link;navigator.clipboard.writeText(t).then(function(){showToast('✅ 已复制')})}
 function dlOrig(k){var s=products[currentProduct].svgs[k];dlSvg(s.svg,s.label,1080)}
 function downloadAll(){Object.keys(products[currentProduct].svgs).forEach(function(k,i){setTimeout(function(){dlOrig(k)},i*500)})}
 function dlSvg(svgStr,label,size){var size=size||1080;var blob=new Blob([svgStr],{type:'image/svg+xml;charset=utf-8'});var url=URL.createObjectURL(blob);var img=new Image();img.onload=function(){var c=document.createElement('canvas');c.width=size;c.height=size;var ctx=c.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,size,size);ctx.drawImage(img,0,0,size,size);c.toBlob(function(b){var a=document.createElement('a');a.download=label.replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g,'')+'.jpg';a.href=URL.createObjectURL(b);a.click();URL.revokeObjectURL(url);showToast('✅ '+a.download)},'image/jpeg',0.95)};img.src=url}
