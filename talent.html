@@ -64,7 +64,7 @@ body{
   cursor:pointer;transition:.25s;display:flex;align-items:center;gap:14px;
   box-shadow:0 2px 12px rgba(0,0,0,.04);position:relative;overflow:hidden;
 }
-.quiz .option:hover{border-color:var(--primary);transform:translateX(4px);box-shadow:var(--shadow)}
+@media(hover:hover){.quiz .option:hover{border-color:var(--primary);transform:translateX(4px);box-shadow:var(--shadow)}}
 .quiz .option:active{transform:scale(.98)}
 .quiz .option .opt-label{
   width:36px;height:36px;border-radius:50%;flex-shrink:0;
@@ -72,7 +72,7 @@ body{
   font-size:15px;font-weight:700;background:rgba(124,58,237,.1);color:var(--primary);
   transition:.25s;
 }
-.quiz .option:hover .opt-label{background:var(--primary);color:#fff}
+@media(hover:hover){.quiz .option:hover .opt-label{background:var(--primary);color:#fff}}
 .quiz .option .opt-text{flex:1;font-weight:500;line-height:1.5}
 /* 选中动画 */
 .quiz .option.selected{border-color:var(--primary);background:rgba(124,58,237,.05)}
@@ -561,12 +561,18 @@ function selectOption(idx){
   dimScores[opt.d] = (dimScores[opt.d]||0) + opt.p;
   var options = document.querySelectorAll('.option');
   options[idx].classList.add('selected');
-  options.forEach(function(o){o.style.pointerEvents='none';});
+  options.forEach(function(o){o.style.pointerEvents='none';o.classList.remove('fadeIn');});
   setTimeout(function(){
     currentQ++;
     if(currentQ >= questions.length){showResult();}
-    else{window.scrollTo({top:0,behavior:'smooth'});renderQuestion();}
-  },300);
+    else{window.scrollTo({top:0,behavior:'smooth'});
+      // 先清空再渲染，避免移动端hover残留
+      document.getElementById('qOptions').innerHTML='';
+      // 强制reflow
+      void document.getElementById('qOptions').offsetWidth;
+      renderQuestion();
+    }
+  },350);
 }
 
 function determineType(){
