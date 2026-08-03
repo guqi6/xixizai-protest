@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<title>天赋型格使用说明书 | 西西崽</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--p:#7c3aed;--pd:#6d28d9;--pl:#ede9fe;--bg:#faf5ff;--c:#fff;--b:#e9d5ff;--t:#1f2937;--tl:#6b7280;--r:12px;--accent:#f59e0b}
+body{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--t);line-height:1.6}
+.wrap{max-width:500px;margin:0 auto;padding:0 0 60px}
+/* Hero */
+.hero{background:linear-gradient(135deg,#7c3aed,#a78bfa);padding:32px 20px 28px;text-align:center;color:#fff;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='30' height='30'%3E%3Cpath d='M30 0H0V30' fill='none' stroke='rgba(255,255,255,0.08)'/%3E%3C/svg%3E")}
+.hero-content{position:relative;z-index:1}
+.hero .icon{font-size:56px;margin-bottom:8px;animation:bounce 1s ease}
+.hero h1{font-size:22px;font-weight:800;margin-bottom:4px}
+.hero .badge{display:inline-block;background:rgba(255,255,255,0.2);padding:4px 14px;border-radius:20px;font-size:13px;margin-top:6px}
+.hero .rarity{font-size:12px;color:rgba(255,255,255,0.7);margin-top:8px}
+@keyframes bounce{0%{transform:translateY(-20px);opacity:0}60%{transform:translateY(5px)}100%{transform:translateY(0);opacity:1}}
+/* Tabs */
+.tabs{display:flex;overflow-x:auto;background:#fff;border-bottom:2px solid var(--pl);position:sticky;top:0;z-index:100;-webkit-overflow-scrolling:touch}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:0 0 auto;padding:14px 12px;font-size:13px;font-weight:600;color:var(--tl);white-space:nowrap;cursor:pointer;border-bottom:3px solid transparent;transition:.2s;text-align:center;min-width:70px}
+.tab.active{color:var(--p);border-bottom-color:var(--p)}
+.tab .tab-icon{font-size:18px;display:block;margin-bottom:2px}
+/* Section */
+.section{display:none;padding:16px;animation:fadeIn .3s ease}
+.section.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+/* Card */
+.card{background:#fff;border-radius:var(--r);padding:18px;margin-bottom:14px;box-shadow:0 1px 4px rgba(124,58,237,0.06)}
+.card-title{font-size:15px;font-weight:700;color:var(--p);margin-bottom:12px;display:flex;align-items:center;gap:6px}
+/* Dimension bars */
+.dim-bar{margin-bottom:14px}
+.dim-bar:last-child{margin-bottom:0}
+.dim-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.dim-name{font-size:13px;font-weight:600;color:var(--t)}
+.dim-score{font-size:18px;font-weight:800;color:var(--p)}
+.dim-level{font-size:11px;color:var(--tl);margin-left:4px}
+.bar-bg{height:8px;background:var(--pl);border-radius:4px;overflow:hidden}
+.bar-fill{height:100%;border-radius:4px;transition:width 1s cubic-bezier(.4,0,.2,1)}
+.bar-fill.high{background:linear-gradient(90deg,#7c3aed,#a78bfa)}
+.bar-fill.mid{background:linear-gradient(90deg,#8b5cf6,#c4b5fd)}
+.bar-fill.low{background:linear-gradient(90deg,#a78bfa,#ddd6fe)}
+.dim-detail{font-size:13px;color:var(--tl);margin-top:6px;line-height:1.6}
+/* Lists */
+.list-item{display:flex;gap:10px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #f3f4f6}
+.list-item:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+.list-icon{flex:0 0 24px;text-align:center;font-size:16px}
+.list-content{flex:1}
+.list-content .li-title{font-size:14px;font-weight:600;margin-bottom:2px}
+.list-content .li-desc{font-size:13px;color:var(--tl);line-height:1.5}
+/* Career cards */
+.career-card{background:var(--pl);border-radius:8px;padding:14px;margin-bottom:10px}
+.career-card:last-child{margin-bottom:0}
+.career-name{font-size:14px;font-weight:700;color:var(--p);margin-bottom:4px}
+.career-why{font-size:13px;color:var(--t);line-height:1.6}
+.career-avoid{background:#fef3f2;border-radius:8px;padding:14px;margin-bottom:10px;border-left:3px solid #f87171}
+.career-avoid .career-name{color:#b91c1c}
+.career-avoid:last-child{margin-bottom:0}
+/* Scene */
+.scene-box{background:linear-gradient(135deg,var(--pl),#f5f3ff);border-radius:12px;padding:20px;position:relative;overflow:hidden}
+.scene-box::before{content:'"';position:absolute;top:-10px;left:10px;font-size:80px;color:rgba(124,58,237,0.1);font-family:Georgia,serif}
+.scene-text{position:relative;font-size:14px;line-height:1.8;color:var(--t);font-style:italic}
+/* Match */
+.match-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.match-card{border-radius:8px;padding:14px;text-align:center}
+.match-best{background:#ecfdf5;border:1px solid #a7f3d0}
+.match-conflict{background:#fef3f2;border:1px solid #fca5a5}
+.match-label{font-size:11px;color:var(--tl);margin-bottom:4px}
+.match-value{font-size:13px;font-weight:700}
+.match-best .match-value{color:#059669}
+.match-conflict .match-value{color:#dc2626}
+/* Quote */
+.quote-box{background:var(--pl);border-left:4px solid var(--p);padding:16px 18px;border-radius:0 12px 12px 0;margin:14px 0}
+.quote-text{font-size:16px;font-weight:700;color:var(--p);font-style:italic}
+/* Action plan */
+.action-day{display:flex;gap:12px;margin-bottom:12px;padding:12px;background:#fff;border-radius:8px;border:1px solid var(--b)}
+.action-day:last-child{margin-bottom:0}
+.day-num{flex:0 0 36px;height:36px;border-radius:50%;background:var(--p);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700}
+.day-content{flex:1}
+.day-title{font-size:14px;font-weight:600;margin-bottom:2px}
+.day-desc{font-size:13px;color:var(--tl);line-height:1.5}
+/* Progress */
+.progress-check{width:22px;height:22px;border:2px solid var(--p);border-radius:6px;cursor:pointer;flex:0 0 22px;display:flex;align-items:center;justify-content:center;transition:.2s;margin-top:2px}
+.progress-check.done{background:var(--p)}
+.progress-check.done::after{content:'✓';color:#fff;font-size:14px;font-weight:700}
+.action-day.done{opacity:0.6}
+.action-day.done .day-title{text-decoration:line-through}
+/* Selector */
+.type-selector{padding:16px;background:#fff;border-bottom:1px solid var(--b)}
+.type-selector label{font-size:13px;color:var(--tl);display:block;margin-bottom:6px}
+.type-selector select{width:100%;padding:10px;border:2px solid var(--pl);border-radius:8px;font-size:14px;color:var(--p);font-weight:600;background:#fff}
+.type-selector select:focus{outline:none;border-color:var(--p)}
+/* Famous */
+.famous-tags{display:flex;flex-wrap:wrap;gap:8px}
+.famous-tag{padding:6px 14px;background:var(--pl);border-radius:20px;font-size:13px;color:var(--p);font-weight:600}
+/* Footer */
+.footer{text-align:center;padding:24px 16px;color:var(--tl);font-size:12px}
+.footer a{color:var(--p);text-decoration:none;font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+<!-- Hero -->
+<div class="hero" id="hero">
+<div class="hero-content">
+<div class="icon" id="heroIcon">🔮</div>
+<h1 id="heroTitle">加载中...</h1>
+<div class="badge" id="heroBadge"></div>
+<div class="rarity" id="heroRarity"></div>
+</div>
+</div>
+
+<!-- Type selector -->
+<div class="type-selector">
+<label>📋 选择你的天赋型格</label>
+<select id="typeSelect" onchange="loadType(this.value)">
+<option value="breaker">🔥 破局者</option>
+<option value="sniper">🎯 精算师</option>
+<option value="resonator">🌊 共振者</option>
+<option value="flash">⚡ 闪电手</option>
+<option value="navigator">🧭 领航员</option>
+<option value="cultivator">🏔️ 深耕者</option>
+<option value="butterfly">🦋 灵动者</option>
+<option value="guardian">🛡️ 守护者</option>
+</select>
+</div>
+
+<!-- Tabs -->
+<div class="tabs" id="tabBar">
+<div class="tab active" onclick="switchTab('xray',this)"><span class="tab-icon">🔬</span>天赋X光片</div>
+<div class="tab" onclick="switchTab('career',this)"><span class="tab-icon">🧭</span>职业路径</div>
+<div class="tab" onclick="switchTab('blind',this)"><span class="tab-icon">⚠️</span>成长盲区</div>
+<div class="tab" onclick="switchTab('match',this)"><span class="tab-icon">🤝</span>天赋搭档</div>
+<div class="tab" onclick="switchTab('action',this)"><span class="tab-icon">📅</span>7天行动</div>
+</div>
+
+<!-- Tab 1: 天赋X光片 -->
+<div class="section active" id="sec-xray">
+<div class="card">
+<div class="card-title">🔬 5大天赋维度详解</div>
+<div id="dimBars"></div>
+</div>
+<div class="card">
+<div class="card-title">💎 核心优势</div>
+<div id="strengthsList"></div>
+</div>
+<div class="quote-box" id="quoteBox">
+<div class="quote-text" id="quoteText"></div>
+</div>
+<div class="card">
+<div class="card-title">🎭 特质标签</div>
+<div class="famous-tags" id="traitTags"></div>
+</div>
+</div>
+
+<!-- Tab 2: 职业发展路径 -->
+<div class="section" id="sec-career">
+<div class="card">
+<div class="card-title">✅ 最适合你的职业方向</div>
+<div id="careerList"></div>
+</div>
+<div class="card">
+<div class="card-title">⚠️ 最不适合你的职业</div>
+<div id="avoidList"></div>
+</div>
+<div class="card">
+<div class="card-title">🌟 你的高光时刻</div>
+<div class="scene-box">
+<div class="scene-text" id="sceneText"></div>
+</div>
+</div>
+</div>
+
+<!-- Tab 3: 成长盲区 -->
+<div class="section" id="sec-blind">
+<div class="card">
+<div class="card-title">⚠️ 你最容易踩的5个盲区</div>
+<div id="trapsList"></div>
+</div>
+<div class="card">
+<div class="card-title">🚀 突破瓶颈的5条建议</div>
+<div id="growthList"></div>
+</div>
+</div>
+
+<!-- Tab 4: 天赋搭档 -->
+<div class="section" id="sec-match">
+<div class="card">
+<div class="card-title">🤝 天赋搭档指南</div>
+<div class="match-grid" id="matchGrid"></div>
+</div>
+<div class="card">
+<div class="card-title">🌟 同型格代表人物</div>
+<div class="famous-tags" id="famousTags"></div>
+</div>
+</div>
+
+<!-- Tab 5: 7天微行动计划 -->
+<div class="section" id="sec-action">
+<div class="card">
+<div class="card-title">📅 7天微行动计划</div>
+<p style="font-size:13px;color:var(--tl);margin-bottom:14px">每天做一个小动作，7天后你会对自己的天赋有全新的认识。点击圆框标记完成 ✓</p>
+<div id="actionList"></div>
+</div>
+</div>
+
+<div class="footer">
+<p>🔮 天赋型格使用说明书 · 西西崽测评站</p>
+<p style="margin-top:4px">更多测试请访问 <a href="https://protest.xixizai.com">protest.xixizai.com</a></p>
+</div>
+</div>
+
+<script>
+// === TYPES DATA (extracted from talent.html) ===
+var types = {
+  breaker:{icon:"🔥",title:"破局者",badge:"从0到1的先锋",rarity:"只有约8%的人属于这个型格",
+    desc:"你天生就是那个『先干了再说』的人。别人还在权衡利弊的时候，你已经下场了。\n\n想象一个画面：会议室里十个人在讨论要不要做，你是那个已经做出原型的人。你不怕失败，你怕的是无聊。\n\n你的创造力和决策力构成了一个强力组合——想到就做，做了再调。在今天这个变化极快的时代，这种能力比什么都稀缺。\n\n但破局者擅长开局不擅长收尾。找一个跟你互补的搭档，你负责冲锋，ta负责守阵地。",
+    quote:"你不是太冲动，是别人太犹豫。",
+    scores:{create:92,decide:88,social:65,resilience:75,insight:72},
+    dimDetail:{
+      create:"你的创造力极强(92分)。你不是灵光一闪式的创意，而是『为什么不能换一种做法』式的创造。你看到一套流程、一个产品，本能反应是这里有优化空间。你不被『一直都是这么做的』这种话束缚。",
+      decide:"决策力是你的核心引擎(88分)。不完全的信息对你来说已经够了——你相信行动本身就是信息收集。你不是不思考，而是思考速度比大多数人快，而且你能忍受在不确定中行动。",
+      social:"社交力中等(65分)。你能跟关键的人建立连接，但不擅长维护大规模人脉网。你更习惯用搞定事来吸引资源，而不是主动社交。",
+      resilience:"韧性偏高(75分)。失败对你来说只是数据点——哦原来这条路不通换一条。你的恢复速度快，但长期积累的挫败感可能在某个时刻集中爆发。",
+      insight:"洞察力中上(72分)。你能看到机会在哪里，但有时因为行动太快而忽略深层的风险信号。你擅长战术洞察，战略洞察需要刻意训练。"
+    },
+    strengths:["能在模糊地带快速找到方向，别人还在犹豫你已经下场了","天生的新项目启动器，从0到1的能力极强","不被现有框架束缚，天然会问为什么不换个做法","行动速度极快，能在别人还在分析时就拿到初步结果","抗压能力强，失败不会让你停下来"],
+    careers:[
+      {name:"创业者/联合创始人",why:"你享受从0到1的混乱和不确定性，这正是创业的日常。你不需要别人给你画路线图，你自己就是路线图。但注意：公司过了生存期后你需要一个擅长运营的搭档。"},
+      {name:"产品经理(0-1阶段)",why:"你在没人告诉你该做什么的场景下最闪耀。从用户调研到MVP到验证，你的快速试错本能让你比别人更快找到product-market fit。"},
+      {name:"创新业务负责人",why:"大公司里最缺的就是你这种人——能在体制内开辟新战线的人。你不会被我们没做过吓退，反而会兴奋。"},
+      {name:"自媒体/IP主理人",why:"你的个人观点鲜明、行动力强，这两个特质在自媒体时代是核心优势。你能快速产出内容、快速验证反馈、快速迭代。"},
+      {name:"早期投资(VC方向)",why:"你的嗅觉加果断让你在发现早期机会方面有天然优势。但你需要刻意训练深度分析能力，投资的敌人不是没有机会而是看错机会。"},
+      {name:"独立顾问",why:"你喜欢同时看多个项目、快速给出判断。独立顾问的工作节奏天然契合你的能量模式。"}
+    ],
+    avoidCareers:[
+      {name:"公务员/体制内",why:"你的核心天赋是打破常规快速试错，体制内的运作方式恰恰相反：层层审批、按资排辈、创新被认为是不安分。你进去后最大的消耗不是工作而是对抗规则。"},
+      {name:"标准化管理岗(工厂/供应链)",why:"这个岗位要求稳定可控不出错，而你天生就是那个为什么要这么做的人。你会觉得窒息，团队也会觉得你难搞。"},
+      {name:"纯后台支持(行政/文员)",why:"你需要在一线看到行动产生结果。纯支持岗让你永远在幕后，你的冲锋本能完全没有释放空间。"},
+      {name:"重复性高的流水线工作",why:"你的大脑需要新鲜感维持热情。重复做同一件事对你来说不是轻松，是最残酷的折磨。"}
+    ],
+    traps:["容易同时启动太多事收不住——三个月后开了五个坑一个都没填完","对按部就班的人缺乏耐心，容易给人太急躁的印象","破局能力强但运营深耕意愿低——开局漂亮续局跟不上","新鲜感消退后容易失去兴趣","不太擅长管理和维护已有成果"],
+    growth:["设一个截止日规则：每周三后不再开新坑必须收尾一个","找擅长运营和细节的搭档形成互补","学会区分真机会和新鲜感——三个月后还让我兴奋吗","每月做一次断舍离复盘砍掉该砍的","给自己留无聊时间——创造力有时在停下来时最强"],
+    scene:"周一早上你走进办公室，桌上放着一个全新的项目方案——只有框架没有细节，需要你自己决定怎么干。大多数人会焦虑，但你的眼睛亮了。这就是你的主场。",
+    match:{best:"精算师🎯 —— 你需要有人帮你判断值不值得做",conflict:"守护者🛡️ —— 对方追求稳定你追求变化，互相消耗"},
+    famous:"典型代表：马斯克、王兴、理查德·布兰森",
+    traits:["敢想敢干","创新思维","天生领袖","不怕冒险","快速试错"]
+  },
+  sniper:{icon:"🎯",title:"精算师",badge:"精准狙击手",rarity:"只有约6%的人属于这个型格",
+    desc:"你是那种谋定而后动的人。做决定之前你会把所有数据、逻辑、可能性过一遍。别人觉得你慢，但你知道——你不出手则已一出手就是精准命中。\n\n想象一个画面：市场上所有人都在追热点，你冷静地分析数据后决定这个不值得追。三个月后证明你是对的。\n\n你的核心竞争力不是速度是准确率。在信息爆炸的时代，判断什么是对的比做得快更值钱。\n\n但你的敌人是分析瘫痪——永远觉得信息还不够。学会在70%确定时就行动。",
+    quote:"别人看到运气，你看到概率。",
+    scores:{create:55,decide:90,social:48,resilience:62,insight:92},
+    dimDetail:{
+      create:"创造力中等偏低(55分)。你的创新更多体现在找到更优解而不是凭空创造。你擅长在已有框架内做优化——同样的资源找到效率最高风险最低的配置。",
+      decide:"决策力极高(90分)。你的决策方式是分析型——收集信息对比方案评估风险。你不拍脑袋你靠数据和逻辑。这让你在关键决策上极少翻车，但也容易错过时机。",
+      social:"社交力偏低(48分)。你更喜欢独立工作或小团队深度协作。大型社交场合让你觉得浪费时间。但你在专业领域的权威感会吸引对的人来找你。",
+      resilience:"韧性中等(62分)。你很少遇到意外的挫折因为做事之前充分评估风险。但当事情超出你的分析模型时你会焦虑。",
+      insight:"洞察力极高(92分)。你天生就能看到事物背后的逻辑和规律，别人看到的是现象你看到的是结构和因果。你在某个领域钻得越深判断力越恐怖。"
+    },
+    strengths:["数据驱动的决策能力，在关键节点上极少判断失误","深度钻研不浮于表面，能看到别人看不到的规律","系统性思维能找到复杂问题的最优解","极低的错误率——做的事都做对","在别人慌乱时保持冷静和理性"],
+    careers:[
+      {name:"投资分析师",why:"你的分析力和洞察力在这个领域是碾压级的。你天然就能看穿财务数据背后的商业逻辑。你的低失误率在投资界就是印钞机。"},
+      {name:"战略咨询顾问",why:"你享受拆解复杂问题的过程。你的系统性思维能快速建立分析框架给客户清晰的答案。"},
+      {name:"数据科学家",why:"你的两个最强维度——分析力和洞察力——完美结合。你能从海量数据中找到别人找不到的模式。"},
+      {name:"风险管理",why:"你是天生的风险雷达。别人看到机会你自动看到风险。在金融安全合规领域这种能力价值千金。"},
+      {name:"精算师/量化交易",why:"这个岗位完全不需要你的短板社交只需要你的长板分析加洞察。纯数据驱动凭判断力吃饭。"},
+      {name:"科研/学术",why:"你享受深度钻研能耐得住寂寞。学术界的评价体系天然契合你的做事方式。"}
+    ],
+    avoidCareers:[
+      {name:"需要快速反应的销售/BD",why:"这个岗位要求你在信息不完整时快速行动快速建立关系。你的分析本能会让你痛苦——总想多想想再说但客户不会等你。"},
+      {name:"创意驱动的广告/设计",why:"这个岗位要求天马行空的发散思维而你的思维模式是收敛型的。你会觉得自己不够有创意。"},
+      {name:"节奏极快的早期创业团队",why:"创业早期要求边跑边看快速试错。你总想先搞清楚再动手的习惯会拖慢团队节奏同时你也会焦虑。"},
+      {name:"高强度社交的公关/市场",why:"这些岗位80%的时间在跟人打交道你的能量会被社交快速消耗没有时间做你擅长的深度思考。"}
+    ],
+    traps:["过度分析导致错过时机——永远觉得信息还不够","对不确定性强的场景焦虑","不太擅长边跑边看的敏捷模式","容易给人想太多做太少的印象","对新信息永远觉得还不够"],
+    growth:["给自己设一个够用线——信息到70%就必须行动","练习在不完美的条件下做决定","学会接受合理误差不追求每次完美","找低成本试错机会训练行动肌肉","跟行动力强的人组队让ta推你出门"],
+    scene:"团队会议上所有人都在争论该往哪个方向走，你安静了十分钟然后打开电脑展示了一份完整的对比分析——数据、风险、收益一目了然。争论瞬间停止了。",
+    match:{best:"破局者🔥 —— ta负责冲锋你负责判断方向对不对",conflict:"闪电手⚡ —— 对方太快你觉得不严谨你太慢对方觉得拖后腿"},
+    famous:"典型代表：巴菲特、Ray Dalio、张磊",
+    traits:["逻辑严密","精准判断","深度思考","天生分析师","低失误率"]
+  },
+  resonator:{icon:"🌊",title:"共振者",badge:"人际粘合剂",rarity:"只有约12%的人属于这个型格",
+    desc:"你是天生的人际磁铁。有你在的场合氛围永远是热的。你能感知到每个人的情绪，知道什么时候该推一把什么时候该拉一下。\n\n想象一个画面：一个剑拔弩张的会议室所有人都不说话了。你开口说了句什么气氛瞬间松动对话重新开始。你就是有这种能力。\n\n你的社交力加上强大的心理韧性让你在高压环境下依然能连接资源稳定军心。你的口碑就是你最好的简历。",
+    quote:"你的竞争力不是技能，是你能连接谁。",
+    scores:{create:62,decide:65,social:95,resilience:88,insight:60},
+    dimDetail:{
+      create:"创造力中等偏高(62分)。你擅长在人际互动中产生新想法——跟人聊着聊着就来灵感了。你的创意是碰撞出来的。",
+      decide:"决策力中等(65分)。你做决定时会考虑所有人的感受这是优点也是束缚。有时你需要学会不被别人的情绪绑架自己的判断。",
+      social:"社交力极强(95分)。人多的场合你如鱼得水。你能记住每个人的名字喜好和关系网络。你的手机通讯录就是你最大的资产。",
+      resilience:"韧性很高(88分)。挫折对你来说就像弹跳床越摔越高。你的乐观和社交支持网络让你恢复速度极快。",
+      insight:"洞察力中等(60分)。你对人的洞察很深能读空气感知情绪，但对事和趋势的洞察一般。你擅长理解人不擅长理解系统。"
+    },
+    strengths:["极高的人际敏感度和共情力——能感知到别人没说出口的情绪","抗压能力极强越挫越勇还能带动身边人的士气","擅长整合资源和人脉天生的连接器","天生的氛围制造者有你在的地方不会冷场","能在矛盾双方之间建立桥梁化解冲突"],
+    careers:[
+      {name:"市场/品牌营销",why:"你天然就能感知消费者想要什么。你的共情力让你写出的文案做出的活动总能打到用户心里。"},
+      {name:"社群运营/KOL",why:"经营社群就是经营关系这是你最擅长的事。你能让每个成员觉得自己被看见被重视。"},
+      {name:"公关负责人",why:"危机公关的本质是情绪管理。你的高情商和抗压能力在这个岗位上就是核武器。"},
+      {name:"HRBP/组织发展",why:"你擅长读懂人——谁不开心了谁该晋升了团队哪里有暗流。你的共情力让你成为员工和公司之间的桥梁。"},
+      {name:"销售(关系型)",why:"你的成交不靠话术靠信任。客户跟你做生意是因为喜欢你这个人。"},
+      {name:"创业者(市场驱动型)",why:"你的核心优势是搞定人和搞定资源——这是创业最需要的能力之一。你的个人魅力就是你的融资能力。"}
+    ],
+    avoidCareers:[
+      {name:"长期独立钻研的科研",why:"科研需要数年跟数据文献实验打交道几乎没有人际互动。你的社交能量没有释放渠道会觉得像被关在小黑屋里。"},
+      {name:"纯数据/代码驱动后端岗",why:"这些岗位不需要跟人打交道就能完成工作。对你来说太孤独了你需要人的温度才能发挥最佳状态。"},
+      {name:"高度标准化重复性流水线",why:"你需要变化互动和情感连接。每天做一模一样的事情对你的精神是一种折磨。"},
+      {name:"冷酷淘汰型行业(高频交易等)",why:"这些行业信奉数据至上弱肉强食不讲究人情。你的共情力在这里不但没用反而成为负担。"}
+    ],
+    traps:["容易把精力分散在太多社交上深度不够","不喜欢钻研专业壁垒可能不足","害怕独处容易用社交逃避深度思考","容易被人情绑架做不理性的决定","在需要说不的时候不够果断"],
+    growth:["每周留至少半天独处时间做深度思考","建立拒绝清单学会说不","选定一个专业方向深入建立壁垒","不只做连接者也要做创造者","学会区分社交带来的真机会和无效社交"],
+    scene:"年会上300人的场子你走进去像回家一样。十分钟内跟五个人交换了联系方式，发现其中一个人的公司正好能帮你朋友解决问题。这种事对你来说像呼吸一样自然。",
+    match:{best:"深耕者🏔️ —— 你负责连接外部世界ta负责深耕专业",conflict:"精算师🎯 —— 对方觉得你太感性你觉得对方太冷漠"},
+    famous:"典型代表：Oprah Winfrey、马云、李佳琦",
+    traits:["社交天花板","共情力强","抗压恢复快","人脉资源王","天生感染力"]
+  },
+  flash:{icon:"⚡",title:"闪电手",badge:"唯快不破",rarity:"只有约10%的人属于这个型格",
+    desc:"你是那种想到就做做完就算的人。你的核心竞争力不是想得最深而是跑得最快。\n\n想象一个画面：老板说了个想法，大多数人在想可行性分析，你已经把第一版做出来发到群里了。\n\n你不需要100%的信息才能行动70%就够了。你是在跑的过程中调整方向而不是想清楚了再跑。你是团队里的加速器。",
+    quote:"完成比完美更重要。",
+    scores:{create:68,decide:85,social:58,resilience:72,insight:55},
+    dimDetail:{
+      create:"创造力中等(68分)。你的创意更多体现在执行层面——怎么更快搞定一件事怎么简化流程。",
+      decide:"决策力极高(85分)。你思考速度极快能在几秒内做出判断而且准确率还不错。你的直觉是多年经验压缩后的本能反应。",
+      social:"社交力中等(58分)。你跟人打交道的方式是快速建立连接快速推进事情。不喜欢冗长的社交场合。",
+      resilience:"韧性偏高(72分)。遇到障碍第一反应不是停下而是绕过去。你的字典里没有卡住了只有换条路。",
+      insight:"洞察力中等偏低(55分)。你不擅长长期趋势分析但对当下正在发生的事反应极快。你的洞察是战术级而非战略级的。"
+    },
+    strengths:["极强的执行力和交付速度别人还在想你已经做完了","不纠结不内耗天生的果断","擅长在有限资源下快速产出","天生的危机处理者越紧急越冷静","推动团队节奏的加速器"],
+    careers:[
+      {name:"项目经理",why:"你天生就是推动事情往前走的人。你能让一个拖了三个月的项目在两周内跑通。"},
+      {name:"运营增长",why:"增长黑客的核心是快速试错快速迭代。你的速度在这个岗位上就是最大的优势。"},
+      {name:"创业团队早期核心",why:"早期创业最需要什么都干什么都快的人。你是天生的瑞士军刀型人才。"},
+      {name:"供应链管理",why:"供应链的核心挑战是效率。你的执行力和应变能力在这里是碾压级的。"},
+      {name:"产品经理(迭代型)",why:"快速上线看数据迭代。这种敏捷模式跟你的本能完全契合。"},
+      {name:"销售(短周期高频)",why:"你的节奏快反应快适合高频短周期的销售场景。"}
+    ],
+    avoidCareers:[
+      {name:"需要数年深耕的科研",why:"一个课题可能要做三到五年。你会在第三个月就开始坐立不安。"},
+      {name:"高度官僚化的体制内",why:"体制的运转方式是层层审批按流程走。你等不了你会试图绕过流程。"},
+      {name:"反复打磨的精品创作",why:"精品需要反复修改精雕细琢。你的本能是先做出来再说。"},
+      {name:"节奏极慢的传统行业",why:"决策周期半年到一年。你会觉得像在泥潭里跑步。"}
+    ],
+    traps:["速度太快有时忽略质量和风险","不喜欢长周期深钻研的工作","容易给人不够深思熟虑的印象","同时推进太多事精力分散","对细节不够敏感容易出低级错误"],
+    growth:["行动前花5分钟做风险检查","学会说这个值得多花时间做对","建立质量检查清单防止低级错误","每月留一天深度复盘","找细心的人帮你把关细节"],
+    scene:"周五下午4点老板突然说这个方案下周一就要。办公室哀嚎一片你已经在打开电脑开始做了。下午6点第一版已经发到群里。",
+    match:{best:"深耕者🏔️ —— 你快速跑通ta把品质做到极致",conflict:"精算师🎯 —— 对方觉得你太莽撞你觉得对方太磨叽"},
+    famous:"典型代表：贝佐斯(早期)、雷军",
+    traits:["执行力爆表","快速响应","结果导向","不墨迹","天生加速器"]
+  },
+  navigator:{icon:"🧭",title:"领航员",badge:"战略操盘手",rarity:"只有约9%的人属于这个型格",
+    desc:"你是那种站在高处看全局的人。你天然就能看到事物之间的联系别人还在纠结细节你已经看到了趋势和方向。\n\n想象一个画面：团队陷入细节争论每个人都只看到自己那一块。你站起来走到白板前画了一张图把所有人的线连了起来然后指着一个交叉点说：机会在这里。\n\n加上你强大的社交连接力你不只是看到了方向还能带着大家走过去。",
+    quote:"别人看到树木，你看到森林。",
+    scores:{create:70,decide:72,social:82,resilience:68,insight:90},
+    dimDetail:{
+      create:"创造力偏高(70分)。你的创意体现在把不同领域的东西拼在一起形成新战略。你不是从零创造而是重新组合已有元素。",
+      decide:"决策力中上(72分)。你的决策方式是先看大局再做判断。一旦判断了大方向就坚定推进。",
+      social:"社交力高(82分)。你擅长在关键人物之间建立连接编织资源网络。你的社交是战略性社交不是闲聊。",
+      resilience:"韧性中等偏高(68分)。你能承受战略被质疑的压力但需要阶段性胜利来维持信心。",
+      insight:"洞察力极高(90分)。你天生就能看到别人看不到的趋势和机会。你擅长从大量信息中提炼出核心模式。你的判断往往领先大多数人。"
+    },
+    strengths:["全局视野和战略思维能看到事物之间的联系","擅长跨界连接和资源整合","能影响和带动他人朝一个方向走","在复杂局面中找到关键杠杆点","天生的领导力和号召力"],
+    careers:[
+      {name:"战略/业务负责人",why:"你享受在复杂局面中找方向的过程。你能把一堆杂乱的信息变成清晰的路线图。"},
+      {name:"投资人/FA",why:"你的洞察力让你比别人更早看到趋势你的社交力让你能触达关键人脉。投资人最需要的两个能力你都具备。"},
+      {name:"管理咨询",why:"咨询卖的就是看全局和拆系统的能力。你的跨界视角让你能给客户独特的洞察。"},
+      {name:"企业高管",why:"你能站在高处看全局又能带着团队走。这是高管最核心的能力组合。"},
+      {name:"创业者(平台型)",why:"你适合做连接型平台——把不同的人和资源连起来创造价值。"},
+      {name:"产品总监",why:"你不只看产品本身还看产品在市场生态中的位置。这种全局视角让你能做出更正确的方向判断。"}
+    ],
+    avoidCareers:[
+      {name:"纯执行层面的重复工作",why:"你的天赋是看全局和找方向纯执行让你觉得自己大材小用。你会觉得这些事不需要你来做。"},
+      {name:"不需要全局视野的技术岗",why:"有些技术岗位只需要钻深不需要看广。你的跨界能力在这里完全没有发挥空间。"},
+      {name:"高度独立缺乏互动的岗位",why:"你的战略需要通过影响他人来落地。没有互动的岗位让你只能想不能做。"},
+      {name:"节奏极快但没有战略空间的环境",why:"如果每天都在救火没有时间思考方向你会觉得自己变成了一个纯执行者。"}
+    ],
+    traps:["有时过于关注大局忽略执行细节","对只管低头干活的人不够理解","战略判断需要时间验证容易在短期被质疑","容易陷入永远在规划迟迟不行动","对不认同战略方向的人不够耐心"],
+    growth:["给自己设一个执行日——这天只干活不看方向","学会欣赏执行型人才的细节能力","在战略还没被验证时用小胜利建立信任","不要等100%确定才行动70%就够了","定期跟一线的人交流防止脱离实际"],
+    scene:"团队陷入细节争论每个人都只看到自己那一块。你站起来走到白板前画了一张图把所有人的线连了起来然后指着一个交叉点说机会在这里。所有人沉默了三秒然后开始点头。",
+    match:{best:"闪电手⚡ —— 你负责指方向ta负责快速跑通",conflict:"守护者🛡️ —— 对方求稳你求变很难达成一致"},
+    famous:"典型代表：任正非、张一鸣、Satya Nadella",
+    traits:["全局视野","战略思维","连接者","影响力","天然领导力"]
+  },
+  cultivator:{icon:"🏔️",title:"深耕者",badge:"长期主义者",rarity:"只有约7%的人属于这个型格",
+    desc:"你是那种认准了一件事就做到极致的人。在所有人都追逐风口的时代你的深度和耐心是你最稀缺的竞争力。\n\n想象一个画面：五年前跟你一起入行的人都换方向了。你还在原地深耕。今天回头看你是走得最远的那个人。\n\n你的洞察力帮你找到值得深耕的方向你的韧性让你在别人放弃的时候还在坚持。你的专业壁垒一旦建立就是别人无法逾越的护城河。",
+    quote:"慢即是快，少即是多。",
+    scores:{create:65,decide:55,social:50,resilience:90,insight:88},
+    dimDetail:{
+      create:"创造力中等(65分)。你的创新在于在已有领域里不断深挖找到别人看不到的深度。你是打磨型创作者。",
+      decide:"决策力偏低(55分)。你不是不能做决定而是做决定之前需要充分理解充分准备。一旦决定了就坚定不移。",
+      social:"社交力偏低(50分)。你更喜欢深度的一对一交流而不是大规模社交。你的朋友圈不大但关系极深。",
+      resilience:"韧性极高(90分)。你能忍受长期的枯燥和寂寞这是大多数人做不到的。你的坚持不是因为固执而是因为对自己的判断有信心。",
+      insight:"洞察力极高(88分)。你的洞察来自深度而非广度。你在某一个领域钻得足够深深到你看到了别人看不到的规律和本质。"
+    },
+    strengths:["深度钻研能力不浮于表面","极强的耐心和长期主义心态","在专业领域建立真正的壁垒","在别人放弃时坚持到底","深度思考找到事物的本质"],
+    careers:[
+      {name:"科研/学术",why:"你享受深度钻研的过程能耐得住寂寞。学术界的评价体系天然契合你的做事方式。十年磨一剑对你来说不是痛苦是享受。"},
+      {name:"技术专家/架构师",why:"你能在技术领域钻到足够深成为不可替代的专家。你的深度就是你的护城河。"},
+      {name:"精品内容创作者",why:"你不追求量产追求每件作品都打磨到极致。这种工匠精神在今天的内容市场反而更稀缺更值钱。"},
+      {name:"专业服务(法律/医疗/财务)",why:"这些领域需要的就是深度积累和极低的错误率。你的耐心和严谨在这里是最好的资产。"},
+      {name:"工匠/手艺人",why:"你享受把一件事做到极致的过程。在工业化时代工匠精神反而成了最稀缺的奢侈品。"},
+      {name:"深度调查记者",why:"你愿意花几个月甚至一年去挖掘一个真相。这种耐心在快餐媒体时代价值千金。"}
+    ],
+    avoidCareers:[
+      {name:"节奏极快的短视频/流量行业",why:"这些行业的核心是快速产出、追逐热点、追求数量。你的工匠本能在这里完全没有用武之地你会觉得在制造垃圾。"},
+      {name:"需要频繁切换方向的创业团队",why:"创业团队的方向可能一两个月就变一次。你刚扎下去就要被拔出来这种节奏会让你非常痛苦。"},
+      {name:"高强度社交的销售/BD",why:"这些岗位80%的时间在社交你的能量会被快速消耗没有时间做深度思考。"},
+      {name:"追求快速变现的短期项目",why:"你的价值需要时间来兑现。短期项目你还没发挥出优势项目就结束了。"}
+    ],
+    traps:["容易过度打磨错过市场时机","对快节奏的模式不适应","需要学会在完美和完成之间取舍","不擅长自我营销容易被埋没","对外部变化反应较慢"],
+    growth:["设一个发布线——达标就必须发布不再打磨","每周花30分钟了解行业新动态防止闭门造车","学会展示自己的成果不要只做不说","找互补的人帮你做推广","接受80分比100分更快更重要的是先出去"],
+    scene:"凌晨两点你的台灯还亮着。这个课题已经做了三年了同行都转方向了但你总觉得再深挖一层就能看到别人没看到的东西。今天你终于找到了那个关键的数据点。这一刻所有的寂寞都值了。",
+    match:{best:"共振者🌊 —— ta负责把你推向世界你负责打磨极致",conflict:"闪电手⚡ —— 对方太快了你还没想清楚ta已经跑完了"},
+    famous:"典型代表：宫崎骏、屠呦呦、Kobe Bryant",
+    traits:["深度思考","长期主义","耐得住寂寞","专业壁垒","工匠精神"]
+  },
+  butterfly:{icon:"🦋",title:"灵动者",badge:"创意连接器",rarity:"只有约11%的人属于这个型格",
+    desc:"你的脑子里永远有一百个想法而你的社交天赋让这些想法不只是停在脑子里——你能找到对的人把灵感变成现实。\n\n想象一个画面：在一个跨界沙龙上你同时跟技术、设计、商业的人在聊三个完全不同的话题但每个话题你都能接住。到最后你把三方拉到一起说：我们做个新东西吧。\n\n你的超能力是跨界——把不同领域的东西拼在一起创造新的可能。你不一定是最专业的但你是最有趣的最有生命力的。",
+    quote:"你的竞争力不是专精一门，是连接万物。",
+    scores:{create:90,decide:62,social:88,resilience:60,insight:70},
+    dimDetail:{
+      create:"创造力极高(90分)。灵感对你来说像呼吸一样自然——走在路上洗澡聊天都在产生新想法。你的挑战不是没想法而是想法太多。",
+      decide:"决策力中等(62分)。你做决定的方式是感觉对了就做有时准有时不准。你需要找一个帮你做筛选的人。",
+      social:"社交力极高(88分)。你是天生的社交蝴蝶能在不同圈子里自由穿梭。你的人脉覆盖面广各行各业的人都有。",
+      resilience:"韧性中等(60分)。你对挫折的恢复方式是——找到下一个有趣的事情就忘了上一个。但长期看不到成果会让你失去热情。",
+      insight:"洞察力偏高(70分)。你的洞察力体现在跨界——你能看到两个不相关的领域之间的连接点。这种能力在创新领域价值极高。"
+    },
+    strengths:["无限的创意和灵感来源脑子里永远有新想法","擅长跨界思维和连接能把不相关的领域串起来","社交能力强资源整合快","天生的灵感体质走到哪都能找到有趣的事","能让沉闷的场合变得有活力"],
+    careers:[
+      {name:"创意总监/策划",why:"你的核心能力是把不同元素重新组合形成新创意。创意总监就是你的天职——你负责脑暴和连接执行交给团队。"},
+      {name:"内容/IP操盘手",why:"你能看到什么内容会火、什么角度没人做过。加上你的社交传播能力你天然就是IP的孵化器。"},
+      {name:"品牌营销",why:"品牌营销需要创意加传播你两个都强。你能做出让人记住的campaign。"},
+      {name:"创业者(创意驱动型)",why:"你的创业不靠技术壁垒靠创意壁垒。你的产品一定是最有趣的那个。"},
+      {name:"设计思维顾问",why:"你擅长把用户需求、商业目标和技术可能性连起来。设计思维顾问就是做这件事的。"},
+      {name:"活动策划/制作人",why:"把不同的人、资源、创意串成一场活动这完全在你的能力圈里。"}
+    ],
+    avoidCareers:[
+      {name:"高度结构化的财务/合规岗",why:"这些岗位的核心是按规则办事不出错。你的天性是打破规则重新组合这种工作对你来说是窒息。"},
+      {name:"长期独立科研",why:"科研需要的是在窄领域深钻十年。你的大脑需要新鲜感需要跨界。独立科研会让你觉得像被关了禁闭。"},
+      {name:"标准化运营管理",why:"运营管理需要稳定性、一致性、对细节的极致追求。你天性喜欢变化和新鲜标准化运营会让你痛苦。"},
+      {name:"不需要创意的流程性工作",why:"你的核心天赋是创意和连接。如果工作不需要这两个能力你完全是在浪费自己。"}
+    ],
+    traps:["想法太多但落地不够经常开了头没结尾","容易被新鲜感牵着走频繁换方向","需要找一个帮你收口的搭档","深度不够什么都知道一点什么都不精","给别人创意太多但执行跟不上会失去信任"],
+    growth:["设一个收口日：这周不再开新想法先落地已有的","找执行力强的人做搭档把你的创意变成产品","用日历管理灵感防止遗忘","每月选一个想法做到完成","学会对一个方向说不即使它很有趣"],
+    scene:"在一个跨界沙龙上你同时跟技术、设计、商业的人在聊三个完全不同的话题。最后你把三方拉到一起说我们做个新东西吧。大家都被你的热情感染了。这就是你的超能力。",
+    match:{best:"闪电手⚡ —— 你出创意ta负责快速执行",conflict:"深耕者🏔️ —— 对方觉得你太飘你觉得对方太闷"},
+    famous:"典型代表：Steve Jobs（把科技和艺术连起来的人）、保罗·格雷厄姆",
+    traits:["创意无限","跨界思维","灵感体质","天生连接者","最有生命力"]
+  },
+  guardian:{icon:"🛡️",title:"守护者",badge:"值得信赖的基石",rarity:"只有约15%的人属于这个型格",
+    desc:"你是那种在任何团队里都不可或缺但容易被忽视的人。你不追求聚光灯但所有人遇到问题第一个想到的就是你。\n\n想象一个画面：公司突然出了大事所有人都在慌。你默默地把关键系统备份了、客户安抚了、流程梳理了。等大家回过神来发现事情已经被你处理好了。\n\n你的稳健和可靠让整个系统正常运转。没有你这种人在团队就像建在沙子上的楼。\n\n你的价值不在于单点爆发而在于——永远在永远稳永远能扛。记住：你的靠谱不是廉价的要让世界看到你沉默的重量。",
+    quote:"真正的强大不是爆发，是始终在。",
+    scores:{create:48,decide:58,social:55,resilience:85,insight:65},
+    dimDetail:{
+      create:"创造力偏低(48分)。你不是天马行空的人但你能把已有的方案执行到位。你的价值不在于创新而在于稳定输出。",
+      decide:"决策力中等偏低(58分)。你做决定比较谨慎倾向于选择稳妥的方案。你不冒险但这也意味着你很少犯大错。",
+      social:"社交力中等(55分)。你不喜欢大型社交但能跟同事建立深度的信任关系。你的社交模式是长期积累的深交。",
+      resilience:"韧性极高(85分)。你是那种越乱越稳的人。别人慌的时候你反而能保持冷静把事情一件件处理好。这种稳定性在关键时刻价值千金。",
+      insight:"洞察力中等偏高(65分)。你的洞察更多体现在对系统和流程的理解上——你知道哪里会出问题所以能提前防。"
+    },
+    strengths:["极强的稳定性和可靠性交付的东西永远在水准之上","深度的责任感和使命感答应的事一定做到","在混乱中维持秩序的能力","极低的失误率是团队的安全网","长期靠谱积累的信任是最深的护城河"],
+    careers:[
+      {name:"技术运维/基础设施",why:"你是天生的系统守护者。运维最需要的就是稳定性、对细节的关注和在危机时刻的冷静。你的价值在系统不down的那一刻体现。"},
+      {name:"财务/合规",why:"这些岗位需要的是严谨、稳定、零失误。你的低失误率和长期主义心态在这里是最好的资产。"},
+      {name:"行政/运营管理",why:"你擅长在幕后让一切井井有条。你的存在让团队效率提升但很少被人注意到——直到你不在的时候大家才发现你的价值。"},
+      {name:"客户成功",why:"你的耐心和可靠让客户有安全感。你不会过度承诺但答应的事一定做到。客户跟你合作会觉得很踏实。"},
+      {name:"质量管理(QA)",why:"你天生就能发现流程中哪里会出问题。质量管理需要的就是这种系统性思维和对细节的敏感。"},
+      {name:"供应链/采购",why:"这个岗位需要稳定性、谈判能力和长期关系管理。你的深度社交模式在这里是优势。"}
+    ],
+    avoidCareers:[
+      {name:"节奏极快的创业团队",why:"创业早期一切都在变没有流程没有规范。你需要结构和稳定性创业环境会让你焦虑。"},
+      {name:"需要频繁社交的BD/销售",why:"这些岗位需要每天认识新人不断拓展人脉。你的社交能量消耗很快长期做会很累。"},
+      {name:"高度创新驱动的创意岗",why:"这些岗位要求你不断打破常规产出新想法。你的天赋在于稳定执行而非天马行空。"},
+      {name:"竞争激烈淘汰率高的行业",why:"这些行业要求你主动出击抢资源。你的性格是防守型的在进攻型环境里会被边缘化。"}
+    ],
+    traps:["容易被忽视不善于展示自己的价值","过于保守错过该冒险的时机","不善于说不容易被当成万能工具人","在需要主动出击的时候不够积极","变化太快的场景会让你不适应"],
+    growth:["学会展示自己的价值定期跟上级同步贡献和成果","在稳定中找微小创新的机会","建立个人品牌让别人看到你","学会说这个不是我的职责","适当冒险走出舒适区你会发现你比想象中强"],
+    scene:"公司突然出大事所有人都在慌。你没有说话默默地把关键系统备份了客户安抚了流程梳理了。等大家回过神来发现事情已经被你处理好了。你笑了笑回到座位继续干活。",
+    match:{best:"破局者🔥 —— ta负责冲锋你负责守阵地",conflict:"破局者🔥 —— 如果双方都不退让会互相消耗"},
+    famous:"典型代表：Tim Cook、稻盛和夫",
+    traits:["稳如磐石","深度可靠","系统守护者","默默扛事","极低失误率"]
+  }
+};;
+
+var currentType='breaker';
+
+function getQueryParam(name){
+var url=new URL(window.location.href);
+return url.searchParams.get(name)||'';
+}
+
+function loadType(type){
+currentType=type;
+var t=types[type];
+if(!t){return}
+
+// Hero
+document.getElementById('heroIcon').textContent=t.icon;
+document.getElementById('heroTitle').textContent='你是「'+t.title+'」';
+document.getElementById('heroBadge').textContent=t.badge;
+document.getElementById('heroRarity').textContent=t.rarity;
+
+// Update selector
+document.getElementById('typeSelect').value=type;
+
+// Tab 1: X-Ray
+renderDimBars(t);
+renderStrengths(t);
+document.getElementById('quoteText').textContent=t.quote;
+renderTraits(t);
+
+// Tab 2: Career
+renderCareers(t);
+renderAvoidCareers(t);
+document.getElementById('sceneText').textContent=t.scene;
+
+// Tab 3: Blind spots
+renderTraps(t);
+renderGrowth(t);
+
+// Tab 4: Match
+renderMatch(t);
+renderFamous(t);
+
+// Tab 5: Action plan
+renderActions(t,type);
+
+// Save to localStorage
+localStorage.setItem('talent_guide_type',type);
+}
+
+function renderDimBars(t){
+var dims=[
+{key:'create',name:'创造力',score:t.scores.create},
+{key:'decide',name:'决策力',score:t.scores.decide},
+{key:'social',name:'社交力',score:t.scores.social},
+{key:'resilience',name:'韧性',score:t.scores.resilience},
+{key:'insight',name:'洞察力',score:t.scores.insight}
+];
+var h='';
+dims.forEach(function(d){
+var level=d.score>=80?'极强':d.score>=65?'优势':d.score>=50?'中等':'待开发';
+var cls=d.score>=80?'high':d.score>=65?'mid':'low';
+var detail=t.dimDetail?t.dimDetail[d.key]||'':'';
+h+='<div class="dim-bar">';
+h+='<div class="dim-row"><span class="dim-name">'+d.name+'</span><span><span class="dim-score">'+d.score+'</span><span class="dim-level">'+level+'</span></span></div>';
+h+='<div class="bar-bg"><div class="bar-fill '+cls+'" style="width:0%" data-w="'+d.score+'"></div></div>';
+if(detail){h+='<div class="dim-detail">'+detail+'</div>'}
+h+='</div>';
+});
+document.getElementById('dimBars').innerHTML=h;
+// Animate bars
+setTimeout(function(){
+document.querySelectorAll('.bar-fill').forEach(function(el){
+el.style.width=el.dataset.w+'%';
+});
+},100);
+}
+
+function renderStrengths(t){
+var icons=['💡','⚡','🎯','🚀','💎'];
+var h='';
+t.strengths.forEach(function(s,i){
+h+='<div class="list-item"><div class="list-icon">'+(icons[i]||'✨')+'</div><div class="list-content"><div class="li-desc">'+s+'</div></div></div>';
+});
+document.getElementById('strengthsList').innerHTML=h;
+}
+
+function renderTraits(t){
+if(!t.traits)return;
+var h='';
+t.traits.forEach(function(tr){
+h+='<span class="famous-tag">'+tr+'</span>';
+});
+document.getElementById('traitTags').innerHTML=h;
+}
+
+function renderCareers(t){
+var h='';
+t.careers.forEach(function(c,i){
+h+='<div class="career-card"><div class="career-name">'+(i+1)+'. '+c.name+'</div><div class="career-why">'+c.why+'</div></div>';
+});
+document.getElementById('careerList').innerHTML=h;
+}
+
+function renderAvoidCareers(t){
+var h='';
+t.avoidCareers.forEach(function(c,i){
+h+='<div class="career-avoid"><div class="career-name">⚠️ '+c.name+'</div><div class="career-why">'+c.why+'</div></div>';
+});
+document.getElementById('avoidList').innerHTML=h;
+}
+
+function renderTraps(t){
+var icons=['🕳️','⚡','🚫','💤','🔄'];
+var h='';
+t.traps.forEach(function(tr,i){
+h+='<div class="list-item"><div class="list-icon">'+(icons[i]||'⚠️')+'</div><div class="list-content"><div class="li-desc">'+tr+'</div></div></div>';
+});
+document.getElementById('trapsList').innerHTML=h;
+}
+
+function renderGrowth(t){
+var icons=['🎯','📈','🤝','🔍','✨'];
+var h='';
+t.growth.forEach(function(g,i){
+h+='<div class="list-item"><div class="list-icon">'+(icons[i]||'💡')+'</div><div class="list-content"><div class="li-desc">'+g+'</div></div></div>';
+});
+document.getElementById('growthList').innerHTML=h;
+}
+
+function renderMatch(t){
+if(!t.match)return;
+var h='';
+h+='<div class="match-card match-best"><div class="match-label">🤝 最佳搭档</div><div class="match-value">'+t.match.best+'</div></div>';
+h+='<div class="match-card match-conflict"><div class="match-label">⚠️ 最大冲突</div><div class="match-value">'+t.match.conflict+'</div></div>';
+document.getElementById('matchGrid').innerHTML=h;
+}
+
+function renderFamous(t){
+if(!t.famous)return;
+var h='';
+t.famous.forEach(function(f){
+h+='<span class="famous-tag">'+f+'</span>';
+});
+document.getElementById('famousTags').innerHTML=h;
+}
+
+function renderActions(t,type){
+var actionPlans={
+breaker:[
+{title:'记录你的「冲动清单」',desc:'今天每次想立刻行动时，记下来。不评判，只记录。看看你的破局本能有多强。'},
+{title:'找一个你一直想做但没做的事',desc:'花30分钟做出第一步——不是计划，是行动。'},
+{title:'给一个正在犹豫的朋友建议',desc:'用你的果断帮别人做决定。你会发现自己在这方面的天赋有多明显。'},
+{title:'复盘最近3个「开了头没收尾」的事',desc:'选一个，给它设一个deadline。破局者最需要的不是新机会，是收尾能力。'},
+{title:'找一个跟你性格互补的人聊天',desc:'注意ta是如何分析和决策的，看看你能从中学到什么。'},
+{title:'做一个你擅长领域的小分享',desc:'发朋友圈、写短文或拍视频。你的天赋需要被看见。'},
+{title:'写下你的天赋使用计划',desc:'基于这周的发现，列出未来一个月你打算用天赋做什么。'}
+],
+sniper:[
+{title:'记录你的「分析时刻」',desc:'今天每次本能地开始分析利弊时，记下来。看看你的精算本能有多强。'},
+{title:'用数据帮一个朋友做决定',desc:'把你的分析能力用在帮助别人上，你会发现自己在这方面的天赋有多明显。'},
+{title:'复盘最近一个你判断正确的事',desc:'写下你当时是怎么判断的，提取你的决策模型。'},
+{title:'找一个你一直想深入研究的话题',desc:'花1小时深度研究，享受你的分析本能被满足的感觉。'},
+{title:'找一个跟你性格互补的人聊天',desc:'注意ta是如何快速行动的，看看你能从中学到什么。'},
+{title:'列出你目前掌握的「分析框架」',desc:'你的方法论就是你的核心资产，把它显性化。'},
+{title:'写下你的天赋使用计划',desc:'基于这周的发现，列出未来一个月你打算用天赋做什么。'}
+],
+resonator:[
+{title:'记录你的「共情时刻」',desc:'今天每次感受到别人的情绪时，记下来。看看你的共振本能有多强。'},
+{title:'主动跟一个很久没联系的朋友聊天',desc:'用你的社交天赋重新连接，感受你的能量场。'},
+{title:'帮一个朋友梳理他/她的困惑',desc:'用你的倾听和共情能力帮助别人，你会发现自己在这方面的天赋有多明显。'},
+{title:'复盘你最近最有成就感的连接',desc:'写下当时你做对了什么，提取你的社交模式。'},
+{title:'找一个跟你性格互补的人聊天',desc:'注意ta是如何专注深度的，看看你能从中学到什么。'},
+{title:'整理你的人脉地图',desc:'你的关系网就是你的核心资产，把它可视化。'},
+{title:'写下你的天赋使用计划',desc:'基于这周的发现，列出未来一个月你打算用天赋做什么。'}
+],
+flash:[
+{title:'记录你的「速度时刻」',desc:'今天每次比别人快完成一件事时，记下来。看看你的闪电本能有多强。'},
+{title:'找一个你一直想快速搞定的事',desc:'用你的速度优势30分钟解决战斗。'},
+{title:'帮一个朋友快速解决一个问题',desc:'用你的行动力帮助别人，你会发现自己在这方面的天赋有多明显。'},
+{title:'复盘你最近最得意的「快速搞定」',desc:'写下你当时是怎么做的，提取你的效率模型。'},
+{title:'找一个跟你性格互补的人聊天',desc:'注意ta是如何深思和品控的，看看你能从中学到什么。'},
+{title:'列出你的「快速搞定」工具箱',desc:'你的效率方法就是你的核心资产，把它系统化。'},
+{title:'写下你的天赋使用计划',desc:'基于这周的发现，列出未来一个月你打算用天赋做什么。'}
+],
+navigator:[
+{title:'记录你的「洞察时刻」',desc:'今天每次看到别人没看到的规律时，记下来。看看你的领航本能有多强。'},
+{title:'为一个复杂问题画出方向图',desc:'用你的洞察力帮助自己和别人看清方向。'},
+{title:'复盘你最近最正确的方向判断',desc:'写下你当时是怎么看到的，提取你的洞察模式。'},
+{title:'找一个你一直想深入研究的话题',desc:'花1小时深度思考，享受你的洞察本能被满足的感觉。'},
+{title:'找一个跟你性格互补的人聊天',desc:'注意ta是如何快速行动的，看看你能从中学到什么。'},
+{title:'列出你目前最看好的3个趋势',desc:'你的前瞻性就是你的核心资产，把它记录下来。'},
+{title:'写下你的天赋使用计划',desc:'基于这周的发现，列出未来一个月你打算用天赋做什么。'}
+],
+cultivator:[
+{title:'记录你的「深耕时刻」',desc:'今天每次沉浸在一件事中忘记时间时，记下来。看看你的深耕本能有多强。'},
+{title:'找一个你一直想钻研到底的领域',desc:'花1小时深度学习，享受你的专注本能被满足的感觉。'},
+{title:'复盘你最近最有深度的成果',desc:'写下你当时是怎么做到的，提取你的深耕模式。'},
+{title:'帮一个朋友深入解决一个问题',desc:'用你的专业能力帮助别人，你会发现自己在这方面的天赋有多明显。'},
+{title:'找一个跟你性格互补的人聊天',desc:'注意ta是如何广泛连接的，看看你能从中学到什么。'},
+{title:'整理你的知识体系',desc:'你的深度专业就是你的核心资产，把它结构化。'},
+{title:'写下你的天赋使用计划',desc:'基于这周的发现，列出未来一个月你打算用天赋做什么。'}
+],
+butterfly:[
+{title:'记录你的「跳跃时刻」',desc:'今天每次在多个领域间灵活切换时，记下来。看看你的灵动本能有多强。'},
+{title:'找一个需要跨界思维的问题',desc:'用你的多元化视角帮助解决，你会发现自己在这方面的天赋有多明显。'},
+{title:'复盘你最近最有创意的连接',desc:'写下你当时是怎么想到的，提取你的创新模式。'},
+{title:'探索一个你从未接触过的领域',desc:'花30分钟探索，享受你的好奇心被满足的感觉。'},
+{title:'找一个跟你性格互补的人聊天',desc:'注意ta是如何专注和深入的，看看你能从中学到什么。'},
+{title:'列出你的「跨界能力清单」',desc:'你的多元视角就是你的核心资产，把它显性化。'},
+{title:'写下你的天赋使用计划',desc:'基于这周的发现，列出未来一个月你打算用天赋做什么。'}
+],
+guardian:[
+{title:'记录你的「守护时刻」',desc:'今天每次本能地想要保护和支持时，记下来。看看你的守护本能有多强。'},
+{title:'帮一个需要支持的人',desc:'用你的稳定和可靠帮助别人，你会发现自己在这方面的天赋有多明显。'},
+{title:'复盘你最近最有价值的守护行为',desc:'写下你当时是怎么做的，提取你的守护模式。'},
+{title:'整理你正在维护和守护的事物清单',desc:'你的可靠性就是你的核心资产，把它可视化。'},
+{title:'找一个跟你性格互补的人聊天',desc:'注意ta是如何拥抱变化的，看看你能从中学到什么。'},
+{title:'为自己设定一个成长挑战',desc:'守护者也需要成长，给自己一个小挑战。'},
+{title:'写下你的天赋使用计划',desc:'基于这周的发现，列出未来一个月你打算用天赋做什么。'}
+]
+};
+
+var plan=actionPlans[type]||actionPlans.breaker;
+var saved=JSON.parse(localStorage.getItem('talent_action_'+type)||'[]');
+var h='';
+plan.forEach(function(a,i){
+var done=saved.includes(i);
+h+='<div class="action-day'+(done?' done':'')+'">';
+h+='<div class="day-num">D'+(i+1)+'</div>';
+h+='<div class="day-content"><div class="day-title">'+a.title+'</div><div class="day-desc">'+a.desc+'</div></div>';
+h+='<div class="progress-check'+(done?' done':'')+'" onclick="toggleAction('+i+',\''+type+'\')"></div>';
+h+='</div>';
+});
+document.getElementById('actionList').innerHTML=h;
+}
+
+function toggleAction(idx,type){
+var saved=JSON.parse(localStorage.getItem('talent_action_'+type)||'[]');
+var pos=saved.indexOf(idx);
+if(pos>=0){saved.splice(pos,1)}else{saved.push(idx)}
+localStorage.setItem('talent_action_'+type,JSON.stringify(saved));
+// Re-render
+var t=types[type];
+renderActions(t,type);
+}
+
+function switchTab(name,el){
+document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active')});
+document.querySelectorAll('.section').forEach(function(s){s.classList.remove('active')});
+el.classList.add('active');
+document.getElementById('sec-'+name).classList.add('active');
+}
+
+// Init: load from URL param or localStorage
+var urlType=getQueryParam('type');
+var savedType=localStorage.getItem('talent_guide_type');
+var initType=urlType||savedType||'breaker';
+if(!types[initType]){initType='breaker'}
+loadType(initType);
+</script>
+</body>
+</html>
