@@ -156,7 +156,6 @@ body{
       <span id="progressCount">1 / 15</span>
     </div>
   </div>
-  <div class="dim-label" id="dimLabel">✨ 创造力</div>
   <div class="q-num" id="qNum">问题 1</div>
   <div class="q-title" id="qTitle">加载中...</div>
   <div class="options" id="qOptions"></div>
@@ -171,9 +170,13 @@ body{
 
   <div class="r-card" id="rDesc"></div>
   <div class="r-card" id="rScores"></div>
+  <div class="r-card" id="rDimDetail"></div>
   <div class="r-card" id="rStrengths"></div>
   <div class="r-card" id="rCareers"></div>
+  <div class="r-card" id="rAvoid"></div>
   <div class="r-card" id="rTraps"></div>
+  <div class="r-card" id="rGrowth"></div>
+  <div class="r-card" id="rFamous"></div>
 
   <div class="r-traits" id="rTraits"></div>
   <div class="r-actions">
@@ -261,7 +264,10 @@ var types = {
     careers:["创业者/联合创始人","产品经理(0-1)","创新业务负责人","自媒体/IP主理人"],
     traps:["容易同时启动太多事，收不住","对『按部就班』的人缺乏耐心","破局能力强，但运营深耕意愿低"],
     traits:["敢想敢干","创新思维","天生领袖","不怕冒险"],
-    scores:{create:92,decide:88,social:65,resilience:75,insight:72}
+    scores:{create:92,decide:88,social:65,resilience:75,insight:72},
+    avoidCareers:["重复性高的流水线工作","需要层层审批的体制内","标准化管理岗","纯粹的后台支持"],
+    growth:["每周设一个截止日：不再开新坑，先收尾一个","找擅长运营的搭档互补","学会区分真机会和新鲜感","每月复盘哪些事该砍掉"],
+    famous:"典型代表：马斯克、王兴、理查德·布兰森"
   },
   sniper:{ // 精算师: decide_B + insight_B
     icon:"🎯",title:"精算师",badge:"精准狙击手",
@@ -271,7 +277,10 @@ var types = {
     careers:["投资分析师","战略咨询顾问","数据科学家","风险管理"],
     traps:["过度分析导致错过时机","对不确定性强的场景焦虑","不太擅长』边跑边看『的敏捷模式"],
     traits:["逻辑严密","精准判断","深度思考","天生分析师"],
-    scores:{create:55,decide:90,social:48,resilience:62,insight:92}
+    scores:{create:55,decide:90,social:48,resilience:62,insight:92},
+    avoidCareers:["需要快速试错的早期创业","高强度社交岗","创意驱动的广告设计","节奏极快的增长团队"],
+    growth:["设一个够用线：信息到70%必须行动","练习在不完美条件下做决定","接受合理误差，不追求每次完美","找低成本试错机会训练行动力"],
+    famous:"典型代表：巴菲特、Ray Dalio、张磊"
   },
   resonator:{ // 共振者: social_A + resilience_A
     icon:"🌊",title:"共振者",badge:"人际粘合剂",
@@ -281,7 +290,10 @@ var types = {
     careers:["市场/品牌营销","社群运营/KOL","公关负责人","HRBP"],
     traps:["容易把精力分散在太多社交上","不喜欢深度钻研，专业壁垒不足","害怕独处，容易用社交逃避深度思考"],
     traits:["社交天花板","共情力强","抗压恢复快","人脉资源王"],
-    scores:{create:62,decide:65,social:95,resilience:88,insight:60}
+    scores:{create:62,decide:65,social:95,resilience:88,insight:60},
+    avoidCareers:["长期独立钻研的科研","纯数据代码驱动岗","不需要人际互动的后台","高度标准化重复性工作"],
+    growth:["每周留半天独处做深度思考","建立拒绝清单学会说不","选定一个专业方向深入建立壁垒","不只做连接者也要做创造者"],
+    famous:"典型代表：Oprah Winfrey、马云、李佳琦"
   },
   flash:{ // 闪电手: decide_A + create_B（高执行力的行动派）
     icon:"⚡",title:"闪电手",badge:"唯快不破",
@@ -291,7 +303,10 @@ var types = {
     careers:["项目经理","运营增长","供应链管理","创业团队早期核心成员"],
     traps:["速度太快有时忽略质量和风险","不喜欢长周期、深钻研的工作","容易给人『不够深思熟虑』的印象"],
     traits:["执行力爆表","快速响应","结果导向","不墨迹"],
-    scores:{create:68,decide:85,social:58,resilience:72,insight:55}
+    scores:{create:68,decide:85,social:58,resilience:72,insight:55},
+    avoidCareers:["需要数年深耕的科研","高度官僚化的体制","需要反复打磨的精品创作","节奏极慢的传统行业"],
+    growth:["行动前花5分钟做风险检查","学会说这个值得多花时间做对","建立质量检查清单防低级错误","每月留一天深度复盘"],
+    famous:"典型代表：贝佐斯(早期)、雷军"
   },
   navigator:{ // 领航员: insight_A + social_A
     icon:"🧭",title:"领航员",badge:"战略操盘手",
@@ -301,7 +316,10 @@ var types = {
     careers:["战略/业务负责人","投资人/FA","管理咨询","企业高管"],
     traps:["有时过于关注大局，忽略执行细节","对『只管低头干活』的人不够理解","战略判断需要时间验证，容易在短期被质疑"],
     traits:["全局视野","战略思维","连接者","影响力"],
-    scores:{create:70,decide:72,social:82,resilience:68,insight:90}
+    scores:{create:70,decide:72,social:82,resilience:68,insight:90},
+    avoidCareers:["纯执行层面的重复工作","不需要全局视野的技术岗","高度独立缺乏互动的岗位","节奏快但没战略空间的环境"],
+    growth:["设一个执行日只干活不看方向","欣赏执行型人才的细节能力","用小胜利建立信任","70%确定就该行动"],
+    famous:"典型代表：任正非、张一鸣、Satya Nadella"
   },
   cultivator:{ // 深耕者: insight_B + resilience_B
     icon:"🏔️",title:"深耕者",badge:"长期主义者",
@@ -311,7 +329,10 @@ var types = {
     careers:["科研/学术","技术专家/架构师","精品内容创作者","专业服务(法律/医疗/财务)"],
     traps:["容易过度打磨，错过市场时机","对『快糙猛』的模式不适应","需要学会在完美和完成之间做取舍"],
     traits:["深度思考","长期主义","耐得住寂寞","专业壁垒"],
-    scores:{create:65,decide:55,social:50,resilience:90,insight:88}
+    scores:{create:65,decide:55,social:50,resilience:90,insight:88},
+    avoidCareers:["节奏极快的短视频流量行业","频繁切换方向的创业团队","高强度社交销售","追求快速变现的短期项目"],
+    growth:["设一个发布线达标就发布不再打磨","每周30分钟了解行业动态防闭门造车","学会展示成果不只做不说","找互补的人帮你推出去"],
+    famous:"典型代表：宫崎骏、屠呦呦、Kobe Bryant"
   },
   butterfly:{ // 灵动者: create_A + social_A
     icon:"🦋",title:"灵动者",badge:"创意连接器",
@@ -321,7 +342,10 @@ var types = {
     careers:["创意总监/策划","内容/IP操盘手","品牌营销","创业者(创意驱动型)"],
     traps:["想法太多但落地不够","容易被新鲜感牵着走","需要找一个帮你『收口』的搭档"],
     traits:["创意无限","跨界思维","灵感体质","天生连接者"],
-    scores:{create:90,decide:62,social:88,resilience:60,insight:70}
+    scores:{create:90,decide:62,social:88,resilience:60,insight:70},
+    avoidCareers:["高度结构化的财务合规岗","长期独立科研","标准化运营管理","不需要创意的流程性工作"],
+    growth:["设一个收口日：这周不再开新想法先落地","找执行力强的人做搭档","用日历管理灵感防止遗忘","每月选一个想法做到完成"],
+    famous:"典型代表：Steve Jobs、保罗·格雷厄姆"
   },
   guardian:{ // 守护者: resilience_B + social_B（稳健可靠型）
     icon:"🛡️",title:"守护者",badge:"值得信赖的基石",
@@ -331,7 +355,10 @@ var types = {
     careers:["技术运维/基础设施","财务/合规","行政/运营管理","客户成功"],
     traps:["容易被忽视，不善于展示自己的价值","过于保守，错过该冒险的时机","不善于说『不』，容易被当成万能工具人"],
     traits:["稳如磐石","深度可靠","系统守护者","默默扛事"],
-    scores:{create:48,decide:58,social:55,resilience:85,insight:65}
+    scores:{create:48,decide:58,social:55,resilience:85,insight:65},
+    avoidCareers:["节奏极快的创业团队","需要频繁社交的BD岗","高度创新驱动的创意岗","竞争激烈淘汰率高的行业"],
+    growth:["学会展示自己的价值不要默默扛事","定期跟上级同步你的贡献和成果","在稳定中找微小创新机会","建立个人品牌让别人看到你"],
+    famous:"典型代表：Tim Cook、稻盛和夫"
   }
 };
 
@@ -367,7 +394,6 @@ function renderQuestion(){
   document.getElementById('progressFill').style.width = progress + '%';
   document.getElementById('progressLabel').textContent = '第 ' + (currentQ+1) + ' 题';
   document.getElementById('progressCount').textContent = (currentQ+1) + ' / ' + total;
-  document.getElementById('dimLabel').innerHTML = q.dimIcon + ' ' + q.dim;
   document.getElementById('qNum').textContent = '问题 ' + (currentQ+1);
   document.getElementById('qTitle').textContent = q.q;
   document.getElementById('qTitle').classList.remove('fadeIn');
@@ -488,6 +514,36 @@ function showResult(){
   var trapHtml = '<div class="r-card-title" style="color:var(--warning)">⚠️ 你容易踩的盲区</div>';
   t.traps.forEach(function(tp){trapHtml += '<div style="font-size:13px;color:#9a3412;margin-bottom:6px;padding-left:16px;position:relative"><span style="position:absolute;left:0">•</span>'+tp+'</div>'});
   document.getElementById('rTraps').innerHTML = trapHtml;
+  
+  // 维度详解
+  if(t.dimDesc){
+    var dimHtml = '<div class="r-card-title">🔍 你的5大天赋维度详解</div>';
+    var dims2 = [{k:'create',n:'创造力',icon:'🎨'},{k:'decide',n:'决策力',icon:'⚡'},{k:'social',n:'社交力',icon:'🤝'},{k:'resilience',n:'韧性',icon:'💪'},{k:'insight',n:'洞察力',icon:'🔮'}];
+    dims2.forEach(function(d){
+      dimHtml += '<div style="margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid rgba(124,58,237,.08)"><div style="font-weight:600;font-size:14px;color:var(--primary-d);margin-bottom:4px">'+d.icon+' '+d.n+' <span style="font-size:12px;color:var(--text-l);font-weight:400">'+(t.scores[d.k]>=85?'极强':t.scores[d.k]>=70?'中高':t.scores[d.k]>=55?'中等':'偏弱')+'</span></div><div style="font-size:13px;color:var(--text-d);line-height:1.6">'+(t.dimDesc[d.k]||'')+'</div></div>';
+    });
+    document.getElementById('rDimDetail').innerHTML = dimHtml;
+  }
+  
+  // 不推荐职业
+  if(t.avoidCareers){
+    var avoidHtml = '<div class="r-card-title" style="color:#dc2626">🚫 不适合你的职业方向</div>';
+    avoidHtml += '<div style="font-size:13px;color:#7f1d1d;margin-bottom:8px;line-height:1.6">以下方向跟你的天赋型格冲突较大，投入产出比低，建议谨慎选择：</div>';
+    t.avoidCareers.forEach(function(c){avoidHtml += '<div style="font-size:13px;color:#991b1b;margin-bottom:6px;padding-left:16px;position:relative"><span style="position:absolute;left:0;color:#dc2626">✕</span>'+c+'</div>'});
+    document.getElementById('rAvoid').innerHTML = avoidHtml;
+  }
+  
+  // 成长建议
+  if(t.growth){
+    var growthHtml = '<div class="r-card-title" style="color:#059669">🌱 突破瓶颈的5条建议</div>';
+    t.growth.forEach(function(g,i){growthHtml += '<div style="display:flex;gap:10px;margin-bottom:10px"><span style="width:22px;height:22px;border-radius:50%;background:#d1fae5;color:#059669;font-size:12px;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0">'+(i+1)+'</span><span style="font-size:13px;color:var(--text-d);line-height:1.6">'+g+'</span></div>'});
+    document.getElementById('rGrowth').innerHTML = growthHtml;
+  }
+  
+  // 典型代表
+  if(t.famous){
+    document.getElementById('rFamous').innerHTML = '<div class="r-card-title">🌟 同型格典型代表</div><div style="font-size:14px;color:var(--text-d);line-height:1.6">'+t.famous+'</div>';
+  }
   
   // 特质标签
   var traitsHtml = t.traits.map(function(tr){return '<span class="r-trait">'+tr+'</span>'}).join('');
