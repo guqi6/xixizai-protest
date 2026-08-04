@@ -612,6 +612,75 @@ h+='<span class="famous-tag">'+f+'</span>';
 document.getElementById('famousTags').innerHTML=h;
 }
 
+// === Missing render functions (fixed 2026-08-04) ===
+function renderActivation(t){
+var type=currentType;
+var d=guideData[type]||guideData.breaker;
+var items=d.activation||[];
+var h='';
+items.forEach(function(a,i){
+var badgeColor=i===0?'#10b981':i===items.length-1?'#f59e0b':'#7c3aed';
+h+='<div class="list-item">';
+h+='<div class="list-icon" style="background:'+badgeColor+'20;color:'+badgeColor+';border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex:0 0 28px">'+(i+1)+'</div>';
+h+='<div class="list-content"><div class="li-title" style="color:'+badgeColor+'">'+a.stage+'</div><div style="font-size:14px;font-weight:600;margin:4px 0">'+a.title+'</div><div class="li-desc">'+a.desc+'</div></div>';
+h+='</div>';
+});
+document.getElementById('activationList').innerHTML=h;
+}
+
+function renderRoadmap(t){
+var type=currentType;
+var d=guideData[type]||guideData.breaker;
+var items=d.roadmap||[];
+var h='';
+items.forEach(function(r,i){
+h+='<div class="list-item">';
+h+='<div class="list-icon" style="background:#7c3aed20;color:#7c3aed;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex:0 0 28px">'+(i+1)+'</div>';
+h+='<div class="list-content"><div class="li-title" style="color:#7c3aed">'+r.phase+'</div><div style="font-size:14px;font-weight:600;margin:4px 0">'+r.title+'</div><div class="li-desc">'+r.desc+'</div></div>';
+h+='</div>';
+});
+document.getElementById('roadmapList').innerHTML=h;
+}
+
+function renderSelfcheck(t,type){
+var d=guideData[type]||guideData.breaker;
+var items=d.selfcheck||[];
+var saved=JSON.parse(localStorage.getItem('talent_check_'+type)||'[]');
+var h='';
+items.forEach(function(q,i){
+var done=saved.includes(i);
+h+='<div class="list-item" style="cursor:pointer" onclick="toggleCheck('+i+',\''+type+'\')">';
+h+='<div class="progress-check'+(done?' done':'')+'" style="margin-top:3px"></div>';
+h+='<div class="list-content"><div class="li-desc" style="'+(done?'text-decoration:line-through;opacity:0.5':'')+'">'+q+'</div></div>';
+h+='</div>';
+});
+document.getElementById('selfcheckList').innerHTML=h;
+}
+
+function renderTeam(t){
+var type=currentType;
+var d=guideData[type]||guideData.breaker;
+var items=d.team||[];
+var h='';
+items.forEach(function(item){
+h+='<div style="margin-bottom:16px">';
+h+='<div style="font-size:13px;color:#6b7280;margin-bottom:6px">'+item.role+'</div>';
+h+='<div style="font-size:14px;font-weight:600;color:#7c3aed;margin-bottom:4px">'+item.title+'</div>';
+h+='<div class="li-desc">'+item.desc+'</div>';
+h+='</div>';
+});
+document.getElementById('teamList').innerHTML=h;
+}
+
+function toggleCheck(idx,type){
+var saved=JSON.parse(localStorage.getItem('talent_check_'+type)||'[]');
+var pos=saved.indexOf(idx);
+if(pos>=0){saved.splice(pos,1)}else{saved.push(idx)}
+localStorage.setItem('talent_check_'+type,JSON.stringify(saved));
+var t=types[type];
+renderSelfcheck(t,type);
+}
+
 function renderActions(t,type){
 var actionPlans={
 breaker:[
