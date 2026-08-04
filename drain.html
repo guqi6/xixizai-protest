@@ -80,41 +80,63 @@ body{
 .result .r-label{font-size:14px;color:#94a3b8;margin-bottom:8px}
 .result .r-title{font-size:32px;font-weight:900;color:#f8fafc;margin-bottom:8px;line-height:1.3}
 .result .r-badge{display:inline-block;background:var(--primary);color:#fff;font-size:12px;padding:4px 16px;border-radius:14px;margin-bottom:24px}
-.result .r-desc{
-  background:var(--card-bg);border-radius:16px;padding:24px;
-  font-size:15px;line-height:1.8;color:var(--text);margin-bottom:16px;
-  box-shadow:var(--shadow);text-align:left;width:100%;
+
+/* 结果卡片通用 */
+.r-card{
+  background:var(--card-bg);border-radius:16px;padding:20px;
+  margin-bottom:14px;box-shadow:var(--shadow);text-align:left;width:100%;
 }
-.result .r-quote{
-  border-left:3px solid var(--primary);background:rgba(59,130,246,.08);
-  padding:12px 16px;margin:12px 0;border-radius:0 8px 8px 0;
+
+/* 耗电指数 */
+.r-score-box{display:flex;align-items:center;gap:16px}
+.r-score-num{font-size:42px;font-weight:900;color:var(--primary);line-height:1}
+.r-score-label{font-size:13px;color:var(--text-l);line-height:1.4}
+.r-score-bar{flex:1;height:8px;background:#e2e8f0;border-radius:4px;overflow:hidden}
+.r-score-fill{height:100%;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:4px}
+
+/* 维度评分 */
+.dim-row{margin-bottom:12px}
+.dim-row:last-child{margin-bottom:0}
+.dim-head{display:flex;justify-content:space-between;margin-bottom:4px}
+.dim-name{font-size:13px;font-weight:600;color:var(--text)}
+.dim-val{font-size:13px;color:var(--text-l)}
+.dim-bar{height:6px;background:#e2e8f0;border-radius:3px;overflow:hidden}
+.dim-fill{height:100%;border-radius:3px;transition:width .8s ease}
+.dim-fill.high{background:linear-gradient(90deg,#ef4444,#f59e0b)}
+.dim-fill.mid{background:linear-gradient(90deg,#f59e0b,#3b82f6)}
+.dim-fill.low{background:linear-gradient(90deg,#3b82f6,#06b6d4)}
+
+/* 引用框 */
+.r-quote{
+  border-left:3px solid var(--primary);background:rgba(59,130,246,.06);
+  padding:12px 16px;margin:10px 0;border-radius:0 8px 8px 0;
   font-style:italic;color:var(--primary-d);font-size:14px;
 }
-.result .r-scenarios{margin-bottom:16px}
-.result .r-fit{margin-bottom:16px}
-.result .r-traps{margin-bottom:16px}
-.result .r-charge{
-  background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.3);
-  border-radius:12px;padding:16px;margin-bottom:24px;text-align:left;
-}
-.result .r-secondary{
-  font-size:13px;color:#94a3b8;margin-bottom:24px;
-}
-.result .r-actions{display:flex;flex-direction:column;gap:12px;width:100%;max-width:300px;margin-bottom:24px}
-.btn-share{background:var(--accent);color:#fff;border:none;padding:14px;border-radius:50px;font-size:15px;font-weight:700;cursor:pointer;transition:.3s;box-shadow:0 4px 16px rgba(245,158,11,.3)}
-.btn-share:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(245,158,11,.4)}
+
+/* 描述段落 */
+.r-desc-p{font-size:15px;line-height:1.8;color:var(--text);margin-bottom:10px}
+
+/* 场景列表 */
+.scenario-item{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px}
+.scenario-num{width:24px;height:24px;border-radius:50%;background:#f59e0b;color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;margin-top:2px}
+.scenario-text{font-size:14px;color:var(--text);line-height:1.5}
+
+/* 适合/雷区列表 */
+.list-item{font-size:14px;color:var(--text);margin-bottom:8px;padding-left:22px;position:relative;line-height:1.5}
+.list-check{position:absolute;left:0;color:#3b82f6;font-weight:700}
+.list-cross{position:absolute;left:0;color:#ef4444;font-weight:700}
+
+/* 充电方式 */
+.charge-box{font-size:15px;color:var(--text);font-weight:500;line-height:1.6;padding:12px;background:rgba(59,130,246,.06);border-radius:10px}
+
+/* 特质标签 */
+.r-tags{display:flex;flex-wrap:wrap;gap:8px;width:100%;margin-bottom:14px}
+.r-tag{background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.3);color:var(--primary-d);font-size:13px;padding:6px 14px;border-radius:20px;font-weight:500}
+
+.r-secondary{font-size:13px;color:#94a3b8;margin-bottom:24px}
+.r-actions{display:flex;flex-direction:column;gap:12px;width:100%;max-width:300px;margin-bottom:24px}
 .btn-retry{background:transparent;color:var(--primary-l);border:2px solid var(--primary-l);padding:12px;border-radius:50px;font-size:14px;font-weight:600;cursor:pointer;transition:.3s}
 .btn-retry:hover{background:var(--primary);color:#fff;border-color:var(--primary)}
-
-/* 分享图弹窗 */
-.share-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:999;align-items:center;justify-content:center;padding:20px}
-.share-modal.show{display:flex}
-.share-card{background:#fff;border-radius:20px;overflow:hidden;max-width:360px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3)}
-.share-card-img{width:100%;display:block}
-.share-card-actions{padding:16px;display:flex;gap:12px}
-.share-card-actions button{flex:1;padding:10px;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer}
-.btn-dl{background:var(--primary);color:#fff}
-.btn-close{background:#f0f0f0;color:#333}
 
 .section-title{font-size:14px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px}
 @keyframes bounceIn{0%{transform:scale(0);opacity:0}60%{transform:scale(1.2)}100%{transform:scale(1);opacity:1}}
@@ -164,30 +186,32 @@ body{
   <div class="r-label">你的职场耗电点是</div>
   <div class="r-title" id="rTitle">社交耗电型</div>
   <div class="r-badge" id="rBadge">社交电池</div>
-  <div class="r-desc" id="rDesc"></div>
-  <div class="r-desc" id="rScenarios"></div>
-  <div class="r-desc" id="rFit"></div>
-  <div class="r-desc" id="rTraps"></div>
-  <div class="r-charge" id="rCharge"></div>
+
+  <!-- 耗电指数 -->
+  <div class="r-card" id="rScoreBox"></div>
+  <!-- 6维度评分 -->
+  <div class="r-card" id="rDimensions"></div>
+  <!-- 核心描述+金句 -->
+  <div class="r-card" id="rDesc"></div>
+  <!-- 耗电场景 -->
+  <div class="r-card" id="rScenarios"></div>
+  <!-- 适合机制 -->
+  <div class="r-card" id="rFit"></div>
+  <!-- 职场雷区 -->
+  <div class="r-card" id="rTraps"></div>
+  <!-- 充电方式 -->
+  <div class="r-card" id="rCharge"></div>
+  <!-- 特质标签 -->
+  <div class="r-tags" id="rTags"></div>
+  <!-- 次要耗电 -->
   <div class="r-secondary" id="rSecondary"></div>
+
   <div class="r-actions">
-    <button class="btn-share" onclick="showShare()">📸 生成分享图</button>
     <button class="btn-retry" onclick="resetQuiz()">🔄 再测一次</button>
   </div>
   <div style="font-size:12px;color:rgba(148,163,184,.4);margin-top:16px">更多测试请访问 protest.xixizai.com</div>
 </div>
 
-</div>
-
-<!-- 分享图弹窗 -->
-<div class="share-modal" id="shareModal">
-  <div class="share-card">
-    <canvas id="shareCanvas" class="share-card-img" width="360" height="540"></canvas>
-    <div class="share-card-actions">
-      <button class="btn-dl" onclick="downloadShare()">💾 保存图片</button>
-      <button class="btn-close" onclick="closeShare()">关闭</button>
-    </div>
-  </div>
 </div>
 
 <script>
@@ -300,67 +324,83 @@ var questions = [
    ]}
 ];
 
-// 维度中文名
 var dimNames = {
   social:"社交耗电",report:"汇报焦虑",control:"失控内耗",
   duty:"责任透支",meaning:"意义缺失",env:"环境吸收"
+};
+
+var dimColors = {
+  social:"#ef4444",report:"#f59e0b",control:"#8b5cf6",
+  duty:"#3b82f6",meaning:"#06b6d4",env:"#10b981"
 };
 
 // === 结果类型 ===
 var results = {
   social:{
     icon:"🔋",title:"社交耗电型",badge:"社交电池",
-    desc:"你不是社恐，也不是不合群。你只是在社交中持续耗电，而别人在社交中充电。\n\n每一次寒暄、每一次会议、每一次『顺便聊两句』，对你来说都是能量支出。你不是不会说，是说完之后需要很长时间恢复。有人觉得你『太安静了』，但只有你知道：你不是没话说，你是在省电。",
+    score:92,
+    desc:"你不是社恐，也不是不合群。你只是在社交中持续耗电，而别人在社交中充电。\n\n每一次寒暄、每一次会议、每一次『顺便聊两句』，对你来说都是能量支出。你不是不会说，是说完之后需要很长时间恢复。\n\n有人觉得你『太安静了』，但只有你知道：你不是没话说，你是在省电。\n\n你的社交电池容量天生比别人小。这不是缺陷，是一种特质。意味着你在低社交的环境中，反而能爆发出惊人的专注力和创造力。",
     quote:"社交很累很累，每次社交之后有3-5天不想再出门。",
-    scenarios:["电梯里遇到同事/领导，不知道该聊什么","团建、聚餐、破冰游戏","每天需要跟多个不同的人对接"],
-    fit:["独立交付型（给任务和deadline，你自己搞定）","文字沟通为主（能打字绝不语音）","低频社交环境"],
-    traps:["销售、商务拓展等高社交岗位","需要频繁跨部门协调的岗位","开放式工位 + 每天有人找你聊天"],
-    charge:"独处。戴耳机。关掉消息提醒。一个人待够，电量就回来了。"
+    scenarios:["电梯里遇到同事/领导，不知道该聊什么","团建、聚餐、破冰游戏，别人玩得开心你只想逃","每天需要跟多个不同的人对接，每个对接都在消耗"],
+    fit:["独立交付型（给任务和deadline，你自己搞定）","文字沟通为主（能打字绝不语音）","低频社交环境，不需要每天跟人打交道"],
+    traps:["销售、商务拓展等高社交密度岗位","需要频繁跨部门协调的岗位","开放式工位 + 每天有人找你聊天"],
+    charge:"独处。戴耳机。关掉消息提醒。一个人待够，电量就回来了。\n\n不是逃避，是恢复。你需要给自己一个允许：不见人、不回消息、不社交，这本身就是一种有效充电。\n\n建议每天给自己安排至少1小时的『零社交时间』。",
+    tags:["内向能量型","深度思考","独立工作","低社交密度","文字沟通"]
   },
   report:{
     icon:"📋",title:"汇报焦虑型",badge:"汇报恐惧",
-    desc:"你不是没做事，你做了很多。但每次要汇报，你就开始慌。\n\n『进度怎么样了？』『这个做到哪了？』『下周计划发一下』——这些消息对你来说不是简单回复，而是一场小型考试。你花在『解释自己在做什么』上的精力，有时候比做事本身还多。\n\n你不是不会做，你是受不了『一边做一边被人盯着』。",
+    score:88,
+    desc:"你不是没做事，你做了很多。但每次要汇报，你就开始慌。\n\n『进度怎么样了？』『这个做到哪了？』『下周计划发一下』——这些消息对你来说不是简单回复，而是一场小型考试。\n\n你花在『解释自己在做什么』上的精力，有时候比做事本身还多。你不是不会做，你是受不了『一边做一边被人盯着』。\n\n这种耗电模式特别隐蔽。因为别人看你产出正常，不会觉得你有问题。但你自己知道：每次被问进度，心里都咯噔一下。",
     quote:"有汇报的时候够我做很多事了，我也不知道怎么向上级汇报。",
-    scenarios:["突然被问『你这个项目进度怎么样了』","每周写周报 / 开周会","领导站在你身后看你的屏幕"],
-    fit:["结果导向（只看最终交付，不看过程）","低频汇报（月度甚至季度）","自主管理进度"],
-    traps:["需要每日站会、日报的岗位","微观管理的领导","需要频繁同步进度的工作"],
-    charge:"把所有待办列出来，划掉已完成的。看到进度在推进，焦虑就少一半。"
+    scenarios:["突然被问『你这个项目进度怎么样了』","每周写周报、开周会，不知道怎么写才有价值","领导站在你身后看你的屏幕，手心开始出汗"],
+    fit:["结果导向（只看最终交付，不看过程）","低频汇报（月度甚至季度）","自主管理进度，领导不微观管理"],
+    traps:["需要每日站会、日报的岗位","微观管理的领导，事无巨细都要过问","需要频繁同步进度和计划的工作"],
+    charge:"把所有待办列出来，划掉已完成的。看到进度在推进，焦虑就少一半。\n\n另外：主动建立汇报模板。与其被动等别人问，不如自己定期发一个简短进度更新。主动权在手，焦虑减半。\n\n记住：汇报不是考试，是信息同步。",
+    tags:["过程敏感","结果导向","自主管理","反微管理","低频汇报"]
   },
   control:{
     icon:"🎯",title:"失控内耗型",badge:"秩序敏感",
-    desc:"你需要事情是清楚的。谁负责什么、下一步做什么、最终交付给谁——这些信息如果模糊，你就会开始内耗。\n\n你不是固执，你是『秩序敏感』。模糊的边界、频繁的变动、说不清楚的需求，对你来说不是小问题，而是会让你彻底停下来。\n\n你甚至想搞清楚每个流程是怎么走的，因为接受不了一切不明不白的东西。",
+    score:85,
+    desc:"你需要事情是清楚的。谁负责什么、下一步做什么、最终交付给谁——这些信息如果模糊，你就会开始内耗。\n\n你不是固执，你是『秩序敏感』。模糊的边界、频繁的变动、说不清楚的需求，对你来说不是小问题，而是会让你彻底停下来。\n\n你甚至想搞清楚每个流程是怎么走的，因为接受不了一切不明不白的东西。这种特质的优点是：一旦环境清晰了，你的执行力和效率会非常高。\n\n问题在于，大多数工作环境都没那么清晰。所以你经常处于『等待清晰』的内耗中。",
     quote:"确切的上升路径和未来发展，如果没有，我就会胡思乱想内耗到甚至离职。",
-    scenarios:["接到模糊任务，没人说清楚怎么做","方案改了又改，之前做的全白费","不知道自己在团队中的位置和未来"],
-    fit:["有清晰SOP和流程文档","目标和边界明确","变动少、可预期"],
-    traps:["早期创业公司（一切都在变）","需求频繁变更的岗位","『先做着看吧』型领导"],
-    charge:"做计划。列清单。把模糊的事拆成清晰的步骤。掌控感回来了，电量就回来了。"
+    scenarios:["接到模糊任务，没人说清楚怎么做，不知从哪下手","方案改了又改，之前做的全白费，心态崩了","不知道自己在团队中的位置和未来发展路径"],
+    fit:["有清晰SOP和流程文档","目标和边界明确，变动少","有明确的上升路径和评估标准"],
+    traps:["早期创业公司（一切都在变）","需求频繁变更的岗位","『先做着看吧』型领导，需求永远模糊"],
+    charge:"做计划。列清单。把模糊的事拆成清晰的步骤。掌控感回来了，电量就回来了。\n\n当任务模糊时，不要默默内耗，主动向领导确认：目标是什么？deadline是什么？交付标准是什么？\n\n把模糊变清晰，是你的超能力。",
+    tags:["秩序敏感","高执行力","流程导向","目标明确","反模糊"]
   },
   duty:{
     icon:"⚡",title:"责任透支型",badge:"过度负责",
-    desc:"你的责任感不是优点，是你的耗电口。\n\n领导交代的事，你做不到敷衍。同事的活，你看不过去就帮忙。出了问题，你第一反应是『是不是我没做好』。你不是不知道该拒绝，你是责任感一上来，什么话术都不需要——你直接就上了。\n\n然后别人夸你『靠谱』，你心里只有疲惫。",
+    score:90,
+    desc:"你的责任感不是优点，是你的耗电口。\n\n领导交代的事，你做不到敷衍。同事的活，你看不过去就帮忙。出了问题，你第一反应是『是不是我没做好』。\n\n你不是不知道该拒绝，你是责任感一上来，什么话术都不需要——你直接就上了。然后别人夸你『靠谱』，你心里只有疲惫。\n\n这种模式的危险在于：你的能量是被别人的需求牵着走的。你很难主动停下来，因为『万一没做好呢』『万一他们需要我呢』。\n\n结果就是：你承担了远超职责的工作量，但很少得到匹配的回报。",
     quote:"责任感一上来，什么话术都不需要。",
-    scenarios:["别人的事最后变成了你的事","出了问题，所有锅都往你身上推","你做的比职责要求的多很多，但没人看到"],
-    fit:["职责边界清晰，不越界","不需要『补位』的岗位","有明确的工作时间和边界"],
-    traps:["『能者多劳』型团队","初创团队（一个人当三个用）","没有边界感的文化"],
-    charge:"学会说出『这不是我的事』。划清边界。做你该做的，不多也不少。"
+    scenarios:["别人的事最后变成了你的事，推都推不掉","出了问题，所有锅都往你身上推，因为『你最靠谱』","你做的比职责要求的多很多，但没人看到，也没人多给钱"],
+    fit:["职责边界清晰，不越界","不需要『补位』的岗位","有明确的工作时间和边界，下班就是下班"],
+    traps:["『能者多劳』型团队，干得越多活越多","初创团队（一个人当三个用）","没有边界感的文化，领导半夜发消息你也要回"],
+    charge:"学会说出『这不是我的事』。划清边界。做你该做的，不多也不少。\n\n下次责任感上来的时候，先问自己三个问题：这是我的职责吗？不做会怎样？做了有人看到吗？\n\n记住：靠谱不等于好欺负。真正的靠谱是有底线的。",
+    tags:["高责任感","边界感弱","靠谱型人格","需要授权","反补位"]
   },
   meaning:{
     icon:"🌫️",title:"意义缺失型",badge:"虚无感",
-    desc:"你可以吃苦，但不能吃『没有意义的苦』。\n\n如果看不到自己做的事情有什么价值、影响了什么人、解决了什么问题——你就会开始怀疑一切。然后你会想辞职，不是因为累，是因为虚无。\n\n你不是矫情，你需要的是『确定的价值反馈』。哪怕只有一个人说『这个帮到我了』，你就能再撑一阵。",
+    score:87,
+    desc:"你可以吃苦，但不能吃『没有意义的苦』。\n\n如果看不到自己做的事情有什么价值、影响了什么人、解决了什么问题——你就会开始怀疑一切。然后你会想辞职，不是因为累，是因为虚无。\n\n你不是矫情，你需要的是『确定的价值反馈』。哪怕只有一个人说『这个帮到我了』，你就能再撑一阵。\n\n这种特质说明你是一个价值驱动的人。在有意义的事情上，你的持久力和投入度远超常人。但在看不到意义的工作中，你会比任何人都更快地枯萎。",
     quote:"看不到结果的、虚无缥缈的产出绝对是大雷区。",
-    scenarios:["每天做重复的事，不知道为了什么","做了一个月的东西，最后被弃用","你的工作产出没人看过、没人反馈"],
-    fit:["能看到最终用户/客户的反馈","有明确产出和成果","做的事情和自己的价值观一致"],
-    traps:["流水线式重复工作","做了一堆PPT但从不知道用在哪","没有反馈机制的岗位"],
-    charge:"做一件有明确反馈的事，哪怕很小。给自己一个『这件事有用』的证据。"
+    scenarios:["每天做重复的事，不知道为了什么，像个工具人","做了一个月的东西，最后被弃用，没人解释原因","你的工作产出没人看过、没人反馈，像扔进了黑洞"],
+    fit:["能看到最终用户/客户的反馈","有明确产出和成果，能看到自己的影响","做的事情和自己的价值观一致"],
+    traps:["流水线式重复工作，每天都一样","做了一堆PPT但从不知道用在哪","没有反馈机制的岗位，做完就完了"],
+    charge:"做一件有明确反馈的事，哪怕很小。给自己一个『这件事有用』的证据。\n\n主动寻找你工作的意义链：你做的事 → 影响了谁 → 改变了什么。如果找不到，可能真的该换了。\n\n不要等别人给你意义，学会自己定义价值。",
+    tags:["价值驱动","反重复","需要反馈","意义 seekers","高投入"]
   },
   env:{
     icon:"🧲",title:"环境吸收型",badge:"情绪海绵",
-    desc:"你不需要跟人说话，光是存在于一个有压力的环境里，能量就开始流失。\n\n同事在叹气、领导在焦虑、隔壁工位在抱怨——你的身体就像一块海绵，自动把这些负能量吸进来。等你意识到的时候，已经耗了一大半。\n\n你不是敏感，你是『高吸收』。这让你在心理类、服务类工作中特别有天赋，但也让你特别容易被耗干。",
+    score:89,
+    desc:"你不需要跟人说话，光是存在于一个有压力的环境里，能量就开始流失。\n\n同事在叹气、领导在焦虑、隔壁工位在抱怨——你的身体就像一块海绵，自动把这些负能量吸进来。等你意识到的时候，已经耗了一大半。\n\n你不是敏感，你是『高吸收』。这让你在心理类、服务类工作中特别有天赋——你能精准感知别人的情绪和需求。但也让你特别容易被耗干。\n\n关键区别：别人下班就能切换，你不行。你吸收的情绪需要更长时间来消化。",
     quote:"光是存在于压力场所里就开始吸收能量了。",
-    scenarios:["在一个高压、高焦虑的团队氛围里","同事一直在抱怨，你被迫当『树洞』","做着『疗愈别人』的工作，自己却没人疗愈"],
-    fit:["低压力、节奏适中的环境","物理空间隔离（居家、独立工位）","可以定期抽离、独处恢复"],
+    scenarios:["在一个高压、高焦虑的团队氛围里，即使不说话也觉得累","同事一直在抱怨，你被迫当『树洞』，听完自己也瘫了","做着『疗愈别人』的工作，自己却没人疗愈"],
+    fit:["低压力、节奏适中的环境","物理空间隔离（居家、独立工位）","可以定期抽离、独处恢复的空间和制度"],
     traps:["高压行业（金融、医疗急救、客服）","充满drama和冲突的团队","需要持续输出情绪价值的岗位"],
-    charge:"离开源头。去一个没人的地方待30分钟。物理隔离是最有效的充电方式。"
+    charge:"离开源头。去一个没人的地方待30分钟。物理隔离是最有效的充电方式。\n\n学会做『情绪隔断』：别人的情绪是别人的，不需要你吸收。想象自己有一层透明罩子，情绪滑过去，不渗进来。\n\n定期做情绪清理：写日记、运动、独处散步。",
+    tags:["高共情","情绪海绵","环境敏感","需要独处","高吸收"]
   }
 };
 
@@ -411,7 +451,7 @@ function selectOption(type){
 }
 
 function showResult(){
-  // 找到最高分
+  // 找到排名
   var maxType = 'social', maxScore = 0;
   var sorted = [];
   for(var k in scores){
@@ -429,148 +469,85 @@ function showResult(){
   document.getElementById('rTitle').textContent = r.title;
   document.getElementById('rBadge').textContent = r.badge;
   
-  // 描述 + 金句
-  var descHtml = r.desc.split('\n').map(function(p){return p.trim()?'<p style="margin-bottom:10px">'+p+'</p>':''}).join('');
+  // 1. 耗电指数
+  document.getElementById('rScoreBox').innerHTML = 
+    '<div class="section-title" style="color:#1e293b">⚡ 耗电指数</div>' +
+    '<div class="r-score-box">' +
+      '<div class="r-score-num">'+r.score+'</div>' +
+      '<div style="flex:1">' +
+        '<div class="r-score-bar"><div class="r-score-fill" style="width:'+r.score+'%"></div></div>' +
+        '<div class="r-score-label" style="margin-top:4px">极高度消耗 · 需要重视</div>' +
+      '</div>' +
+    '</div>';
+  
+  // 2. 6维度评分条
+  var dimHtml = '<div class="section-title" style="color:#1e293b">📊 六维耗电分析</div>';
+  sorted.forEach(function(item, i){
+    var pct = Math.round(item.score / 15 * 100);
+    var level = pct >= 50 ? 'high' : (pct >= 30 ? 'mid' : 'low');
+    var barColor = i === 0 ? dimColors[item.type] : '';
+    dimHtml += '<div class="dim-row">' +
+      '<div class="dim-head"><span class="dim-name">'+dimNames[item.type]+(i===0?' ⚡':'')+'</span><span class="dim-val">'+item.score+'题 / '+pct+'%</span></div>' +
+      '<div class="dim-bar"><div class="dim-fill '+level+'" style="width:'+pct+'%;'+(barColor?'background:'+barColor:'')+'"></div></div>' +
+    '</div>';
+  });
+  document.getElementById('rDimensions').innerHTML = dimHtml;
+  
+  // 3. 核心描述 + 金句
+  var descHtml = '';
+  r.desc.split('\n').forEach(function(p){
+    if(p.trim()){
+      descHtml += '<p class="r-desc-p">'+p+'</p>';
+    }
+  });
   descHtml += '<div class="r-quote">「'+r.quote+'」</div>';
   document.getElementById('rDesc').innerHTML = descHtml;
   
-  // 最耗电场景
+  // 4. 耗电场景
   var scenarioHtml = '<div class="section-title" style="color:#e65100">⚡ 最耗电场景 Top3</div>';
-  r.scenarios.forEach(function(s,i){scenarioHtml+='<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span style="width:24px;height:24px;border-radius:50%;background:#f59e0b;color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;font-weight:700">'+(i+1)+'</span><span style="font-size:14px;color:var(--text)">'+s+'</span></div>'});
+  r.scenarios.forEach(function(s,i){
+    scenarioHtml += '<div class="scenario-item"><span class="scenario-num">'+(i+1)+'</span><span class="scenario-text">'+s+'</span></div>';
+  });
   document.getElementById('rScenarios').innerHTML = scenarioHtml;
   
-  // 适合的工作机制
+  // 5. 适合的工作机制
   var fitHtml = '<div class="section-title" style="color:#1d4ed8">✅ 适合你的工作机制</div>';
-  r.fit.forEach(function(f){fitHtml+='<div style="font-size:14px;color:var(--text);margin-bottom:6px;padding-left:20px;position:relative"><span style="position:absolute;left:0;color:#3b82f6">✓</span>'+f+'</div>'});
+  r.fit.forEach(function(f){
+    fitHtml += '<div class="list-item"><span class="list-check">✓</span>'+f+'</div>';
+  });
   document.getElementById('rFit').innerHTML = fitHtml;
   
-  // 职场雷区
+  // 6. 职场雷区
   var trapHtml = '<div class="section-title" style="color:#dc2626">⚠️ 职场雷区</div>';
-  r.traps.forEach(function(t){trapHtml+='<div style="font-size:14px;color:#991b1b;margin-bottom:6px;padding-left:20px;position:relative"><span style="position:absolute;left:0;color:#ef4444">✗</span>'+t+'</div>'});
+  r.traps.forEach(function(t){
+    trapHtml += '<div class="list-item" style="color:#991b1b"><span class="list-cross">✗</span>'+t+'</div>';
+  });
   document.getElementById('rTraps').innerHTML = trapHtml;
   
-  // 充电方式
-  document.getElementById('rCharge').innerHTML = '<div class="section-title" style="color:#3b82f6">🔋 你的充电方式</div><div style="font-size:15px;color:var(--text);font-weight:500">'+r.charge+'</div>';
+  // 7. 充电方式
+  var chargeHtml = '<div class="section-title" style="color:#3b82f6">🔋 你的充电方式</div>';
+  r.charge.split('\n').forEach(function(p){
+    if(p.trim()){
+      chargeHtml += '<p style="margin-bottom:8px">'+p+'</p>';
+    }
+  });
+  document.getElementById('rCharge').innerHTML = chargeHtml;
   
-  // 次要耗电类型
+  // 8. 特质标签
+  var tagsHtml = '';
+  r.tags.forEach(function(tag){
+    tagsHtml += '<span class="r-tag">'+tag+'</span>';
+  });
+  document.getElementById('rTags').innerHTML = tagsHtml;
+  
+  // 9. 次要耗电类型
   document.getElementById('rSecondary').textContent = '你的次要耗电点是「'+dimNames[secondaryType]+'」';
-  
-  // 存到全局供分享图用
-  window._resultData = r;
-  window._resultType = maxType;
 }
 
 function resetQuiz(){
   document.getElementById('page-result').style.display='none';
   document.getElementById('page-cover').style.display='flex';
-}
-
-// === 分享图生成 ===
-function showShare(){
-  document.getElementById('shareModal').classList.add('show');
-  drawShareCard();
-}
-function closeShare(){
-  document.getElementById('shareModal').classList.remove('show');
-}
-function drawShareCard(){
-  var canvas = document.getElementById('shareCanvas');
-  var ctx = canvas.getContext('2d');
-  var W = 360, H = 540;
-  var r = window._resultData || results.social;
-  
-  // 背景
-  var grad = ctx.createLinearGradient(0,0,W,H);
-  grad.addColorStop(0,'#0f172a');
-  grad.addColorStop(0.5,'#1e293b');
-  grad.addColorStop(1,'#1e3a5f');
-  ctx.fillStyle = grad;
-  ctx.fillRect(0,0,W,H);
-  
-  // 网格
-  ctx.strokeStyle = 'rgba(59,130,246,0.08)';
-  ctx.lineWidth = 1;
-  for(var x=0;x<W;x+=30){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
-  for(var y=0;y<H;y+=30){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
-  
-  // 标签
-  ctx.fillStyle = 'rgba(59,130,246,.15)';
-  ctx.strokeStyle = '#60a5fa';
-  ctx.lineWidth = 1.5;
-  roundRect(ctx,28,36,90,26,5);
-  ctx.fill();ctx.stroke();
-  ctx.fillStyle = '#60a5fa';
-  ctx.font = 'bold 12px sans-serif';
-  ctx.fillText('职场耗电点', 40, 53);
-  ctx.fillStyle = '#60a5fa';
-  ctx.font = '12px sans-serif';
-  ctx.fillText('NO.004', W-70, 53);
-  
-  // 图标
-  ctx.font = '56px sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText(r.icon, W/2, 160);
-  
-  // 标签
-  ctx.fillStyle = '#94a3b8';
-  ctx.font = '13px sans-serif';
-  ctx.fillText('你的职场耗电点是', W/2, 200);
-  
-  // 标题
-  ctx.fillStyle = '#f8fafc';
-  ctx.font = 'bold 28px sans-serif';
-  ctx.fillText(r.title, W/2, 238);
-  
-  // badge
-  ctx.fillStyle = '#3b82f6';
-  var bw = ctx.measureText(r.badge).width + 24;
-  roundRect(ctx,(W-bw)/2,258,bw,26,13);
-  ctx.fill();
-  ctx.fillStyle = '#fff';
-  ctx.font = 'bold 12px sans-serif';
-  ctx.fillText(r.badge, W/2, 275);
-  
-  // 充电方式
-  ctx.fillStyle = 'rgba(148,163,184,.8)';
-  ctx.font = '13px sans-serif';
-  ctx.textAlign = 'left';
-  ctx.fillText('🔋 充电方式：', 40, 330);
-  var chargeLines = r.charge.match(/.{1,16}/g) || [];
-  chargeLines.slice(0,3).forEach(function(line,i){
-    ctx.fillText(line, 40, 352+i*20);
-  });
-  
-  // 二维码占位
-  ctx.fillStyle = '#fff';
-  roundRect(ctx,W/2-40,440,80,80,12);
-  ctx.fill();
-  ctx.fillStyle = '#3b82f6';
-  ctx.font = '11px sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText('扫码来测', W/2, 470);
-  ctx.font = 'bold 22px sans-serif';
-  ctx.fillText('⚡', W/2, 500);
-  
-  ctx.fillStyle = 'rgba(148,163,184,.3)';
-  ctx.font = '10px sans-serif';
-  ctx.fillText('protest.xixizai.com', W/2, 528);
-  ctx.textAlign = 'left';
-}
-function roundRect(ctx,x,y,w,h,r){
-  ctx.beginPath();
-  ctx.moveTo(x+r,y);
-  ctx.arcTo(x+w,y,x+w,y+h,r);
-  ctx.arcTo(x+w,y+h,x,y+h,r);
-  ctx.arcTo(x,y+h,x,y,r);
-  ctx.arcTo(x,y,x+w,y,r);
-  ctx.closePath();
-}
-function downloadShare(){
-  var canvas = document.getElementById('shareCanvas');
-  var link = document.createElement('a');
-  link.download = '我的职场耗电点测试结果.png';
-  link.href = canvas.toDataURL();
-  link.click();
+  window.scrollTo(0,0);
 }
 </script>
 </body>
