@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>你为什么上班这么累？ | 西西崽测评</title>
+<meta name="description" content="15道题测出你的职场耗电点">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg1:#0f172a;--bg2:#1e293b;--bg3:#1e3a5f;
+  --primary:#3b82f6;--primary-d:#1d4ed8;--primary-l:#60a5fa;
+  --accent:#f59e0b;--card-bg:rgba(255,255,255,.95);
+  --text:#1e293b;--text-l:#475569;--text-d:#0f172a;
+  --border:#93c5fd;--shadow:0 8px 32px rgba(59,130,246,.12);
+}
+body{
+  font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+  min-height:100vh;color:var(--text);overflow-x:hidden;
+}
+.bg{position:fixed;inset:0;z-index:-1;
+  background:linear-gradient(135deg,#0f172a 0%,#1e293b 40%,#1e3a5f 100%);
+}
+.bg::before{content:"";position:absolute;inset:0;
+  background-image:
+    linear-gradient(rgba(59,130,246,.08) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(59,130,246,.08) 1px,transparent 1px);
+  background-size:30px 30px;
+}
+.app{max-width:500px;margin:0 auto;min-height:100vh;position:relative}
+
+/* === 封面页 === */
+.cover{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:40px 24px;text-align:center}
+.cover .tag{display:inline-flex;align-items:center;gap:8px;margin-bottom:32px}
+.cover .tag-label{border:1.5px solid var(--primary-l);border-radius:6px;padding:3px 14px;font-size:13px;color:var(--primary-l);background:rgba(59,130,246,.1);font-weight:600}
+.cover .tag-num{font-size:13px;color:var(--primary-l);font-weight:600}
+.cover .tag-line{flex:1;width:60px;height:1px;background:var(--border);opacity:.5}
+.cover h1{font-size:38px;font-weight:900;color:#f8fafc;line-height:1.3;margin-bottom:20px;letter-spacing:-1px}
+.cover .subtags{display:flex;flex-direction:column;gap:6px;margin-bottom:48px}
+.cover .subtag{font-size:15px;color:#cbd5e1}
+.cover .quote-deco{position:absolute;right:24px;bottom:120px;font-size:64px;color:rgba(59,130,246,.1);font-weight:900;line-height:1}
+.cover .footer-en{position:absolute;bottom:24px;left:0;right:0;text-align:center;font-size:11px;color:rgba(148,163,184,.4);letter-spacing:3px}
+.btn-start{
+  background:var(--primary);color:#fff;border:none;
+  padding:16px 56px;border-radius:50px;font-size:17px;font-weight:700;
+  cursor:pointer;transition:.3s;box-shadow:0 4px 20px rgba(59,130,246,.4);
+}
+.btn-start:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(59,130,246,.5);background:var(--primary-d)}
+.btn-start:active{transform:translateY(0)}
+
+/* === 答题页 === */
+.quiz{display:none;flex-direction:column;min-height:100vh;padding:32px 24px}
+.quiz .progress-wrap{margin-bottom:40px}
+.quiz .progress-bar{height:6px;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden}
+.quiz .progress-fill{height:100%;background:linear-gradient(90deg,var(--primary),var(--primary-l));border-radius:3px;transition:width .2s ease}
+.quiz .progress-text{display:flex;justify-content:space-between;margin-top:8px;font-size:12px;color:#94a3b8}
+.quiz .q-num{font-size:13px;color:var(--primary-l);font-weight:600;margin-bottom:8px}
+.quiz .q-title{font-size:24px;font-weight:800;color:#f8fafc;line-height:1.4;margin-bottom:32px}
+.quiz .options{display:flex;flex-direction:column;gap:12px}
+.quiz .option{
+  background:var(--card-bg);border:2px solid transparent;
+  border-radius:16px;padding:18px 20px;font-size:16px;color:var(--text);
+  cursor:pointer;transition:.25s;display:flex;align-items:center;gap:14px;
+  box-shadow:0 2px 12px rgba(0,0,0,.1);
+}
+.quiz .option:hover{border-color:var(--primary);transform:translateX(4px);box-shadow:var(--shadow)}
+.quiz .option:active{transform:scale(.98)}
+.quiz .option .opt-label{
+  width:36px;height:36px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:15px;font-weight:700;background:rgba(59,130,246,.1);color:var(--primary);
+  transition:.25s;
+}
+.quiz .option:hover .opt-label{background:var(--primary);color:#fff}
+.quiz .option .opt-text{flex:1;font-weight:500}
+
+/* === 结果页 === */
+.result{display:none;flex-direction:column;align-items:center;min-height:100vh;padding:40px 24px;text-align:center;background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%)}
+.result .r-icon{font-size:72px;margin-bottom:16px;animation:bounceIn .6s ease}
+.result .r-label{font-size:14px;color:#94a3b8;margin-bottom:8px}
+.result .r-title{font-size:32px;font-weight:900;color:#f8fafc;margin-bottom:8px;line-height:1.3}
+.result .r-badge{display:inline-block;background:var(--primary);color:#fff;font-size:12px;padding:4px 16px;border-radius:14px;margin-bottom:24px}
+.result .r-desc{
+  background:var(--card-bg);border-radius:16px;padding:24px;
+  font-size:15px;line-height:1.8;color:var(--text);margin-bottom:16px;
+  box-shadow:var(--shadow);text-align:left;width:100%;
+}
+.result .r-quote{
+  border-left:3px solid var(--primary);background:rgba(59,130,246,.08);
+  padding:12px 16px;margin:12px 0;border-radius:0 8px 8px 0;
+  font-style:italic;color:var(--primary-d);font-size:14px;
+}
+.result .r-scenarios{margin-bottom:16px}
+.result .r-fit{margin-bottom:16px}
+.result .r-traps{margin-bottom:16px}
+.result .r-charge{
+  background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.3);
+  border-radius:12px;padding:16px;margin-bottom:24px;text-align:left;
+}
+.result .r-secondary{
+  font-size:13px;color:#94a3b8;margin-bottom:24px;
+}
+.result .r-actions{display:flex;flex-direction:column;gap:12px;width:100%;max-width:300px;margin-bottom:24px}
+.btn-share{background:var(--accent);color:#fff;border:none;padding:14px;border-radius:50px;font-size:15px;font-weight:700;cursor:pointer;transition:.3s;box-shadow:0 4px 16px rgba(245,158,11,.3)}
+.btn-share:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(245,158,11,.4)}
+.btn-retry{background:transparent;color:var(--primary-l);border:2px solid var(--primary-l);padding:12px;border-radius:50px;font-size:14px;font-weight:600;cursor:pointer;transition:.3s}
+.btn-retry:hover{background:var(--primary);color:#fff;border-color:var(--primary)}
+
+/* 分享图弹窗 */
+.share-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:999;align-items:center;justify-content:center;padding:20px}
+.share-modal.show{display:flex}
+.share-card{background:#fff;border-radius:20px;overflow:hidden;max-width:360px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.share-card-img{width:100%;display:block}
+.share-card-actions{padding:16px;display:flex;gap:12px}
+.share-card-actions button{flex:1;padding:10px;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer}
+.btn-dl{background:var(--primary);color:#fff}
+.btn-close{background:#f0f0f0;color:#333}
+
+.section-title{font-size:14px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+@keyframes bounceIn{0%{transform:scale(0);opacity:0}60%{transform:scale(1.2)}100%{transform:scale(1);opacity:1}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.fadeIn{animation:fadeIn .2s ease}
+</style>
+</head>
+<body>
+<div class="bg"></div>
+<div class="app">
+
+<!-- 封面页 -->
+<div class="cover" id="page-cover">
+  <div class="tag">
+    <span class="tag-label">职场耗电点</span>
+    <span class="tag-line"></span>
+    <span class="tag-num">NO.004</span>
+  </div>
+  <h1>你为什么上班这么累？</h1>
+  <div class="subtags">
+    <div class="subtag">⏱️ 三分钟自测</div>
+    <div class="subtag">📝 15道场景题</div>
+    <div class="subtag">✨ 测出你的耗电类型</div>
+  </div>
+  <button class="btn-start" onclick="startQuiz()">开始测试 →</button>
+  <div class="quote-deco">⚡</div>
+  <div class="footer-en">WORKPLACE DRAIN DETECTOR</div>
+</div>
+
+<!-- 答题页 -->
+<div class="quiz" id="page-quiz">
+  <div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-text">
+      <span id="progressLabel">第 1 题</span>
+      <span id="progressCount">1 / 15</span>
+    </div>
+  </div>
+  <div class="q-num" id="qNum">问题 1</div>
+  <div class="q-title" id="qTitle">加载中...</div>
+  <div class="options" id="qOptions"></div>
+</div>
+
+<!-- 结果页 -->
+<div class="result" id="page-result">
+  <div class="r-icon" id="rIcon">🔋</div>
+  <div class="r-label">你的职场耗电点是</div>
+  <div class="r-title" id="rTitle">社交耗电型</div>
+  <div class="r-badge" id="rBadge">社交电池</div>
+  <div class="r-desc" id="rDesc"></div>
+  <div class="r-desc" id="rScenarios"></div>
+  <div class="r-desc" id="rFit"></div>
+  <div class="r-desc" id="rTraps"></div>
+  <div class="r-charge" id="rCharge"></div>
+  <div class="r-secondary" id="rSecondary"></div>
+  <div class="r-actions">
+    <button class="btn-share" onclick="showShare()">📸 生成分享图</button>
+    <button class="btn-retry" onclick="resetQuiz()">🔄 再测一次</button>
+  </div>
+  <div style="font-size:12px;color:rgba(148,163,184,.4);margin-top:16px">更多测试请访问 protest.xixizai.com</div>
+</div>
+
+</div>
+
+<!-- 分享图弹窗 -->
+<div class="share-modal" id="shareModal">
+  <div class="share-card">
+    <canvas id="shareCanvas" class="share-card-img" width="360" height="540"></canvas>
+    <div class="share-card-actions">
+      <button class="btn-dl" onclick="downloadShare()">💾 保存图片</button>
+      <button class="btn-close" onclick="closeShare()">关闭</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// === 测试数据 ===
+var questions = [
+  {q:"周一到周五，你哪一刻最想辞职？",
+   opts:[
+     {t:"电梯里遇到领导，不知道该聊什么",type:"social"},
+     {t:"老板突然发消息『进度怎么样了』",type:"report"},
+     {t:"发现这周做的事和上周一模一样",type:"meaning"},
+     {t:"被拉进新项目但没人说清怎么分工",type:"control"}
+   ]},
+  {q:"如果可以给工作加一个条件，你最想要？",
+   opts:[
+     {t:"不用和任何人说话，给任务我自己做",type:"social"},
+     {t:"不用写周报、开周会",type:"report"},
+     {t:"每一步该做什么都写得清清楚楚",type:"control"},
+     {t:"做的事情能被看到、被认可",type:"meaning"}
+   ]},
+  {q:"同事突然找你帮忙，你内心的第一反应是？",
+   opts:[
+     {t:"又要跟人打交道了……",type:"social"},
+     {t:"帮了之后这个产出怎么算",type:"control"},
+     {t:"她会不会以后一直来找我",type:"duty"},
+     {t:"如果不帮，她会怎么看我",type:"env"}
+   ]},
+  {q:"开会的时候，什么让你最窒息？",
+   opts:[
+     {t:"被突然点名『你觉得呢』",type:"report"},
+     {t:"有人一直在叹气、抱怨、散发负能量",type:"env"},
+     {t:"开了两小时还没明确结论和分工",type:"control"},
+     {t:"讨论的东西你觉得完全没有意义",type:"meaning"}
+   ]},
+  {q:"想象你最舒服的工作状态：",
+   opts:[
+     {t:"一个人戴着耳机，安静地做自己的事",type:"social"},
+     {t:"领导给任务和deadline，中间完全不来找我",type:"report"},
+     {t:"有清晰流程图，每步都知道做什么",type:"control"},
+     {t:"做出来的东西有人用，有人说『这个帮到我了』",type:"meaning"}
+   ]},
+  {q:"工作群弹出消息，你最怕看到什么？",
+   opts:[
+     {t:"@所有人 下午团建！",type:"social"},
+     {t:"你那个项目进度怎样了？",type:"report"},
+     {t:"方案改了，之前做的都要调整",type:"control"},
+     {t:"这个先放着吧，暂时不推了",type:"meaning"}
+   ]},
+  {q:"下班后朋友约你，你最真实的拒绝理由是？",
+   opts:[
+     {t:"今天说太多话了，不想再开口",type:"social"},
+     {t:"今天被领导说了，心情很差",type:"env"},
+     {t:"今天还有事没做完，心里不踏实",type:"duty"},
+     {t:"今天一整天都不知道在忙什么",type:"meaning"}
+   ]},
+  {q:"你觉得自己最大的『职场毛病』是？",
+   opts:[
+     {t:"一被催进度就慌，明明在做也焦虑",type:"report"},
+     {t:"事情不明确就完全做不下去",type:"control"},
+     {t:"什么事都往自己身上揽，不会拒绝",type:"duty"},
+     {t:"太容易受周围人情绪影响",type:"env"}
+   ]},
+  {q:"当你手头有3个任务同时进行，最崩溃的是？",
+   opts:[
+     {t:"每个都要跟不同的人对接",type:"social"},
+     {t:"每个都要跟不同的人汇报进度",type:"report"},
+     {t:"出了问题三个都要我背锅",type:"duty"},
+     {t:"没一个觉得有意义的，全是应付",type:"meaning"}
+   ]},
+  {q:"领导说『你最近表现不错』，你心里在想？",
+   opts:[
+     {t:"完了，是不是要加活了",type:"duty"},
+     {t:"她是不是在给我挖坑",type:"env"},
+     {t:"是不是后面要安排更模糊的活了",type:"control"},
+     {t:"然并卵",type:"meaning"}
+   ]},
+  {q:"以下哪种工作你绝对干不了一个月？",
+   opts:[
+     {t:"每天打30个陌生电话",type:"social"},
+     {t:"每天写详细的工作日报给领导审阅",type:"report"},
+     {t:"每天做的事完全不一样，没有规律",type:"control"},
+     {t:"每天重复同一个流水线动作",type:"meaning"}
+   ]},
+  {q:"你身边有同事在抱怨工作，你的反应是？",
+   opts:[
+     {t:"礼貌点头但内心走神，不想深入聊",type:"social"},
+     {t:"感觉自己情绪也被拖下去了，跟着丧",type:"env"},
+     {t:"你为什么不直接去找领导说清楚",type:"control"},
+     {t:"特别想帮她，但又觉得自己也帮不了什么",type:"duty"}
+   ]},
+  {q:"有没有过这种时刻——明明活不重、同事也还行，但就是突然不想干了？",
+   opts:[
+     {t:"有，就是某天突然不想说话了，谁跟我搭话都烦",type:"social"},
+     {t:"有，就是突然觉得汇报好累，不想再解释自己在做什么",type:"report"},
+     {t:"有，就是突然觉得不知道自己在往哪走",type:"control"},
+     {t:"有，就是突然觉得这一切都没意义",type:"meaning"}
+   ]},
+  {q:"周末对你最重要的意义是？",
+   opts:[
+     {t:"两天不用跟任何同事说话",type:"social"},
+     {t:"不用操心别人的事，只管自己",type:"duty"},
+     {t:"可以按自己的节奏安排事情",type:"control"},
+     {t:"可以做自己觉得真正有价值的事",type:"meaning"}
+   ]},
+  {q:"你的『职场充电』方式是？",
+   opts:[
+     {t:"一个人待着，完全不看手机",type:"social"},
+     {t:"把所有待办列出来，划掉已完成的",type:"control"},
+     {t:"找个不被打扰的空间，把情绪消化掉",type:"env"},
+     {t:"做一件有成就感的事，哪怕很小",type:"meaning"}
+   ]}
+];
+
+// 维度中文名
+var dimNames = {
+  social:"社交耗电",report:"汇报焦虑",control:"失控内耗",
+  duty:"责任透支",meaning:"意义缺失",env:"环境吸收"
+};
+
+// === 结果类型 ===
+var results = {
+  social:{
+    icon:"🔋",title:"社交耗电型",badge:"社交电池",
+    desc:"你不是社恐，也不是不合群。你只是在社交中持续耗电，而别人在社交中充电。\n\n每一次寒暄、每一次会议、每一次『顺便聊两句』，对你来说都是能量支出。你不是不会说，是说完之后需要很长时间恢复。有人觉得你『太安静了』，但只有你知道：你不是没话说，你是在省电。",
+    quote:"社交很累很累，每次社交之后有3-5天不想再出门。",
+    scenarios:["电梯里遇到同事/领导，不知道该聊什么","团建、聚餐、破冰游戏","每天需要跟多个不同的人对接"],
+    fit:["独立交付型（给任务和deadline，你自己搞定）","文字沟通为主（能打字绝不语音）","低频社交环境"],
+    traps:["销售、商务拓展等高社交岗位","需要频繁跨部门协调的岗位","开放式工位 + 每天有人找你聊天"],
+    charge:"独处。戴耳机。关掉消息提醒。一个人待够，电量就回来了。"
+  },
+  report:{
+    icon:"📋",title:"汇报焦虑型",badge:"汇报恐惧",
+    desc:"你不是没做事，你做了很多。但每次要汇报，你就开始慌。\n\n『进度怎么样了？』『这个做到哪了？』『下周计划发一下』——这些消息对你来说不是简单回复，而是一场小型考试。你花在『解释自己在做什么』上的精力，有时候比做事本身还多。\n\n你不是不会做，你是受不了『一边做一边被人盯着』。",
+    quote:"有汇报的时候够我做很多事了，我也不知道怎么向上级汇报。",
+    scenarios:["突然被问『你这个项目进度怎么样了』","每周写周报 / 开周会","领导站在你身后看你的屏幕"],
+    fit:["结果导向（只看最终交付，不看过程）","低频汇报（月度甚至季度）","自主管理进度"],
+    traps:["需要每日站会、日报的岗位","微观管理的领导","需要频繁同步进度的工作"],
+    charge:"把所有待办列出来，划掉已完成的。看到进度在推进，焦虑就少一半。"
+  },
+  control:{
+    icon:"🎯",title:"失控内耗型",badge:"秩序敏感",
+    desc:"你需要事情是清楚的。谁负责什么、下一步做什么、最终交付给谁——这些信息如果模糊，你就会开始内耗。\n\n你不是固执，你是『秩序敏感』。模糊的边界、频繁的变动、说不清楚的需求，对你来说不是小问题，而是会让你彻底停下来。\n\n你甚至想搞清楚每个流程是怎么走的，因为接受不了一切不明不白的东西。",
+    quote:"确切的上升路径和未来发展，如果没有，我就会胡思乱想内耗到甚至离职。",
+    scenarios:["接到模糊任务，没人说清楚怎么做","方案改了又改，之前做的全白费","不知道自己在团队中的位置和未来"],
+    fit:["有清晰SOP和流程文档","目标和边界明确","变动少、可预期"],
+    traps:["早期创业公司（一切都在变）","需求频繁变更的岗位","『先做着看吧』型领导"],
+    charge:"做计划。列清单。把模糊的事拆成清晰的步骤。掌控感回来了，电量就回来了。"
+  },
+  duty:{
+    icon:"⚡",title:"责任透支型",badge:"过度负责",
+    desc:"你的责任感不是优点，是你的耗电口。\n\n领导交代的事，你做不到敷衍。同事的活，你看不过去就帮忙。出了问题，你第一反应是『是不是我没做好』。你不是不知道该拒绝，你是责任感一上来，什么话术都不需要——你直接就上了。\n\n然后别人夸你『靠谱』，你心里只有疲惫。",
+    quote:"责任感一上来，什么话术都不需要。",
+    scenarios:["别人的事最后变成了你的事","出了问题，所有锅都往你身上推","你做的比职责要求的多很多，但没人看到"],
+    fit:["职责边界清晰，不越界","不需要『补位』的岗位","有明确的工作时间和边界"],
+    traps:["『能者多劳』型团队","初创团队（一个人当三个用）","没有边界感的文化"],
+    charge:"学会说出『这不是我的事』。划清边界。做你该做的，不多也不少。"
+  },
+  meaning:{
+    icon:"🌫️",title:"意义缺失型",badge:"虚无感",
+    desc:"你可以吃苦，但不能吃『没有意义的苦』。\n\n如果看不到自己做的事情有什么价值、影响了什么人、解决了什么问题——你就会开始怀疑一切。然后你会想辞职，不是因为累，是因为虚无。\n\n你不是矫情，你需要的是『确定的价值反馈』。哪怕只有一个人说『这个帮到我了』，你就能再撑一阵。",
+    quote:"看不到结果的、虚无缥缈的产出绝对是大雷区。",
+    scenarios:["每天做重复的事，不知道为了什么","做了一个月的东西，最后被弃用","你的工作产出没人看过、没人反馈"],
+    fit:["能看到最终用户/客户的反馈","有明确产出和成果","做的事情和自己的价值观一致"],
+    traps:["流水线式重复工作","做了一堆PPT但从不知道用在哪","没有反馈机制的岗位"],
+    charge:"做一件有明确反馈的事，哪怕很小。给自己一个『这件事有用』的证据。"
+  },
+  env:{
+    icon:"🧲",title:"环境吸收型",badge:"情绪海绵",
+    desc:"你不需要跟人说话，光是存在于一个有压力的环境里，能量就开始流失。\n\n同事在叹气、领导在焦虑、隔壁工位在抱怨——你的身体就像一块海绵，自动把这些负能量吸进来。等你意识到的时候，已经耗了一大半。\n\n你不是敏感，你是『高吸收』。这让你在心理类、服务类工作中特别有天赋，但也让你特别容易被耗干。",
+    quote:"光是存在于压力场所里就开始吸收能量了。",
+    scenarios:["在一个高压、高焦虑的团队氛围里","同事一直在抱怨，你被迫当『树洞』","做着『疗愈别人』的工作，自己却没人疗愈"],
+    fit:["低压力、节奏适中的环境","物理空间隔离（居家、独立工位）","可以定期抽离、独处恢复"],
+    traps:["高压行业（金融、医疗急救、客服）","充满drama和冲突的团队","需要持续输出情绪价值的岗位"],
+    charge:"离开源头。去一个没人的地方待30分钟。物理隔离是最有效的充电方式。"
+  }
+};
+
+// === 测试逻辑 ===
+var currentQ = 0;
+var scores = {social:0,report:0,control:0,duty:0,meaning:0,env:0};
+
+function startQuiz(){
+  currentQ = 0;
+  scores = {social:0,report:0,control:0,duty:0,meaning:0,env:0};
+  document.getElementById('page-cover').style.display='none';
+  document.getElementById('page-result').style.display='none';
+  document.getElementById('page-quiz').style.display='flex';
+  renderQuestion();
+}
+
+function renderQuestion(){
+  var q = questions[currentQ];
+  var total = questions.length;
+  var progress = (currentQ / total) * 100;
+  
+  document.getElementById('progressFill').style.width = progress + '%';
+  document.getElementById('progressLabel').textContent = '第 ' + (currentQ+1) + ' 题';
+  document.getElementById('progressCount').textContent = (currentQ+1) + ' / ' + total;
+  document.getElementById('qNum').textContent = '问题 ' + (currentQ+1);
+  document.getElementById('qTitle').textContent = q.q;
+  
+  var optsHtml = '';
+  var labels = ['A','B','C','D'];
+  q.opts.forEach(function(o,i){
+    optsHtml += '<div class="option fadeIn" onclick="selectOption(\''+o.type+'\')">' +
+      '<div class="opt-label">'+labels[i]+'</div>' +
+      '<div class="opt-text">'+o.t+'</div>' +
+      '</div>';
+  });
+  document.getElementById('qOptions').innerHTML = optsHtml;
+}
+
+function selectOption(type){
+  scores[type]++;
+  currentQ++;
+  if(currentQ >= questions.length){
+    showResult();
+  } else {
+    window.scrollTo(0,0);
+    renderQuestion();
+  }
+}
+
+function showResult(){
+  // 找到最高分
+  var maxType = 'social', maxScore = 0;
+  var sorted = [];
+  for(var k in scores){
+    sorted.push({type:k,score:scores[k]});
+    if(scores[k] > maxScore){maxScore = scores[k]; maxType = k;}
+  }
+  sorted.sort(function(a,b){return b.score - a.score});
+  
+  var r = results[maxType];
+  var secondaryType = sorted[1].type;
+  
+  document.getElementById('page-quiz').style.display='none';
+  document.getElementById('page-result').style.display='flex';
+  document.getElementById('rIcon').textContent = r.icon;
+  document.getElementById('rTitle').textContent = r.title;
+  document.getElementById('rBadge').textContent = r.badge;
+  
+  // 描述 + 金句
+  var descHtml = r.desc.split('\n').map(function(p){return p.trim()?'<p style="margin-bottom:10px">'+p+'</p>':''}).join('');
+  descHtml += '<div class="r-quote">「'+r.quote+'」</div>';
+  document.getElementById('rDesc').innerHTML = descHtml;
+  
+  // 最耗电场景
+  var scenarioHtml = '<div class="section-title" style="color:#e65100">⚡ 最耗电场景 Top3</div>';
+  r.scenarios.forEach(function(s,i){scenarioHtml+='<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span style="width:24px;height:24px;border-radius:50%;background:#f59e0b;color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;font-weight:700">'+(i+1)+'</span><span style="font-size:14px;color:var(--text)">'+s+'</span></div>'});
+  document.getElementById('rScenarios').innerHTML = scenarioHtml;
+  
+  // 适合的工作机制
+  var fitHtml = '<div class="section-title" style="color:#1d4ed8">✅ 适合你的工作机制</div>';
+  r.fit.forEach(function(f){fitHtml+='<div style="font-size:14px;color:var(--text);margin-bottom:6px;padding-left:20px;position:relative"><span style="position:absolute;left:0;color:#3b82f6">✓</span>'+f+'</div>'});
+  document.getElementById('rFit').innerHTML = fitHtml;
+  
+  // 职场雷区
+  var trapHtml = '<div class="section-title" style="color:#dc2626">⚠️ 职场雷区</div>';
+  r.traps.forEach(function(t){trapHtml+='<div style="font-size:14px;color:#991b1b;margin-bottom:6px;padding-left:20px;position:relative"><span style="position:absolute;left:0;color:#ef4444">✗</span>'+t+'</div>'});
+  document.getElementById('rTraps').innerHTML = trapHtml;
+  
+  // 充电方式
+  document.getElementById('rCharge').innerHTML = '<div class="section-title" style="color:#3b82f6">🔋 你的充电方式</div><div style="font-size:15px;color:var(--text);font-weight:500">'+r.charge+'</div>';
+  
+  // 次要耗电类型
+  document.getElementById('rSecondary').textContent = '你的次要耗电点是「'+dimNames[secondaryType]+'」';
+  
+  // 存到全局供分享图用
+  window._resultData = r;
+  window._resultType = maxType;
+}
+
+function resetQuiz(){
+  document.getElementById('page-result').style.display='none';
+  document.getElementById('page-cover').style.display='flex';
+}
+
+// === 分享图生成 ===
+function showShare(){
+  document.getElementById('shareModal').classList.add('show');
+  drawShareCard();
+}
+function closeShare(){
+  document.getElementById('shareModal').classList.remove('show');
+}
+function drawShareCard(){
+  var canvas = document.getElementById('shareCanvas');
+  var ctx = canvas.getContext('2d');
+  var W = 360, H = 540;
+  var r = window._resultData || results.social;
+  
+  // 背景
+  var grad = ctx.createLinearGradient(0,0,W,H);
+  grad.addColorStop(0,'#0f172a');
+  grad.addColorStop(0.5,'#1e293b');
+  grad.addColorStop(1,'#1e3a5f');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0,0,W,H);
+  
+  // 网格
+  ctx.strokeStyle = 'rgba(59,130,246,0.08)';
+  ctx.lineWidth = 1;
+  for(var x=0;x<W;x+=30){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(var y=0;y<H;y+=30){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+  
+  // 标签
+  ctx.fillStyle = 'rgba(59,130,246,.15)';
+  ctx.strokeStyle = '#60a5fa';
+  ctx.lineWidth = 1.5;
+  roundRect(ctx,28,36,90,26,5);
+  ctx.fill();ctx.stroke();
+  ctx.fillStyle = '#60a5fa';
+  ctx.font = 'bold 12px sans-serif';
+  ctx.fillText('职场耗电点', 40, 53);
+  ctx.fillStyle = '#60a5fa';
+  ctx.font = '12px sans-serif';
+  ctx.fillText('NO.004', W-70, 53);
+  
+  // 图标
+  ctx.font = '56px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(r.icon, W/2, 160);
+  
+  // 标签
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '13px sans-serif';
+  ctx.fillText('你的职场耗电点是', W/2, 200);
+  
+  // 标题
+  ctx.fillStyle = '#f8fafc';
+  ctx.font = 'bold 28px sans-serif';
+  ctx.fillText(r.title, W/2, 238);
+  
+  // badge
+  ctx.fillStyle = '#3b82f6';
+  var bw = ctx.measureText(r.badge).width + 24;
+  roundRect(ctx,(W-bw)/2,258,bw,26,13);
+  ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 12px sans-serif';
+  ctx.fillText(r.badge, W/2, 275);
+  
+  // 充电方式
+  ctx.fillStyle = 'rgba(148,163,184,.8)';
+  ctx.font = '13px sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('🔋 充电方式：', 40, 330);
+  var chargeLines = r.charge.match(/.{1,16}/g) || [];
+  chargeLines.slice(0,3).forEach(function(line,i){
+    ctx.fillText(line, 40, 352+i*20);
+  });
+  
+  // 二维码占位
+  ctx.fillStyle = '#fff';
+  roundRect(ctx,W/2-40,440,80,80,12);
+  ctx.fill();
+  ctx.fillStyle = '#3b82f6';
+  ctx.font = '11px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('扫码来测', W/2, 470);
+  ctx.font = 'bold 22px sans-serif';
+  ctx.fillText('⚡', W/2, 500);
+  
+  ctx.fillStyle = 'rgba(148,163,184,.3)';
+  ctx.font = '10px sans-serif';
+  ctx.fillText('protest.xixizai.com', W/2, 528);
+  ctx.textAlign = 'left';
+}
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+}
+function downloadShare(){
+  var canvas = document.getElementById('shareCanvas');
+  var link = document.createElement('a');
+  link.download = '我的职场耗电点测试结果.png';
+  link.href = canvas.toDataURL();
+  link.click();
+}
+</script>
+</body>
+</html>
