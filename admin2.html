@@ -88,6 +88,7 @@ body{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-se
 <div class="product-chip active" onclick="switchProduct('career',this)">🚀 你天生该吃哪碗饭</div>
 <div class="product-chip" onclick="switchProduct('pua',this)">🛡️ 职场PUA免疫力测试</div>
 <div class="product-chip" onclick="switchProduct('talent',this)">🔮 你的天赋型格是什么</div>
+<div class="product-chip" onclick="switchProduct('drain',this)">⚡ 你为什么上班这么累</div>
 </div>
 <div class="card">
 <div class="card-title">📝 文案（点击即复制）</div>
@@ -193,7 +194,7 @@ document.querySelectorAll('.tc').forEach(function(t){t.classList.remove('active'
 el.classList.add('active');document.getElementById('tab-'+name).classList.add('active');
 }
 
-var SHIPPING_INFO='感谢购买❤️\n【测试方式】复制链接到浏览器打开即可测试，不要在小红书内直接点\n【售后】虚拟商品不支持退换，有问题联系客服\n【好评福利】五星好评+截图找客服，免费领取「天赋使用说明书」完整版手册（含职业路线图+陷阱自查+7天行动计划）';
+var SHIPPING_INFO='感谢购买❤️\n【测试方式】复制链接到浏览器打开即可测试，不要在小红书内直接点\n【售后】虚拟商品不支持退换，有问题联系客服\n【好评福利】五星好评+截图找客服，免费领取额外测评一份（测你的隐藏天赋型格，含详细职业路线+盲区自查）';
 
 // 产品数据
 var products={career:{title:"128+已测【你天生该吃哪碗饭】10道题测出你的隐藏职业基因，准确到头皮发麻",shortTitle:"职业基因趣味测试",detail:'你是不是也想过：为什么有人上班像上坟，有人却越干越来劲？\n这不是一个普通的性格测试。\n它不会笼统地告诉你"你是外向还是内向"，\n而是从你的本能反应里，挖出藏最深的职业天赋。\n\n从10个看似跟工作无关的生活场景——\n周末醒来第一个念头、怎么处理朋友的倾诉、\n突然拿到一笔闲钱会干嘛……\n\n精准锁定你的4大职业基因维度：\n行动力指数、创造感知力、社交影响力、策略掌控力\n\n做完的人都在说：\n"我以为自己适合上班，原来我天生就该创业"\n"这也太准了，我就是那个操盘手"\n"从小到大没人比这个测试更懂我"\n\n10道题，2分钟，找到你天生的饭碗。\n\n⚠️ 温馨提示：测完可能会想辞职（不是）',link:"https://protest.xixizai.com",linkUrl:"https://protest.xixizai.com",commentGuide:"迷茫的姐妹都来测一下！10道题只要2分钟，测完真的会刷新对自己的认知 👉 笔记同款测评点这里！",svgs:{}},drain:{title:"\u3010INFP\u5fc5\u6d4b\u3011\u4f60\u4e3a\u4ec0\u4e48\u4e0a\u73ed\u8fd9\u4e48\u7d2f\uff115\u9898\u6d4b\u51fa\u4f60\u7684\u804c\u573a\u8017\u7535\u70b9",shortTitle:"\u804c\u573a\u8017\u7535\u70b9\u6d4b\u8bc4",detail:"\u4f60\u4e0d\u662f\u61d2\uff0c\u4e5f\u4e0d\u662f\u4e0d\u9002\u5408\u4e0a\u73ed\u3002\u4f60\u53ea\u662f\u5728\u67d0\u4e9b\u5730\u65b9\u6301\u7eed\u8017\u7535\uff0c\u800c\u81ea\u5df1\u90fd\u6ca1\u610f\u8bc6\u5230\u3002\u6709\u4eba\u4e00\u88ab\u50ac\u8fdb\u5ea6\u5c31\u614c\uff0c\u6709\u4eba\u5149\u662f\u5b58\u5728\u4e8e\u538b\u529b\u73af\u5883\u91cc\u80fd\u91cf\u5c31\u5f00\u59cb\u6d41\u5931\uff0c\u6709\u4eba\u770b\u4e0d\u5230\u505a\u4e8b\u7684\u610f\u4e49\u5c31\u76f4\u63a5\u6446\u70c2\u3002\u4f60\u7684\u8017\u7535\u70b9\u5230\u5e95\u5728\u54ea\uff1f15\u4e2a\u771f\u5b9e\u804c\u573a\u573a\u666f\u9898\uff0c\u6d4b\u51fa\u4f60\u76846\u79cd\u8017\u7535\u7c7b\u578b\u4e4b\u4e00\uff1a\u793e\u4ea4\u8017\u7535\u578b\/\u6c47\u62a5\u7126\u8651\u578b\/\u5931\u63a7\u5185\u8017\u578b\/\u8d23\u4efb\u900f\u652f\u578b\/\u610f\u4e49\u7f3a\u5931\u578b\/\u73af\u5883\u5438\u6536\u578b\u3002\u6bcf\u79cd\u7c7b\u578b\u9644\u5e26\uff1a\u6700\u8017\u7535\u573a\u666fTop3 + \u9002\u5408\u7684\u5de5\u4f5c\u673a\u5236 + \u804c\u573a\u96f7\u533a + \u5145\u7535\u65b9\u5f0f\u300215\u9053\u9898\uff0c3\u5206\u949f\uff0c\u627e\u5230\u4f60\u4e0a\u73ed\u7d2f\u7684\u771f\u6b63\u539f\u56e0\u3002",link:"https:\/\/protest.xixizai.com\/drain.html",linkUrl:"https:\/\/protest.xixizai.com\/drain.html",commentGuide:"\u4e0a\u73ed\u603b\u89c9\u5f97\u7d2f\u4f46\u53c8\u8bf4\u4e0d\u51fa\u4e3a\u4ec0\u4e48\u7684\u59d0\u59b9\u90fd\u6765\u6d4b\uff0115\u98983\u5206\u949f\uff0c\u6d4b\u5b8c\u79d2\u61c2\u81ea\u5df1\u4e3a\u4ec0\u4e48\u8017\u7535\u8fd9\u4e48\u5feb",svgs:{}}};
