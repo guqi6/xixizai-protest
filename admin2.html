@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>物料管理后台 | 西西崽</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--p:#6366f1;--pd:#4f46e5;--g:#10b981;--bg:#f0f2f5;--c:#fff;--b:#e5e7eb;--t:#1f2937;--tl:#6b7280;--r:8px;--z:#4A7CF7;--zd:#3a6ad4}
+body{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--t)}
+.nav{background:var(--c);border-bottom:1px solid var(--b);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.nav h1{font-size:16px;font-weight:700}
+.container{max-width:900px;margin:0 auto;padding:20px 16px}
+.tabs{display:flex;gap:0;margin-bottom:16px;background:var(--c);border-radius:var(--r);overflow:hidden;border:1px solid var(--b)}
+.tab{flex:1;padding:14px;text-align:center;cursor:pointer;font-size:14px;font-weight:600;color:var(--tl);border-bottom:3px solid transparent;transition:.2s}
+.tab.active{color:var(--p);border-bottom-color:var(--p);background:#eef2ff}
+.tab:hover:not(.active){background:#f9fafb}
+.tc{display:none}.tc.active{display:block}
+.card{background:var(--c);border-radius:var(--r);padding:20px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.card-title{font-size:15px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:6px}
+.field{margin-bottom:14px}
+.field-label{font-size:12px;font-weight:600;color:var(--tl);margin-bottom:4px;display:flex;justify-content:space-between;align-items:center}
+.field-content{background:#f9fafb;border:1px solid var(--b);border-radius:6px;padding:10px 12px;font-size:14px;line-height:1.6;color:var(--t);cursor:pointer;transition:.2s;white-space:pre-wrap;word-break:break-all}
+.field-content:hover{border-color:var(--p);background:#eef2ff}
+.field-content.copied{background:#d1fae5;border-color:var(--g)}
+.copy-btn{font-size:11px;padding:3px 10px;border:1px solid var(--b);border-radius:4px;background:var(--c);color:var(--tl);cursor:pointer;transition:.2s}
+.copy-btn:hover{border-color:var(--p);color:var(--p)}
+.svg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
+.svg-card{background:#f9fafb;border:1px solid var(--b);border-radius:8px;overflow:hidden}
+.svg-card .svg-label{font-size:12px;font-weight:600;color:var(--tl);padding:8px 10px 4px}
+.svg-card .svg-preview{display:flex;align-items:center;justify-content:center;padding:10px;background:#fff;border-bottom:1px solid var(--b);max-height:300px;overflow:auto}
+.svg-card .svg-preview svg{max-width:100%;max-height:280px}
+.svg-card .svg-actions{padding:8px 10px;display:flex;gap:6px}
+.dl-btn{flex:1;font-size:12px;padding:6px;border:none;border-radius:4px;background:var(--p);color:#fff;cursor:pointer;font-weight:600}
+.dl-btn:hover{background:var(--pd)}
+.product-select{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.product-chip{padding:8px 16px;border-radius:20px;font-size:13px;cursor:pointer;border:2px solid var(--b);background:var(--c);color:var(--tl);transition:.2s;font-weight:600}
+.product-chip.active{border-color:var(--p);background:var(--p);color:#fff}
+.link-box{display:flex;gap:8px;align-items:center}
+.link-box .link-url{flex:1;background:#f9fafb;border:1px solid var(--b);border-radius:6px;padding:10px 12px;font-size:14px;color:var(--p);font-weight:600}
+.link-box .link-open{padding:10px 16px;background:var(--g);color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;display:inline-block}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1f2937;color:#fff;padding:8px 20px;border-radius:8px;font-size:13px;z-index:9999;opacity:0;transition:.3s}
+.toast.show{opacity:1}
+.dl-all-btn{background:var(--g);color:#fff;border:none;padding:10px 16px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;margin-top:10px;width:100%}
+.dl-all-btn:hover{background:#059669}
+.gen-input{width:100%;padding:12px;border:1px solid var(--b);border-radius:8px;font-size:14px;font-family:inherit;resize:vertical;line-height:1.6}
+.gen-input:focus{outline:none;border-color:var(--p);box-shadow:0 0 0 3px rgba(99,102,241,.1)}
+.gen-btn{background:var(--z);color:#fff;border:none;padding:14px 24px;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;width:100%;transition:.2s}
+.gen-btn:hover{background:var(--zd)}
+.gen-btn:disabled{background:#aaa;cursor:not-allowed}
+.upload-zone{border:2px dashed var(--b);border-radius:8px;padding:24px;text-align:center;cursor:pointer;transition:.2s}
+.upload-zone:hover{border-color:var(--p);background:#f9fafb}
+.upload-zone.has-files{border-color:var(--g);background:#f0fdf4}
+.preview-imgs{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.preview-imgs img{width:60px;height:60px;object-fit:cover;border-radius:6px;border:1px solid var(--b)}
+.steps{display:flex;gap:8px;margin-bottom:16px}
+.step-item{flex:1;text-align:center;padding:8px;border-radius:6px;font-size:12px;color:var(--tl);background:#f3f4f6;transition:.3s}
+.step-item.active{background:var(--p);color:#fff;font-weight:600}
+.step-item.done{background:var(--g);color:#fff}
+.log-area{background:#1e293b;color:#a5b4fc;border-radius:8px;padding:12px;font-size:12px;line-height:1.8;max-height:200px;overflow:auto;font-family:'SF Mono',Consolas,monospace;display:none}
+.log-area.show{display:block}
+.log-area .log-success{color:#4ade80}
+.log-area .log-error{color:#f87171}
+.log-area .log-warn{color:#fbbf24}
+.title-options{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.title-opt{padding:12px;border:2px solid var(--b);border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;transition:.2s}
+.title-opt:hover{border-color:var(--p);background:#eef2ff}
+.title-opt.selected{border-color:var(--p);background:#eef2ff;color:var(--p)}
+.result-body{background:#f9fafb;border:1px solid var(--b);border-radius:8px;padding:16px;font-size:14px;line-height:1.8;white-space:pre-wrap;max-height:400px;overflow:auto;cursor:text}
+.result-body:focus{outline:none;border-color:var(--p);background:#fff}
+</style>
+</head>
+<body>
+<nav class="nav">
+<h1>📦 西西崽物料后台</h1>
+<div style="font-size:12px;color:var(--tl)">点击文字一键复制 · 点击下载转JPG</div>
+</nav>
+<div class="container">
+<div class="tabs">
+<div class="tab active" onclick="switchTab('material',this)">📋 物料管理</div>
+<div class="tab" onclick="switchTab('notes',this)">📝 笔记文案</div>
+<div class="tab" onclick="switchTab('generator',this)">✏️ 内容生成</div>
+</div>
+
+<!-- Tab 1: 物料管理 -->
+<div class="tc active" id="tab-material">
+<div class="product-select">
+<div class="product-chip active" onclick="switchProduct('career',this)">🚀 你天生该吃哪碗饭</div>
+<div class="product-chip" onclick="switchProduct('pua',this)">🛡️ 职场PUA免疫力测试</div>
+<div class="product-chip" onclick="switchProduct('talent',this)">🔮 你的天赋型格是什么</div>
+</div>
+<div class="card">
+<div class="card-title">📝 文案（点击即复制）</div>
+<div class="field"><div class="field-label"><span>🏷️ 商品标题</span><button class="copy-btn" onclick="copyField('title')">📋复制</button></div><div class="field-content" id="fTitle" onclick="copyField('title')"></div></div>
+<div class="field"><div class="field-label"><span>📌 导购短标题</span><button class="copy-btn" onclick="copyField('shortTitle')">📋复制</button></div><div class="field-content" id="fShortTitle" onclick="copyField('shortTitle')"></div></div>
+<div class="field"><div class="field-label"><span>📝 商品详情文案</span><button class="copy-btn" onclick="copyField('detail')">📋复制</button></div><div class="field-content" id="fDetail" onclick="copyField('detail')" style="max-height:300px;overflow:auto"></div></div>
+<div class="field"><div class="field-label"><span>📂 商品类目</span></div><div class="field-content" style="cursor:default">电子资源 > 课件/教案/手抄报</div></div>
+<div class="field"><div class="field-label"><span>🔗 测试链接</span></div><div class="link-box"><div class="link-url" id="fLink" onclick="copyField('link')"></div><a class="link-open" id="fLinkOpen" target="_blank">🔗 打开</a></div></div>
+<div class="field"><div class="field-label"><span>📦 发货说明</span><button class="copy-btn" onclick="copyField('shipping')">📋复制</button></div><div class="field-content" id="fShipping" onclick="copyField('shipping')" style="white-space:pre-wrap"></div></div>
+</div>
+<div class="card">
+<div class="card-title">📌 评论引导话术<span style="font-size:12px;color:var(--tl);font-weight:400"> · 发布后第一时间置顶</span></div>
+<div class="field"><div class="field-label"><span>💬 置顶评论话术</span><button class="copy-btn" onclick="copyField('commentGuide')">📋复制</button></div><div class="field-content" id="fCommentGuide" onclick="copyField('commentGuide')" style="white-space:pre-wrap;background:#fffbeb;border-color:#fde68a"></div></div>
+<div style="font-size:12px;color:var(--tl);margin-top:4px">💡 发笔记后立刻发这条评论，抢占第一条位置</div>
+</div>
+<div class="card">
+<div class="card-title">🖼️ 配图（SVG预览 · 下载转JPG）</div>
+<div class="svg-grid" id="svgGrid"></div>
+<button class="dl-all-btn" onclick="downloadAll()">⬇️ 一键下载全部图片（JPG）</button>
+</div>
+</div>
+
+<!-- Tab 2: 笔记文案 -->
+<div class="tc" id="tab-notes">
+<div id="notesList"></div>
+</div>
+
+<!-- Tab 3: 内容生成 -->
+<div class="tc" id="tab-generator">
+<div class="card">
+<div class="card-title">✏️ 小红书内容生成</div>
+<div class="field">
+<div class="field-label"><span>📌 对标内容（文字）</span><span style="font-size:11px;color:var(--tl)">粘贴竞品爆款文案</span></div>
+<textarea class="gen-input" id="refText" rows="5" placeholder="粘贴对标笔记的文字内容，或描述你想要的风格..."></textarea>
+</div>
+<div class="field">
+<div class="field-label"><span>🖼️ 对标图片（可选）</span></div>
+<div class="upload-zone" id="uploadZone" onclick="document.getElementById('refImages').click()">
+<div style="font-size:24px;margin-bottom:4px">📁</div>
+<div style="font-size:13px;color:var(--tl)">点击上传参考图（可选）</div>
+<input type="file" id="refImages" accept="image/*" multiple style="display:none" onchange="handleUpload(this)">
+<div class="preview-imgs" id="previewImgs"></div>
+</div>
+</div>
+<div class="field">
+<div class="field-label"><span>📦 推广产品</span></div>
+<select class="gen-input" id="genProduct" style="padding:10px">
+<option value="你天生该吃哪碗饭">🚀 你天生该吃哪碗饭（职业基因测试）</option>
+<option value="职场PUA免疫力">🛡️ 职场PUA免疫力测试</option>
+</select>
+</div>
+<button class="gen-btn" id="genBtn" onclick="generateContent()">🚀 一键生成</button>
+</div>
+
+<div class="card" id="progressCard" style="display:none">
+<div class="steps">
+<div class="step-item" data-step="1">① 分析→标题</div>
+<div class="step-item" data-step="2">② 正文</div>
+<div class="step-item" data-step="3">③ 配图×3</div>
+</div>
+<div class="log-area" id="logArea"></div>
+</div>
+
+<div class="card" id="resultCard" style="display:none">
+<div class="card-title">🎉 生成结果</div>
+<div class="field">
+<div class="field-label"><span>🏷️ 标题（选一个）</span><button class="copy-btn" onclick="copySelectedTitle()">📋复制</button></div>
+<div class="title-options" id="titleOptions"></div>
+</div>
+<div class="field">
+<div class="field-label"><span>📝 正文（可编辑）</span><button class="copy-btn" onclick="copyGenBody()">📋复制</button></div>
+<div class="result-body" id="genBody" contenteditable="true"></div>
+</div>
+<div class="field">
+<div class="field-label"><span>🎨 配图（3页）</span></div>
+<div class="svg-grid" id="genSvgGrid"></div>
+<button class="dl-all-btn" onclick="downloadAllGen()">⬇️ 一键下载全部（JPG）</button>
+</div>
+</div>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div id="loginOverlay" style="position:fixed;inset:0;background:#1f2937;z-index:9999;display:flex;align-items:center;justify-content:center">
+<div style="background:#fff;border-radius:12px;padding:32px;width:320px;text-align:center">
+<div style="font-size:28px;margin-bottom:8px">🔐</div>
+<div style="font-size:16px;font-weight:700;margin-bottom:16px">物料后台登录</div>
+<input type="password" id="pwInput" placeholder="请输入密码" style="width:100%;padding:12px;border:2px solid #e5e7eb;border-radius:8px;font-size:15px;text-align:center;margin-bottom:12px;letter-spacing:4px" onkeydown="if(event.key==='Enter')checkPw()">
+<button onclick="checkPw()" style="width:100%;padding:12px;background:#6366f1;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">进入</button>
+<div id="pwError" style="color:#ef4444;font-size:12px;margin-top:8px;display:none">密码错误</div>
+</div>
+</div>
+
+<script>
+var ADMIN_PW='mima234';
+function checkPw(){var input=document.getElementById('pwInput').value;if(input===ADMIN_PW){document.getElementById('loginOverlay').style.display='none';sessionStorage.setItem('admin_ok','1')}else{document.getElementById('pwError').style.display='block';document.getElementById('pwInput').value=''}}
+if(sessionStorage.getItem('admin_ok')==='1'){document.getElementById('loginOverlay').style.display='none'}
+
+// Tab切换
+function switchTab(name,el){
+document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active')});
+document.querySelectorAll('.tc').forEach(function(t){t.classList.remove('active')});
+el.classList.add('active');document.getElementById('tab-'+name).classList.add('active');
+}
+
+var SHIPPING_INFO='感谢购买❤️\n【售后说明】虚拟商品，发货后不支持退换。下单后自动发送链接，若无收到或者有问题请联系我\n【常见问题】Q:链接打不开怎么办？ A:复制链接到浏览器、备忘录、聊天软件打开，不要在小红书内直接点如果出现了加载不出结果，辛苦再试一次， 可能是因为个别手机不兼容';
+
+// 产品数据
+var products={career:{title:"128+已测【你天生该吃哪碗饭】10道题测出你的隐藏职业基因，准确到头皮发麻",shortTitle:"职业基因趣味测试",detail:'你是不是也想过：为什么有人上班像上坟，有人却越干越来劲？\n这不是一个普通的性格测试。\n它不会笼统地告诉你"你是外向还是内向"，\n而是从你的本能反应里，挖出藏最深的职业天赋。\n\n从10个看似跟工作无关的生活场景——\n周末醒来第一个念头、怎么处理朋友的倾诉、\n突然拿到一笔闲钱会干嘛……\n\n精准锁定你的4大职业基因维度：\n行动力指数、创造感知力、社交影响力、策略掌控力\n\n做完的人都在说：\n"我以为自己适合上班，原来我天生就该创业"\n"这也太准了，我就是那个操盘手"\n"从小到大没人比这个测试更懂我"\n\n10道题，2分钟，找到你天生的饭碗。\n\n⚠️ 温馨提示：测完可能会想辞职（不是）',link:"https://protest.xixizai.com",linkUrl:"https://protest.xixizai.com",commentGuide:"迷茫的姐妹都来测一下！10道题只要2分钟，测完真的会刷新对自己的认知 👉 笔记同款测评点这里！",svgs:{}}};
+function phSvg(){return '<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080"><rect width="1080" height="1080" fill="#e8f5e9"/><text x="540" y="540" font-size="48" text-anchor="middle" fill="#2e7d32">SVG</text></svg>'}
+products.career.svgs={main:{label:"商品主图(1:1)",svg:phSvg()},guide:{label:"引导图(1:1)",svg:phSvg()},detail:{label:"详情图(1:1)",svg:phSvg()}};
+
+// === 产品2: PUA免疫力测试 ===
+products.pua={
+title:"89+已测【你的职场PUA免疫力有多强】10道真实场景，测出你的职场段位",
+shortTitle:"职场PUA免疫力测试",
+detail:'你有没有过这种感觉：\n领导说完一句话，你明明觉得哪里不对，但又说不上来？\n\n这不是一个普通的职场性格测试。\n它不会笼统地告诉你「你适合什么工作」，\n而是把10个真实职场场景丢到你面前——\n领导画饼、公开批评、情感绑架、比较PUA……\n看你在真实压力下会怎么选。\n\n做完你会清楚知道：\n你的PUA免疫力指数、认知清醒度、边界感、情绪管理、行动力，\n分别在什么段位。\n\n做完的人都在说：\n「我以为自己很刚，原来只是佛系」\n「原来领导那句「我为你好」是经典PUA话术」\n「终于知道为什么每次被骂都内耗三天了」\n\n10道题，2分钟，看清你在职场的真实生存力。\n\n⚠️ 温馨提示：测完可能会想更新简历（不是）',
+link:"https://pua.xixizai.com/pua",
+linkUrl:"https://pua.xixizai.com/pua",
+commentGuide:"职场里受委屈的姐妹一定要做一次这个测试！看看你的PUA免疫力在什么段位 👉 笔记同款测评在这里！",
+svgs:{}
+};
+
+// PUA测评主图SVG (1:1 红色系)
+products.pua.svgs={
+main:{label:"商品主图(1:1)",svg:'<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080">\n  <defs>\n    <linearGradient id="bgGrad" x1="0" y1="0" x2="1" y2="1">\n      <stop offset="0" stop-color="#fef3f2"/>\n      <stop offset="0.5" stop-color="#fee4e2"/>\n      <stop offset="1" stop-color="#fef0f0"/>\n    </linearGradient>\n    <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse">\n      <path d="M 30 0 L 0 0 0 30" fill="none" stroke="rgba(253,162,155,0.12)" stroke-width="1"/>\n    </pattern>\n  </defs>\n  <rect width="1080" height="1080" fill="url(#bgGrad)"/>\n  <rect width="1080" height="1080" fill="url(#grid)"/>\n  <!-- 顶部标签 -->\n  <rect x="80" y="90" width="180" height="48" rx="8" fill="none" stroke="#b42318" stroke-width="2"/>\n  <text x="170" y="121" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="700" fill="#b42318" text-anchor="middle">职场免疫</text>\n  <text x="320" y="121" font-family="Arial,sans-serif" font-size="16" fill="#b5471f" font-weight="600">NO.002</text>\n  <line x1="400" y1="114" x2="700" y2="114" stroke="#fda29b" stroke-width="1"/>\n  <!-- 主标题 -->\n  <text x="540" y="360" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="72" font-weight="900" fill="#7a271a" text-anchor="middle" letter-spacing="-2">你的职场PUA</text>\n  <text x="540" y="450" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="72" font-weight="900" fill="#b42318" text-anchor="middle" letter-spacing="-2">免疫力有多强？</text>\n  <!-- 盾牌图标 -->\n  <g transform="translate(440 520)">\n    <path d="M100 0 L180 30 L180 100 C180 150 140 190 100 210 C60 190 20 150 20 100 L20 30 Z" fill="#b42318" opacity="0.1"/>\n    <path d="M100 10 L170 35 L170 100 C170 145 135 180 100 198 C65 180 30 145 30 100 L30 35 Z" fill="none" stroke="#b42318" stroke-width="3"/>\n    <text x="100" y="125" font-family="PingFang SC,sans-serif" font-size="48" font-weight="900" fill="#b42318" text-anchor="middle">🛡️</text>\n  </g>\n  <!-- 副标题 -->\n  <text x="540" y="780" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="32" fill="#b5471f" text-anchor="middle">10道真实场景 · 2分钟出结果</text>\n  <text x="540" y="830" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="24" fill="rgba(122,39,26,0.5)" text-anchor="middle">认知清醒度 / 边界感 / 情绪管理 / 行动力</text>\n  <!-- 底部 -->\n  <text x="540" y="960" font-family="PingFang SC,sans-serif" font-size="20" font-weight="600" fill="#b42318" text-anchor="middle">⚠️ 测完可能会想更新简历</text>\n</svg>'},
+guide:{label:"引导图(1:1)",svg:'<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080">\n  <defs>\n    <linearGradient id="bgGrad2" x1="0" y1="0" x2="1" y2="1">\n      <stop offset="0" stop-color="#fee4e2"/>\n      <stop offset="1" stop-color="#fef0f0"/>\n    </linearGradient>\n  </defs>\n  <rect width="1080" height="1080" fill="url(#bgGrad2)"/>\n  <!-- 引导文案 -->\n  <text x="540" y="350" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="56" font-weight="900" fill="#7a271a" text-anchor="middle">你是职场PUA受害者吗？</text>\n  <text x="540" y="430" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="28" fill="#b5471f" text-anchor="middle">10道题告诉你答案</text>\n  <!-- 解锁按钮 -->\n  <rect x="340" y="550" width="400" height="100" rx="50" fill="#b42318"/>\n  <text x="540" y="612" font-family="PingFang SC,sans-serif" font-size="36" font-weight="700" fill="white" text-anchor="middle">🔓 点击解锁全部测试</text>\n  <!-- 底部提示 -->\n  <text x="540" y="780" font-family="PingFang SC,sans-serif" font-size="22" fill="rgba(122,39,26,0.4)" text-anchor="middle">已有数百人完成测试</text>\n</svg>'},
+detail:{label:"详情图(1:1)",svg:'<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080">\n  <defs>\n    <linearGradient id="bgGrad3" x1="0" y1="0" x2="1" y2="1">\n      <stop offset="0" stop-color="#fef3f2"/>\n      <stop offset="1" stop-color="#fee4e2"/>\n    </linearGradient>\n  </defs>\n  <rect width="1080" height="1080" fill="url(#bgGrad3)"/>\n  <!-- 标题 -->\n  <text x="540" y="200" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="48" font-weight="900" fill="#b42318" text-anchor="middle">你将获得</text>\n  <line x1="440" y1="230" x2="640" y2="230" stroke="#b42318" stroke-width="3"/>\n  <!-- 内容列表 -->\n  <text x="180" y="340" font-family="PingFang SC,sans-serif" font-size="32" fill="#7a271a">✅ PUA免疫力指数（0-100分）</text>\n  <text x="180" y="410" font-family="PingFang SC,sans-serif" font-size="32" fill="#7a271a">✅ 认知清醒度评分</text>\n  <text x="180" y="480" font-family="PingFang SC,sans-serif" font-size="32" fill="#7a271a">✅ 职场边界感评分</text>\n  <text x="180" y="550" font-family="PingFang SC,sans-serif" font-size="32" fill="#7a271a">✅ 情绪管理能力评分</text>\n  <text x="180" y="620" font-family="PingFang SC,sans-serif" font-size="32" fill="#7a271a">✅ 职场行动力评分</text>\n  <text x="180" y="690" font-family="PingFang SC,sans-serif" font-size="32" fill="#7a271a">✅ 你的职场段位定位</text>\n  <text x="180" y="760" font-family="PingFang SC,sans-serif" font-size="32" fill="#7a271a">✅ 专属自保建议</text>\n  <text x="180" y="830" font-family="PingFang SC,sans-serif" font-size="32" fill="#7a271a">✅ 职场雷区提醒</text>\n  <!-- 底部CTA -->\n  <rect x="290" y="900" width="500" height="80" rx="40" fill="#f79009"/>\n  <text x="540" y="952" font-family="PingFang SC,sans-serif" font-size="30" font-weight="700" fill="white" text-anchor="middle">🔒 解锁后查看完整结果</text>\n</svg>'}
+};
+var currentProduct='career';
+
+// === 产品3: 天赋型格测评 ===
+products.talent={
+title:"【你的天赋型格是什么】20道题测出你的核心天赋密码，比MBTI更深入",
+shortTitle:"天赋型格深度测评",
+detail:'你是不是也想过：\n为什么有些人做什么都事半功倍，而你明明很努力却总差点意思？\n\n不是你不够好。\n是你还没找到属于自己的赛道。\n\n这不是一个普通的性格测试。\n它不会笼统地告诉你「你是内向还是外向」，\n而是用20道精心设计的场景题——\n从你的本能反应里，挖出5大天赋维度的真实数据：\n创造力、决策力、社交力、韧性、洞察力。\n\n然后精准锁定你的天赋型格：\n破局者、精算师、共振者、闪电手、领航员、深耕者、灵动者、守护者。\n\n每种型格都有完整的「使用说明书」：\n最适合你的6个职业方向（附详细解释为什么适合）\n最不适合你的4个职业（告诉你为什么痛苦）\n你最容易踩的5个盲区\n突破瓶颈的5条具体建议\n你的高光时刻场景\n跟其他型格的搭档关系\n同型格代表人物\n\n做完的人都在说：\n「原来我不是没有天赋，是一直用错了方向」\n「每个职业推荐都解释了为什么，比职业咨询师还详细」\n「不推荐的职业太准了，我就是踩了那个坑」\n\n20道题，5分钟，找到你的天赋密码。\n\n⚠️ 温馨提示：测完可能会想重新规划职业路线（不是）',
+link:"https://protest.xixizai.com/talent",
+linkUrl:"https://protest.xixizai.com/talent",
+commentGuide:"强烈建议迷茫的人都来做一次天赋测试，或许会有意外惊喜！20道题5分钟出结果 👉 笔记同款测评点这里！",
+svgs:{}
+};
+
+// 天赋型格主图SVG (1:1 紫色系)
+products.talent.svgs={
+main:{label:"商品主图(1:1)",svg:'<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080">\n  <defs>\n    <linearGradient id="bgGrad" x1="0" y1="0" x2="1" y2="1">\n      <stop offset="0" stop-color="#f5f3ff"/>\n      <stop offset="0.5" stop-color="#ede9fe"/>\n      <stop offset="1" stop-color="#ddd6fe"/>\n    </linearGradient>\n    <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse">\n      <path d="M 30 0 L 0 0 0 30" fill="none" stroke="rgba(139,92,246,0.12)" stroke-width="1"/>\n    </pattern>\n  </defs>\n  <rect width="1080" height="1080" fill="url(#bgGrad)"/>\n  <rect width="1080" height="1080" fill="url(#grid)"/>\n  <rect x="80" y="90" width="180" height="48" rx="8" fill="none" stroke="#7c3aed" stroke-width="2"/>\n  <text x="170" y="121" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="22" font-weight="700" fill="#7c3aed" text-anchor="middle">天赋型格</text>\n  <text x="320" y="121" font-family="Arial,sans-serif" font-size="16" fill="#8b5cf6" font-weight="600">NO.003</text>\n  <line x1="400" y1="114" x2="700" y2="114" stroke="#c4b5fd" stroke-width="1"/>\n  <text x="540" y="360" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="72" font-weight="900" fill="#5b21b6" text-anchor="middle" letter-spacing="-2">你的天赋型格</text>\n  <text x="540" y="450" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="72" font-weight="900" fill="#7c3aed" text-anchor="middle" letter-spacing="-2">是什么？</text>\n  <text x="540" y="560" font-family="serif" font-size="80" text-anchor="middle">🔮</text>\n  <text x="540" y="780" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="32" fill="#8b5cf6" text-anchor="middle">20道场景题 · 5分钟出结果</text>\n  <text x="540" y="830" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="24" fill="rgba(91,33,182,0.5)" text-anchor="middle">创造力 / 决策力 / 社交力 / 韧性 / 洞察力</text>\n  <text x="540" y="960" font-family="PingFang SC,sans-serif" font-size="20" font-weight="600" fill="#7c3aed" text-anchor="middle">⚠️ 测完可能会想重新规划职业路线</text>\n</svg>'},
+guide:{label:"引导图(1:1)",svg:'<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080">\n  <defs>\n    <linearGradient id="bgGrad2" x1="0" y1="0" x2="1" y2="1">\n      <stop offset="0" stop-color="#ede9fe"/>\n      <stop offset="1" stop-color="#ddd6fe"/>\n    </linearGradient>\n  </defs>\n  <rect width="1080" height="1080" fill="url(#bgGrad2)"/>\n  <text x="540" y="350" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="56" font-weight="900" fill="#5b21b6" text-anchor="middle">你天生擅长什么？</text>\n  <text x="540" y="430" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="28" fill="#8b5cf6" text-anchor="middle">20道题告诉你答案</text>\n  <rect x="340" y="550" width="400" height="100" rx="50" fill="#7c3aed"/>\n  <text x="540" y="612" font-family="PingFang SC,sans-serif" font-size="36" font-weight="700" fill="white" text-anchor="middle">🔓 点击解锁全部测试</text>\n  <text x="540" y="780" font-family="PingFang SC,sans-serif" font-size="22" fill="rgba(91,33,182,0.4)" text-anchor="middle">8种天赋型格 · 你是哪一种？</text>\n</svg>'},
+detail:{label:"详情图(1:1)",svg:'<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080">\n  <defs>\n    <linearGradient id="bgGrad3" x1="0" y1="0" x2="1" y2="1">\n      <stop offset="0" stop-color="#f5f3ff"/>\n      <stop offset="1" stop-color="#ede9fe"/>\n    </linearGradient>\n  </defs>\n  <rect width="1080" height="1080" fill="url(#bgGrad3)"/>\n  <text x="540" y="140" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="48" font-weight="900" fill="#7c3aed" text-anchor="middle">你将获得</text>\n  <line x1="440" y1="170" x2="640" y2="170" stroke="#7c3aed" stroke-width="3"/>\n  <text x="140" y="260" font-family="PingFang SC,sans-serif" font-size="28" fill="#5b21b6">✅ 天赋型格精准匹配（8种型格）</text>\n  <text x="140" y="320" font-family="PingFang SC,sans-serif" font-size="28" fill="#5b21b6">✅ 5大天赋维度评分+深度解读</text>\n  <text x="140" y="380" font-family="PingFang SC,sans-serif" font-size="28" fill="#5b21b6">✅ 6个最适合你的职业方向（附解释）</text>\n  <text x="140" y="440" font-family="PingFang SC,sans-serif" font-size="28" fill="#5b21b6">✅ 4个最不适合你的职业（避坑指南）</text>\n  <text x="140" y="500" font-family="PingFang SC,sans-serif" font-size="28" fill="#5b21b6">✅ 你最容易踩的5个盲区</text>\n  <text x="140" y="560" font-family="PingFang SC,sans-serif" font-size="28" fill="#5b21b6">✅ 突破瓶颈的5条具体建议</text>\n  <text x="140" y="620" font-family="PingFang SC,sans-serif" font-size="28" fill="#5b21b6">✅ 你的高光时刻场景描写</text>\n  <text x="140" y="680" font-family="PingFang SC,sans-serif" font-size="28" fill="#5b21b6">✅ 跟其他型格的搭档关系</text>\n  <text x="140" y="740" font-family="PingFang SC,sans-serif" font-size="28" fill="#5b21b6">✅ 同型格代表人物</text>\n  <rect x="290" y="880" width="500" height="80" rx="40" fill="#f59e0b"/>\n  <text x="540" y="932" font-family="PingFang SC,sans-serif" font-size="30" font-weight="700" fill="white" text-anchor="middle">🔒 解锁后查看完整结果</text>\n</svg>'}
+};
+
+function renderProduct(){
+var p=products[currentProduct];
+document.getElementById('fTitle').textContent=p.title;
+document.getElementById('fShortTitle').textContent=p.shortTitle;
+document.getElementById('fDetail').textContent=p.detail;
+document.getElementById('fLink').textContent=p.link;
+document.getElementById('fLinkOpen').href=p.linkUrl;
+document.getElementById('fShipping').textContent=SHIPPING_INFO;
+document.getElementById('fCommentGuide').textContent=p.commentGuide||'';
+var h='';Object.keys(p.svgs).forEach(function(k){var s=p.svgs[k];h+='<div class="svg-card"><div class="svg-label">'+s.label+'</div><div class="svg-preview">'+s.svg+'</div><div class="svg-actions"><button class="dl-btn" onclick="dlOrig(\''+k+'\')">⬇️ 下载JPG</button></div></div>'});
+document.getElementById('svgGrid').innerHTML=h;
+}
+function switchProduct(k,el){currentProduct=k;document.querySelectorAll('.product-chip').forEach(function(c){c.classList.remove('active')});el.classList.add('active');renderProduct();}
+function copyField(f){var p=products[currentProduct];var t=f==='title'?p.title:f==='shortTitle'?p.shortTitle:f==='detail'?p.detail:f==='shipping'?SHIPPING_INFO:f==='commentGuide'?(p.commentGuide||''):p.link;navigator.clipboard.writeText(t).then(function(){showToast('✅ 已复制')})}
+function dlOrig(k){var s=products[currentProduct].svgs[k];dlSvg(s.svg,s.label,1080)}
+function downloadAll(){Object.keys(products[currentProduct].svgs).forEach(function(k,i){setTimeout(function(){dlOrig(k)},i*500)})}
+function dlSvg(svgStr,label,size){var size=size||1080;var blob=new Blob([svgStr],{type:'image/svg+xml;charset=utf-8'});var url=URL.createObjectURL(blob);var img=new Image();img.onload=function(){var c=document.createElement('canvas');c.width=size;c.height=size;var ctx=c.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,size,size);ctx.drawImage(img,0,0,size,size);c.toBlob(function(b){var a=document.createElement('a');a.download=label.replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g,'')+'.jpg';a.href=URL.createObjectURL(b);a.click();URL.revokeObjectURL(url);showToast('✅ '+a.download)},'image/jpeg',0.95)};img.src=url}
+function dlSvgTall(svgStr,label){var blob=new Blob([svgStr],{type:'image/svg+xml;charset=utf-8'});var url=URL.createObjectURL(blob);var img=new Image();img.onload=function(){var c=document.createElement('canvas');c.width=1080;c.height=1440;var ctx=c.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,1080,1440);ctx.drawImage(img,0,0,1080,1440);c.toBlob(function(b){var a=document.createElement('a');a.download=label.replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g,'')+'.jpg';a.href=URL.createObjectURL(b);a.click();URL.revokeObjectURL(url);showToast('✅ '+a.download)},'image/jpeg',0.95)};img.src=url}
+function showToast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show')},2000)}
+
+// === 内容生成器 ===
+var genState={titles:[],selectedTitle:0,body:'',svgs:[],refImages:[]};
+
+function handleUpload(input){
+var files=Array.from(input.files);var zone=document.getElementById('uploadZone');var preview=document.getElementById('previewImgs');
+genState.refImages=[];preview.innerHTML='';
+files.forEach(function(file){var reader=new FileReader();reader.onload=function(e){genState.refImages.push(e.target.result);var img=document.createElement('img');img.src=e.target.result;preview.appendChild(img)};reader.readAsDataURL(file)});
+if(files.length)zone.classList.add('has-files');else zone.classList.remove('has-files');
+}
+
+function setStep(step){
+document.querySelectorAll('.step-item').forEach(function(el){var s=parseInt(el.dataset.step);el.classList.remove('active','done');if(s<step)el.classList.add('done');else if(s===step)el.classList.add('active')});
+}
+
+function addLog(msg,type){
+var area=document.getElementById('logArea');area.classList.add('show');
+var cls=type==='success'?'log-success':type==='error'?'log-error':type==='warn'?'log-warn':'';
+var time=new Date().toLocaleTimeString('zh-CN',{hour12:false});
+area.innerHTML+='<div class="'+cls+'">['+time+'] '+msg+'</div>';
+area.scrollTop=area.scrollHeight;
+}
+
+async function generateContent(){
+var refText=document.getElementById('refText').value.trim();
+if(!refText&&!genState.refImages.length){showAlert('请输入对标文字或上传图片');return}
+var product=document.getElementById('genProduct').value;
+var btn=document.getElementById('genBtn');btn.disabled=true;btn.textContent='⏳ 生成中...';
+document.getElementById('progressCard').style.display='block';
+document.getElementById('resultCard').style.display='none';
+document.getElementById('logArea').innerHTML='';genState.svgs=[];
+setStep(1);addLog('🚀 开始生成...');
+
+try{
+var resp=await fetch('/xxs/api/generate-xhs',{
+method:'POST',headers:{'Content-Type':'application/json'},
+body:JSON.stringify({reference_text:refText,reference_images:genState.refImages.slice(0,2),product:product})
+});
+
+var reader=resp.body.getReader();var decoder=new TextDecoder();var buffer='';
+while(true){
+var done,value;({done,value}=await reader.read());
+if(done)break;
+buffer+=decoder.decode(value,{stream:true});
+var lines=buffer.split('\n');buffer=lines.pop()||'';
+for(var i=0;i<lines.length;i++){
+var line=lines[i].trim();
+if(!line.startsWith('data: '))continue;
+var data;try{data=JSON.parse(line.substring(6))}catch(e){continue}
+
+if(data.type==='progress'){setStep(data.step);addLog('▶️ '+data.label)}
+else if(data.type==='log'){addLog(data.msg)}
+else if(data.type==='titles'){
+genState.titles=data.titles;genState.selectedTitle=0;
+var th='';data.titles.forEach(function(t,i){th+='<div class="title-opt'+(i===0?' selected':'')+'" onclick="selectTitle('+i+',this)">'+(i+1)+'. '+t+'</div>'});
+document.getElementById('titleOptions').innerHTML=th;
+addLog('✅ 标题：'+data.titles[0],'success');
+}
+else if(data.type==='body'){
+genState.body=data.content;
+document.getElementById('genBody').textContent=data.content;
+}
+else if(data.type==='svg'){
+genState.svgs.push({label:data.label,svg:data.svg});
+renderGenSvgs();
+addLog('✅ '+data.label+' 完成','success');
+}
+else if(data.type==='done'){
+addLog(data.msg||'🎉 全部完成','success');
+document.getElementById('resultCard').style.display='block';
+}
+else if(data.type==='error'){addLog('❌ '+data.msg,'error')}
+else if(data.type==='heartbeat'){addLog('⏳ 仍在处理...','warn')}
+}
+}
+}catch(e){addLog('❌ '+e.message,'error')}
+finally{btn.disabled=false;btn.textContent='🚀 一键生成'}
+}
+
+function selectTitle(i,el){
+genState.selectedTitle=i;
+document.querySelectorAll('.title-opt').forEach(function(e){e.classList.remove('selected')});
+el.classList.add('selected');
+}
+
+function renderGenSvgs(){
+var h='';
+genState.svgs.forEach(function(s,i){
+h+='<div class="svg-card"><div class="svg-label">'+s.label+'</div><div class="svg-preview">'+s.svg+'</div><div class="svg-actions"><button class="dl-btn" onclick="dlGenSvg('+i+')">⬇️ 下载JPG</button></div></div>';
+});
+document.getElementById('genSvgGrid').innerHTML=h;
+}
+function dlGenSvg(i){dlSvgTall(genState.svgs[i].svg,genState.svgs[i].label)}
+function downloadAllGen(){genState.svgs.forEach(function(s,i){setTimeout(function(){dlGenSvg(i)},i*500)})}
+function copySelectedTitle(){
+if(genState.titles.length){navigator.clipboard.writeText(genState.titles[genState.selectedTitle]).then(function(){showToast('✅ 已复制')})}
+}
+function copyGenBody(){
+var text=document.getElementById('genBody').textContent;
+navigator.clipboard.writeText(text).then(function(){showToast('✅ 已复制')})
+}
+
+// === 笔记文案数据（NO.003天赋型格测评推广） ===
+// 第1-5篇：基于8月3日采集「今天测什么呢」对标笔记改写
+var notes=[
+{title:'你生理性沉迷的事，藏着你最值钱的天赋',body:'回想一下，有没有一件事——\n\n别人觉得无聊，你却做起来就忘了时间？\n别人需要逼自己，你却不用人催就主动投入？\n\n这种「生理性沉迷」不是拖延，不是逃避。\n而是你的大脑在告诉你：这件事跟你的天赋回路完全匹配。\n\n很多人把这些沉迷当成了"不务正业"：\n喜欢跟人聊天 → 觉得自己话太多\n喜欢整理东西 → 觉得自己太龟毛\n喜欢一个人发呆 → 觉得自己太内向\n\n但你换个角度看：\n喜欢聊天的人，天然有社交力和共情力——做销售、做内容、做社群，一上来就如鱼得水。\n喜欢整理的人，天生有系统思维——做项目管理、做数据分析，别人头大的事你觉得很爽。\n喜欢发呆的人，内在有极强的洞察力——做创意、做策略、做研究，总能看到别人忽略的东西。\n\n不是你没有天赋。\n是你把天赋当成了理所当然，从来没有认真测过它到底指向哪条赛道。\n\n20道题，5分钟，找到你的天赋型格。\n测完你会发现：原来你一直以为的"随便做做"，其实是老天爷给你的核心竞争力。\n\n#我的天赋进化史 #天赋 #性格测试 #天赋和努力 #天赋探索 #自我认知 #天赋优势 #找到你的热爱 #职业规划 #话题测试w'},
+{title:'天赋自测｜让你上头的事，是身体给你的最高评分',body:'有没有想过，为什么你对某些事会上头？\n\n不是因为你不够自律。\n是你的身体在用多巴胺给你打分——\n它在对你说：这件事，你天生就擅长。\n\n上头的本质，不是冲动，是天赋的信号弹。\n问题在于，大多数人收到了信号，却不会解码：\n\n你上头于刷短视频 → 不是浪费时间，你的洞察力很强，天然适合捕捉内容和趋势\n你上头于跟陌生人聊天 → 不是社恐，你的社交力是顶级配置，适合需要人脉的工作\n你上头于独自研究一个问题 → 不是孤僻，你的深度思考力碾压大多数人，适合做专业领域\n\n真正可惜的不是没有天赋。\n是你上头了很久，却从来没搞清楚：\n这个上头到底指向什么职业方向？哪个赛道能让你的天赋最大化？\n\n每个人身上都带着天赋的密码。\n只是你需要一把钥匙，把它翻译成你能理解的语言。\n\n20道场景题，精准锁定你的5大天赋维度。\n不是模棱两可的"你很有潜力"，而是告诉你：\n你的天赋型格是哪种，最适合做什么，最容易在哪里发光。\n\n#我的天赋进化史 #天赋 #性格测试 #天赋测评 #天赋探索 #找到你的热爱 #自我认知 #上头 #话题测试w #潜能'},
+{title:'那些不需要准备就能做好的事，可能就是你的天赋',body:'你有没有发现一个现象——\n\n有些事，别人需要花大量时间练习才能上手。\n但你？第一次做就有模有样。\n\n这不是运气。\n这就是天赋最典型的外在表现：低门槛、高产出。\n\n举个例子：\n有人第一次写文案就被夸"你天生就是干这个的"\n有人第一次组织活动就安排得井井有条\n有人第一次做PPT就比做了三年的人还好看\n\n他们自己觉得"这不是很简单吗？"\n但旁边的人觉得"你怎么做到的？？"\n\n天赋最狡猾的地方在于：\n你对自己的天赋习以为常，甚至觉得它不值一提。\n因为对你来说太自然了，自然到你以为所有人都能做到。\n\n这就是为什么很多人一辈子都在错误的赛道上努力——\n明明有天赋的事看不上，没天赋的事拼命补短板。\n结果越努力越累，越累越怀疑自己。\n\n记住一句话：\n你不需要准备就能做好的事，值得你认真对待。\n它可能就是你一直在找的那条路。\n\n测一测，看看你身上有哪些「不费力就很强」的天赋。\n20道题，5分钟，找到你的天赋型格和最适合的职业方向。\n\n#我的天赋进化史 #性格测试 #天赋 #天赋和努力 #天赋探索 #优势发现 #找到自己的优势 #自我认知 #话题测试w #潜能'},
+{title:'在不适合自己的领域耗着，是你觉得自己不行的真正原因',body:'你有没有过这种感觉——\n\n明明很努力，但总觉得使不上劲。\n同事做起来轻松的事，你需要花两倍时间。\n别人越干越有成就感，你越干越怀疑自己。\n\n这不是你能力差。\n很可能只是：你在错误的赛道上，用自己的短板硬磕别人的长板。\n\n一个天生创造力90分的人，去做需要按流程执行的工作 → 每天都觉得窒息\n一个天生社交力95分的人，去做独立完成的案头工作 → 每天都觉得孤独\n一个天生洞察力极强的人，去做重复性的体力劳动 → 每天都觉得浪费\n\n你以为"是我太差了"。\n其实只是方向不对。\n\n真正适合你的赛道，不一定是"最轻松的"，但一定是让你的努力能被放大的。\n同样花一小时，在天赋赛道上能产出别人三小时的效果。\n在错误赛道上，花三小时才能勉强够到别人的起跑线。\n\n很多人不是没天赋。\n只是在错误的地方耗了太久，把"不擅长"误以为"我不行"。\n\n20道题测出你的天赋型格。\n找到那条让你的努力终于能看到结果的路。\n\n#我的天赋进化史 #性格测试 #天赋 #不要给自己设限 #远离消耗自己的人与事 #职业发展 #天赋探索 #优势分析 #自我认知 #天赋和努力 #话题测试w'},
+{title:'千万不要做和自己天赋相悖的工作，那种痛苦是深层级的',body:'说一句大实话：\n\n选错工作不可怕。\n可怕的是，你选了一份跟自己天赋完全相悖的工作。\n\n那种痛苦不是"不喜欢"。\n是每天上班像在逆水行舟，拼尽全力只能勉强不后退。\n\n一个创造力90分的人，去做日复一日的录入工作 → 每天都在枯萎\n一个社交力95分的人，去做独自面对电脑的岗位 → 每天都在内耗\n一个洞察力极强的人，去做只需要执行不需要思考的事 → 每天都在窒息\n\n最残忍的是——\n不是你不够努力，是你正用自己的弱项跟别人的天赋赛跑。\n你怎么赢？\n\n很多人在这个状态里待了5年、10年，慢慢地：\n从"我不适合这份工作" → 变成"我什么都做不好"\n从"这份工作不适合我" → 变成"我是不是能力有问题"\n\n不是的。\n你只是站错了赛道。\n\n天赋相悖的工作，消耗的不只是时间。\n它消耗的是你的自信、你的能量、你对未来的期待。\n\n20道题，5分钟。\n测出你的天赋型格，看清楚哪些职业你该冲，哪些职业你该跑。\n别再用自己的短板硬磕了。\n\n#我的天赋进化史 #天赋 #天赋和努力 #性格与职业 #自我认知 #天赋优势 #真正的自我 #话题测试w #职业规划 #职业倦怠'},
+// 第6-10篇：基于8月3日采集对标笔记改写（200-300字）
+{title:'老天爷真的会反复用天赋提示你该走什么路',body:'其实老天爷一直在暗示你，只是你没在意。\n\n你有没有这种感觉——\n做某件事的时候，就是比别人轻松？\n不用人教，不用费力，甚至不用准备，上手就有模有样。\n\n这不是运气好。\n这是你的天赋在反复给你发信号。\n\n很多人觉得天赋离自己很远，觉得那是莫扎特、乔丹才有的东西。\n但其实天赋就藏在你日常的每一个「顺手」里：\n\n别人绞尽脑汁想不出方案，你随便聊两句就有灵感 → 这是创造力天赋\n面对混乱的局面别人头大，你三两下就理清了 → 这是决策力天赋\n朋友遇到问题第一个想到你，因为你总能看到本质 → 这是洞察力天赋\n\n问题在于——\n你太习惯这些「顺手」了，觉得没什么大不了。\n但如果把这些天赋放到错误的赛道上，就像让鱼去爬树。\n不是你不行，是你站错了位置。\n\n别只盯着短板补了。\n找到你的天赋赛道，人生直接开简单模式。\n\n20道题，5分钟，测出你的天赋型格。\n看看老天爷到底给了你什么牌。\n\n#我的天赋进化史 #天赋进化大赛 #寻找属于自己的人生赛道 #天赋 #天赋优势 #天赋解读 #天赋挖掘 #努力就是天赋 #话题测试w #未来发展方向'},
+{title:'你越有天赋的事，越容易被你看不起',body:'发现一个反常识：\n\n你越有天赋的事，越容易被你自己看不起。\n\n因为它对你来说太自然了。\n不用逼自己，也能做得不错。\n别人觉得你很厉害，你却觉得「这有什么」。\n\n慢慢地，你开始羡慕自己没有的东西，\n却把真正属于你的优势，当成了理所当然。\n\n举个真实的例子：\n有人天生共情力极强，别人跟她说两句话就觉得被理解了。\n她觉得这不算能力——「不就是听人说话嘛」。\n但实际上，这种天赋在心理咨询、用户研究、团队管理里，价值千金。\n\n有人天生对数字敏感，看报表一眼就能发现问题。\n他觉得「这不是基本功吗」——\n但大部分人对着密密麻麻的数据只会头疼。\n\n很多人不是没有天赋。\n只是太习惯自己的天赋了，觉得不值得当回事。\n\n别再忽视你觉得「没什么大不了」的能力了。\n它可能就是别人怎么努力都追不上的东西。\n\n20道题，测出你的天赋型格。\n看看那些你习以为常的小事，到底值多少分。\n\n#我的天赋进化史 #性格测试 #女大学生必看 #天赋优势 #提升个人能力 #自我认知 #天赋 #个人性格探索 #性格与职业 #提高认知能力'},
+{title:'你忍不住想分享的事，藏着你的终极天赋',body:'有没有一种事——\n你一旦学到或发现，就想立刻告诉别人？\n\n不是因为你爱表现。\n是那些内容触发了你的表达本能。\n\n忍不住分享的背后，往往藏着你最强的天赋方向。\n\n想想看：\n你忍不住安利的产品，是不是你对「好东西」的洞察力特别强？\n你忍不住转发的内容，是不是你对某个领域天然敏感？\n你忍不住跟朋友聊起的话题，是不是你潜意识里最擅长的方向？\n\n分享欲的本质不是话多。\n是你的大脑在说：这件事跟我的天赋回路匹配，我要传播它。\n\n但大多数人从来没认真想过——\n这个「忍不住分享」的冲动，到底指向什么职业方向？\n\n你忍不住分享好书 → 可能天生适合做内容、做选品、做推荐\n你忍不住分享方法 → 可能天生适合做培训、做咨询、做知识付费\n你忍不住分享好店 → 可能天生适合做探店、做运营、做社区\n\n每个「忍不住」都是一条线索。\n把它们连起来，就是你的天赋地图。\n\n20道题，5分钟，测出你的天赋型格。\n看看你的分享欲，到底指向哪条赛道。\n\n#我的天赋进化史 #性格测试 #天赋 #天赋和努力 #天赋进化大赛 #话题测试w #天赋探索 #兴趣发现 #优势发现 #找到你的热爱 #测试zwh'},
+{title:'摆烂太久天赋真的会被收回，看完瞬间清醒',body:'看完瞬间清醒。\n\n长期摆烂，就是放任自己麻木：\n拒绝输入、放弃思考、对新鲜事物失去好奇心。\n脑子停滞在几年前的认知，思维迟钝，表达没有条理。\n做什么都觉得费力，身心持续疲惫，完全失去掌控感。\n\n但你知道吗？\n很多人不是没有天赋。\n是长期躺平，把天赋弄丢了。\n\n天赋不锻炼会生锈。\n就像肌肉一样，不用就会萎缩。\n你以为「我什么都不擅长」，其实是你的天赋太久没被激活了。\n\n如果你现在处于这种状态，先别急着否定自己。\n试试这几件事：\n每天花15分钟记录自己的想法\n控制睡眠，别熬夜刷手机\n在家把手机收起来，给自己一段专注时间\n找回身体的掌控感\n坚持看书，哪怕每天只看一页\n\n然后，认真测一次你的天赋型格。\n找到那个不用费力就能发光的赛道。\n天赋一直都在，只是等你重新捡起来。\n\n20道题，5分钟。\n测出你的天赋型格，重新启动你的人生。\n\n#我的天赋进化史 #没有天赋那就反复 #天赋 #天赋优势 #天赋解读 #天赋和努力 #个人性格探索 #天赋挖掘 #了解自己'},
+{title:'生理性喜欢，是老天爷给你的天赋信号',body:'你有没有想过——\n\n为什么对某些事会有天生的喜欢？\n\n这种喜欢不是后天培养的，\n不是被谁安利的，\n也不是看了什么鸡汤才觉得「我也想试试」。\n\n而是从很小的时候开始，\n你就对某种事有一种莫名的兴趣和好奇。\n\n这就是老天爷给你的天赋信号。\n\n生理性喜欢的本质，是你的大脑在告诉你：\n这件事跟你的天赋回路天然匹配。\n做这件事的时候，你的多巴胺分泌会比别人多。\n你的专注力、记忆力、创造力，都会自动拉满。\n\n但你可能从来没把它当回事。\n\n「喜欢画画有什么用？又不能当饭吃。」\n「喜欢跟人聊天有什么用？又不专业。」\n「喜欢一个人发呆有什么用？就是在浪费时间。」\n\n但事实证明：\n喜欢画画的人，去做设计、做UI、做视觉，比科班出身的还猛。\n喜欢聊天的人，去做销售、做社群、做内容，起步就是别人的天花板。\n喜欢发呆的人，去做研究、做策略、做创意，总能想到别人想不到的点。\n\n你的生理性喜欢，不会骗你。\n它指向的，就是你最该走的路。\n\n20道题，5分钟，测出你的天赋型格。\n看看你的「喜欢」，到底值多少钱。\n\n#我的天赋进化史 #性格测试 #天赋 #天赋和努力 #天赋进化大赛 #话题测试w #天赋探索 #兴趣发现 #优势发现 #上天在提醒你 #找到你的热爱'}
+];
+
+function renderNotes(){
+var h='';
+notes.forEach(function(n,i){
+h+='<div class="card">';
+h+='<div class="card-title">\ud83d\udcdd 第'+(i+1)+'篇</div>';
+h+='<div class="field"><div class="field-label"><span>\ud83c\udff7\ufe0f 标题</span><button class="copy-btn" onclick="copyNote('+i+',\'title\')">\ud83d\udccb复制</button></div><div class="field-content" onclick="copyNote('+i+',\'title\')" style="font-weight:600;font-size:15px">'+n.title+'</div></div>';
+h+='<div class="field"><div class="field-label"><span>\ud83d\udcdd 正文+标签</span><button class="copy-btn" onclick="copyNote('+i+',\'body\')">\ud83d\udccb一键复制全文</button></div><div class="field-content" onclick="copyNote('+i+',\'body\')" style="max-height:400px;overflow:auto;line-height:1.8">'+n.body.replace(/\n/g,'<br>')+'</div></div>';
+h+='</div>';
+});
+document.getElementById('notesList').innerHTML=h;
+}
+function copyNote(i,field){var t=field==='title'?notes[i].title:notes[i].body;navigator.clipboard.writeText(t).then(function(){showToast('\u2705 \u5df2\u590d\u5236')})}
+
+renderProduct();
+renderNotes();
+</script>
+</body>
+</html>
