@@ -403,7 +403,7 @@ var notes=[
 
 function renderNotes(){
 var h='';
-notes.forEach(function(n,i){
+for(var i=notes.length-1;i>=0;i--){var n=notes[i];
 h+='<div class="card">';
 h+='<div class="card-title">\ud83d\udcdd 第'+(i+1)+'篇</div>';
 h+='<div class="field"><div class="field-label"><span>\ud83c\udff7\ufe0f 标题</span><button class="copy-btn" onclick="copyNote('+i+',\'title\')">\ud83d\udccb复制</button></div><div class="field-content" onclick="copyNote('+i+',\'title\')" style="font-weight:600;font-size:15px">'+n.title+'</div></div>';
