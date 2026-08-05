@@ -413,7 +413,7 @@ h+='<div class="card-title">\ud83d\udcdd 第'+(i+1)+'篇</div>';
 h+='<div class="field"><div class="field-label"><span>\ud83c\udff7\ufe0f 标题</span><button class="copy-btn" onclick="copyNote('+i+',\'title\')">\ud83d\udccb复制</button></div><div class="field-content" onclick="copyNote('+i+',\'title\')" style="font-weight:600;font-size:15px">'+n.title+'</div></div>';
 h+='<div class="field"><div class="field-label"><span>\ud83d\udcdd 正文+标签</span><button class="copy-btn" onclick="copyNote('+i+',\'body\')">\ud83d\udccb一键复制全文</button></div><div class="field-content" onclick="copyNote('+i+',\'body\')" style="max-height:400px;overflow:auto;line-height:1.8">'+n.body.replace(/\n/g,'<br>')+'</div></div>';
 h+='</div>';
-});
+}
 document.getElementById('notesList').innerHTML=h;
 }
 function copyNote(i,field){var t=field==='title'?notes[i].title:notes[i].body;navigator.clipboard.writeText(t).then(function(){showToast('\u2705 \u5df2\u590d\u5236')})}
