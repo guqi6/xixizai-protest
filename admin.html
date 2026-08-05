@@ -172,7 +172,7 @@ body{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-se
 </div>
 
 <div class="toast" id="toast"></div>
-<div id="loginOverlay" style="position:fixed;inset:0;background:#1f2937;z-index:9999;display:flex;align-items:center;justify-content:center">
+<div id="loginOverlay" style="display:none">
 <div style="background:#fff;border-radius:12px;padding:32px;width:320px;text-align:center">
 <div style="font-size:28px;margin-bottom:8px">🔐</div>
 <div style="font-size:16px;font-weight:700;margin-bottom:16px">物料后台登录</div>
@@ -183,9 +183,9 @@ body{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-se
 </div>
 
 <script>
-var ADMIN_PW='mima234';
-function checkPw(){var input=document.getElementById('pwInput').value;if(input===ADMIN_PW){document.getElementById('loginOverlay').style.display='none';sessionStorage.setItem('admin_ok','1')}else{document.getElementById('pwError').style.display='block';document.getElementById('pwInput').value=''}}
-if(sessionStorage.getItem('admin_ok')==='1'){document.getElementById('loginOverlay').style.display='none'}
+// 密码已取消
+function checkPw(){document.getElementById('loginOverlay').style.display='none'}
+document.getElementById('loginOverlay').style.display='none'
 
 // Tab切换
 function switchTab(name,el){
