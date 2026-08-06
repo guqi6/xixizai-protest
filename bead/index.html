@@ -963,9 +963,25 @@
       if(!resp.ok){const t=await resp.text().catch(()=>'');throw new Error('HTTP '+resp.status+(t?' '+t.slice(0,200):''));}
       const data=await resp.json();
       const text=data.choices?.[0]?.message?.content||'';
-      const match=text.match(/\{[\s\S]*\}/);
-      if(!match)throw new Error('AI返回格式异常: '+text.slice(0,200));
-      return JSON.parse(match[0]);
+      // 去掉markdown代码块包裹
+      const cleaned=text.replace(/^```(?:json)?\s*/i,'').replace(/\s*```$/,'').trim();
+      // 尝试解析第一个完整JSON对象
+      let parsed;
+      try{parsed=JSON.parse(cleaned);}
+      catch(e){
+        // 如果直接解析失败，尝试提取 {...} 块
+        const start=cleaned.indexOf('{');
+        if(start<0)throw new Error('AI返回格式异常: '+cleaned.slice(0,200));
+        let depth=0,end=-1;
+        for(let i=start;i<cleaned.length;i++){
+          if(cleaned[i]==='{')depth++;
+          else if(cleaned[i]==='}'){depth--;if(depth===0){end=i;break;}}
+        }
+        if(end<0)throw new Error('AI返回JSON不完整: '+cleaned.slice(0,200));
+        try{parsed=JSON.parse(cleaned.slice(start,end+1));}
+        catch(e2){throw new Error('JSON解析失败: '+e2.message+' | 原文: '+cleaned.slice(0,200));}
+      }
+      return parsed;
     }
 
     window.__BEAD_TEST__={paletteCount:palette.length,getData:()=>currentData,loadSample,buildExportCanvas,generate,performCutout,restoreOriginal,buildCrispMap,clusterCellColors,buildColoredStrokeMask,refineOutline,bridgeDirectionalGaps,completeLightContours,buildWhiteMask,preserveSalientAccents,balancePairedAccents,refineRoundedDarkContours,snapIncidentalEdgeGrays,repairOuterSilhouette};
