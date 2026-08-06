@@ -184,7 +184,7 @@
           return;
         }
         const script=document.createElement('script');
-        script.src='https://docs.opencv.org/4.10.0/opencv.js';
+        script.src='https://docs.opencv.org/4.9.0/opencv.js';
         script.async=true;script.dataset.opencv='1';
         script.onerror=()=>reject(new Error('OpenCV.js 加载失败'));
         script.onload=()=>{
