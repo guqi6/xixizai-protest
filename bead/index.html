@@ -706,6 +706,7 @@
     }
 
     function applyAiCorrection(map,cells,w,h,hints){
+      if(!cells||!cells.length)return map;
       const result=map.slice();
       const h1=palette.find(p=>p.code==='H1');
       if(!h1)return result;
@@ -713,7 +714,6 @@
       if(hints.has_white){
         const h1Count=result.filter(p=>p&&p.code==='H1').length;
         if(h1Count<2){
-          // Find brightest non-outline cells and convert to H1
           const candidates=[];
           for(let i=0;i<cells.length;i++){
             if(!cells[i]||!cells[i].a||!result[i])continue;
@@ -721,9 +721,11 @@
             const c=cells[i],chroma=Math.max(c.r,c.g,c.b)-Math.min(c.r,c.g,c.b);
             if(c.medianLum>=195&&chroma<42)candidates.push({i,lum:c.medianLum,chroma});
           }
-          candidates.sort((a,b)=>b.lum-a.lum);
-          const topN=Math.max(3,Math.min(Math.floor(candidates.length*.15),cells.length*.06));
-          for(let k=0;k<topN&&k<candidates.length;k++)result[candidates[k].i]=h1;
+          if(candidates.length){
+            candidates.sort((a,b)=>b.lum-a.lum);
+            const topN=Math.min(Math.max(3,Math.floor(candidates.length*.15)),candidates.length);
+            for(let k=0;k<topN;k++)result[candidates[k].i]=h1;
+          }
         }
       }
       // 2. Force important accent colors
@@ -731,10 +733,8 @@
         for(const ic of hints.important_colors){
           if(!ic.hex)continue;
           const rgb=hexToRgb(ic.hex),targetLab=rgbToLab(rgb.r,rgb.g,rgb.b);
-          // Check if this color already exists in result (within tolerance)
           const existing=result.find(p=>p&&labDistance(p.lab,targetLab)<18);
           if(existing)continue;
-          // Find cells closest to this color that aren't outline/white
           const sorted=[];
           for(let i=0;i<cells.length;i++){
             if(!cells[i]||!cells[i].a||!result[i])continue;
@@ -742,11 +742,12 @@
             const d=labDistance(cells[i].lab,targetLab);
             if(d<55)sorted.push({i,d});
           }
-          sorted.sort((a,b)=>a.d-b.d);
-          // Convert top matches to nearest bead of this color
-          const bead=nearestBead(targetLab);
-          const topCount=Math.max(1,Math.min(sorted.length,Math.floor(cells.length*.008)));
-          for(let k=0;k<topCount;k++)result[sorted[k].i]=bead;
+          if(sorted.length){
+            sorted.sort((a,b)=>a.d-b.d);
+            const bead=nearestBead(targetLab);
+            const topCount=Math.min(Math.max(1,Math.floor(cells.length*.008)),sorted.length);
+            for(let k=0;k<topCount;k++)result[sorted[k].i]=bead;
+          }
         }
       }
       // 3. Force eye colors
@@ -756,7 +757,6 @@
           const rgb=hexToRgb(ec.hex),targetLab=rgbToLab(rgb.r,rgb.g,rgb.b);
           const existing=result.find(p=>p&&labDistance(p.lab,targetLab)<22);
           if(existing)continue;
-          // Find cells matching eye color
           const sorted=[];
           for(let i=0;i<cells.length;i++){
             if(!cells[i]||!cells[i].a||!result[i])continue;
@@ -764,10 +764,9 @@
             const d=labDistance(cells[i].lab,targetLab);
             if(d<48)sorted.push({i,d});
           }
-          sorted.sort((a,b)=>a.d-b.d);
           if(sorted.length){
             const bead=nearestBead(targetLab);
-            const topCount=Math.max(1,Math.min(sorted.length,Math.floor(cells.length*.005)));
+            const topCount=Math.min(Math.max(1,Math.floor(cells.length*.005)),sorted.length);
             for(let k=0;k<topCount;k++)result[sorted[k].i]=bead;
           }
         }
