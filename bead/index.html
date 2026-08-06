@@ -88,7 +88,8 @@
         <div class="advanced">
           <label class="check"><input id="forceH7" type="checkbox" checked><span>黑灰描边统一使用 H7<span class="help">识别眼睛、嘴、头发等细线；不会把普通灰色填充区域全部变黑。</span></span></label>
           <label class="check"><input id="preserveDetails" type="checkbox" checked><span>优先保留白色、眼睛与高光<span class="help">眼白、白衣、彩色虹膜和小面积高光不会被大色块合并。</span></span></label>
-          <label class="check"><input id="morphOptimize" type="checkbox" checked><span>修复断线与重复描边<span class="help">使用方向性闭运算补齐短断点，并将误识别成双排的细描边恢复为单排；不会压缩实心黑色区域。</span></span></label>
+          <label class="check"><input id="morphOptimize" type="checkbox" checked><span>主体外轮廓完整黑边<span class="help">识别主体与背景直接相邻的可见边界，强制使用单格 H7 连续描边；仅在外轮廓区域做闭运算。</span></span></label>
+          <label class="check"><input id="internalTopologyRepair" type="checkbox" checked><span>内部结构线与细节拓扑保护<span class="help">依据原图暗线方向修复眼镜、眼睛、嘴巴、衣褶等一格断点，并保护镜片、眼白和高光负空间。</span></span></label>
           <div class="field"><label for="simplifyLevel">色块统一程度</label><select id="simplifyLevel"><option value="light">轻微</option><option value="standard" selected>标准</option><option value="strong">强力</option></select><span class="help">越强，皮肤和头发使用的近似颜色越少。</span></div>
           <label class="check"><input id="minorGrid" type="checkbox" checked><span>显示每格浅虚线<span class="help">可关闭；每 5 格实线、外框和坐标始终保留。</span></span></label>
         </div>
@@ -134,7 +135,7 @@
     let cutoutBlob = null;
     let cutoutUrl = null;
     let sourceName = '图片';
-    let cvLoadPromise=null,cvReady=false,lastMorphStats={added:0,thinned:0,removedNoise:0};
+    let cvLoadPromise=null,cvReady=false,lastMorphStats={added:0,thinned:0,removedNoise:0},lastStructureStats={outerForced:0,outerBridged:0,internalBridged:0,negativeSpaceRestored:0,colorLeaksFixed:0};
 
     const uploadZone=$('uploadZone'), fileInput=$('fileInput'), chooseBtn=$('chooseBtn'), sampleBtn=$('sampleBtn');
     chooseBtn.addEventListener('click', e => {e.stopPropagation();fileInput.click();});
@@ -305,7 +306,7 @@
             usedCV=await loadOpenCVWithTimeout(2200);
             setStatus(usedCV?'阶段 1/4：OpenCV 已加载，正在分析背景与结构轴…':'结构引擎未就绪，正在使用内置算法生成…');
             const cells=analyzeImageCells(currentImage,gridW,gridH,6);
-            map=buildCrispMap(cells,gridW,gridH,{limitValue,simplify,forceH7:$('forceH7').checked,preserveDetails:$('preserveDetails').checked,morphOptimize:$('morphOptimize').checked,useCV:usedCV});
+            map=buildCrispMap(cells,gridW,gridH,{limitValue,simplify,forceH7:$('forceH7').checked,preserveDetails:$('preserveDetails').checked,morphOptimize:$('morphOptimize').checked,internalTopologyRepair:$('internalTopologyRepair').checked,useCV:usedCV});
             currentCells=cells;
           }else{
             const raw=sampleImage(currentImage,gridW,gridH);
@@ -322,8 +323,9 @@
           const showAi=$('aiApiKey').value.trim()&&currentCells;
           if(showAi){$('aiOptimizeBtn').style.display='';$('aiOptimizeBtn').disabled=false;$('aiOptimizeBtn').textContent='🤖 AI 优化细节';}
           const modeText=mode==='crisp'?'清晰拼豆模式':'忠实原图模式';
-          const morphText=mode==='crisp'&&$('morphOptimize').checked?`；边缘补线 ${lastMorphStats.added} 格，双线/噪点整理 ${lastMorphStats.thinned+lastMorphStats.removedNoise} 格`:'';
-          setStatus(total?`完成：${modeText}${usedCV?' + OpenCV结构拟合':''}，${gridW}×${gridH}，${Object.keys(counts).length} 色，共 ${total} 颗${morphText}。`:'当前图片全部为透明区域。',total===0);
+          const outerText=mode==='crisp'&&$('morphOptimize').checked?`；外轮廓补齐 ${lastStructureStats.outerForced+lastStructureStats.outerBridged} 格`:'';
+          const innerText=mode==='crisp'&&$('internalTopologyRepair').checked?`，内部补线 ${lastStructureStats.internalBridged} 格，负空间/颜色保护 ${lastStructureStats.negativeSpaceRestored+lastStructureStats.colorLeaksFixed} 格`:'';
+          setStatus(total?`完成：${modeText}${usedCV?' + OpenCV结构拟合':''}，${gridW}×${gridH}，${Object.keys(counts).length} 色，共 ${total} 颗${outerText}${innerText}。`:'当前图片全部为透明区域。',total===0);
         }catch(err){console.error(err);setStatus('生成失败，请换一张图片或减小格数后重试。',true);}
         finally{$('generateBtn').disabled=false;}
       },30));
@@ -667,26 +669,34 @@
     function analyzeImageCells(img,w,h,supersample=6){
       const sw=w*supersample,sh=h*supersample,c=document.createElement('canvas');c.width=sw;c.height=sh;
       const ctx=c.getContext('2d',{willReadFrequently:true});ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.clearRect(0,0,sw,sh);ctx.drawImage(img,0,0,sw,sh);
-      const data=ctx.getImageData(0,0,sw,sh).data,cells=new Array(w*h),area=supersample*supersample;
+      const data=ctx.getImageData(0,0,sw,sh).data,cells=new Array(w*h),area=supersample*supersample,gray=new Float32Array(sw*sh);
+      for(let i=0;i<gray.length;i++){const k=i*4;gray[i]=data[k]*.299+data[k+1]*.587+data[k+2]*.114;}
       const pct=(arr,q)=>arr[Math.min(arr.length-1,Math.max(0,Math.floor((arr.length-1)*q)))];
       for(let gy=0;gy<h;gy++)for(let gx=0;gx<w;gx++){
-        const rs=[],gs=[],bs=[],lums=[],whitePixels=[],accentR=[],accentG=[],accentB=[];
+        const rs=[],gs=[],bs=[],lums=[],whitePixels=[],accentR=[],accentG=[],accentB=[];let edgePixels=0,darkEdgePixels=0,darkLinePixels=0,edgeTotal=0,edgeCos=0,edgeSin=0;
         for(let py=0;py<supersample;py++)for(let px=0;px<supersample;px++){
-          const k=(((gy*supersample+py)*sw)+(gx*supersample+px))*4,a=data[k+3];if(a<72)continue;
+          const sx=gx*supersample+px,sy=gy*supersample+py,si=sy*sw+sx,k=si*4,a=data[k+3];if(a<72)continue;
           const r=data[k],g=data[k+1],b=data[k+2],lum=r*.299+g*.587+b*.114,max=Math.max(r,g,b),min=Math.min(r,g,b),chroma=max-min;rs.push(r);gs.push(g);bs.push(b);lums.push(lum);
           if(lum>200&&chroma<38)whitePixels.push([r,g,b]);
           if(chroma>48&&lum>35&&lum<242){accentR.push(r);accentG.push(g);accentB.push(b);}
+          if(lum<112)darkLinePixels++;
+          if(sx>0&&sx<sw-1&&sy>0&&sy<sh-1){
+            const dx=gray[si+1]-gray[si-1],dy=gray[si+sw]-gray[si-sw],magnitude=Math.hypot(dx,dy);
+            if(magnitude>=22){const tangent=Math.atan2(dy,dx)+Math.PI/2;edgePixels++;edgeTotal+=magnitude;edgeCos+=Math.cos(2*tangent)*magnitude;edgeSin+=Math.sin(2*tangent)*magnitude;if(lum<158)darkEdgePixels++;}
+          }
         }
         const i=gy*w+gx,coverage=rs.length/area;
-        if(coverage<.34){cells[i]={a:0,coverage,outlineCandidate:false,weakCandidate:false,confidence:0,blackRatio:0,whiteRatio:0,accentRatio:0};continue;}
+        if(coverage<.34){cells[i]={a:0,coverage,outlineCandidate:false,weakCandidate:false,referenceLineCandidate:false,confidence:0,blackRatio:0,darkLineRatio:0,edgeRatio:0,darkEdgeRatio:0,edgeStrength:0,edgeCoherence:0,edgeAngle:0,whiteRatio:0,accentRatio:0};continue;}
         rs.sort((a,b)=>a-b);gs.sort((a,b)=>a-b);bs.sort((a,b)=>a-b);lums.sort((a,b)=>a-b);
         const r=pct(rs,.5),g=pct(gs,.5),b=pct(bs,.5),medianLum=pct(lums,.5),low=pct(lums,.10),high=pct(lums,.90),contrast=high-low;
         const darkCut=Math.min(96,medianLum-28),darkRatio=lums.filter(v=>v<darkCut).length/lums.length,blackRatio=lums.filter(v=>v<48).length/lums.length;
         const confidence=Math.min(2,(blackRatio*2.2+darkRatio*1.35)*(contrast/52));
         const outlineCandidate=(blackRatio>=.065&&contrast>=30)||(darkRatio>=.14&&contrast>=43);
         const weakCandidate=(blackRatio>=.025&&contrast>=20)||(darkRatio>=.075&&contrast>=30),whiteRatio=whitePixels.length/lums.length,accentRatio=accentR.length/lums.length;
+        const edgeRatio=edgePixels/lums.length,darkEdgeRatio=darkEdgePixels/lums.length,darkLineRatio=darkLinePixels/lums.length,edgeStrength=edgePixels?edgeTotal/(edgePixels*255):0,edgeCoherence=edgeTotal?Math.hypot(edgeCos,edgeSin)/edgeTotal:0,edgeAngle=.5*Math.atan2(edgeSin,edgeCos);
+        const referenceLineCandidate=(darkLineRatio>=.10&&edgeRatio>=.055)||(darkEdgeRatio>=.075&&edgeCoherence>=.22)||(blackRatio>=.018&&edgeRatio>=.11);
         const accentLab=accentR.length?rgbToLab(pct(accentR.sort((a,b)=>a-b),.5),pct(accentG.sort((a,b)=>a-b),.5),pct(accentB.sort((a,b)=>a-b),.5)):null;
-        cells[i]={r,g,b,a:Math.round(coverage*255),coverage,lab:rgbToLab(r,g,b),medianLum,contrast,darkRatio,blackRatio,confidence,outlineCandidate,weakCandidate,whiteRatio,accentRatio,accentLab};
+        cells[i]={r,g,b,a:Math.round(coverage*255),coverage,lab:rgbToLab(r,g,b),medianLum,contrast,darkRatio,blackRatio,darkLineRatio,edgeRatio,darkEdgeRatio,edgeStrength,edgeCoherence,edgeAngle,referenceLineCandidate,confidence,outlineCandidate,weakCandidate,whiteRatio,accentRatio,accentLab};
       }
       return cells;
     }
@@ -1036,14 +1046,15 @@
       return out;
     }
 
-    function refineDarkContoursMorphologically(map,cells,w,h,enabled=true,useCV=false){
+    function refineDarkContoursMorphologically(map,cells,w,h,enabled=true,useCV=false,scopeMask=null){
       lastMorphStats={added:0,thinned:0,removedNoise:0};if(!enabled)return map;
       const result=map.slice(),h7=palette.find(p=>p.code==='H7'),isDark=p=>p&&(p.code==='H7'||p.code==='H16'),mask=new Uint8Array(map.length);
-      for(let i=0;i<map.length;i++)if(isDark(map[i]))mask[i]=1;
+      for(let i=0;i<map.length;i++)if(isDark(map[i])&&(!scopeMask||scopeMask[i]))mask[i]=1;
       const kernels=[[[ -1,0],[0,0],[1,0]],[[0,-1],[0,0],[0,1]],[[-1,-1],[0,0],[1,1]],[[1,-1],[0,0],[-1,1]]];
       let closed=useCV?directionalCloseWithOpenCV(mask,w,h):null;
       if(!closed){closed=mask.slice();for(const kernel of kernels){const candidate=closeBinary(mask,w,h,kernel);for(let i=0;i<closed.length;i++)if(candidate[i])closed[i]=1;}}
       const canBridge=i=>{
+        if(scopeMask&&!scopeMask[i])return false;
         const c=cells[i],p=result[i];if(!c||!c.a||p&&(p.code==='H1'||p.code==='H2'))return false;
         const chroma=Math.max(c.r,c.g,c.b)-Math.min(c.r,c.g,c.b);
         return !(c.whiteRatio>.28&&c.medianLum>180&&chroma<48)&&(c.blackRatio>=.012||c.weakCandidate||(c.medianLum<138&&c.contrast>16));
@@ -1257,10 +1268,113 @@
       return mask;
     }
 
-    function buildCrispMap(cells,w,h,{limitValue='auto',simplify='standard',forceH7=true,preserveDetails=true,morphOptimize=true,useCV=false}={}){
-      const backgroundMask=buildEdgeBackgroundMask(cells,w,h,true),coloredStrokeMask=buildColoredStrokeMask(cells,w,h,preserveDetails),blockedForOutline=coloredStrokeMask.slice();
+    function buildExteriorContourInfo(cells,backgroundMask,w,h,enabled=true){
+      const subject=new Uint8Array(cells.length),exterior=new Uint8Array(cells.length),boundary=new Uint8Array(cells.length),band=new Uint8Array(cells.length);
+      if(!enabled)return {subject,exterior,boundary,band};
+      for(let i=0;i<cells.length;i++)if(cells[i]&&cells[i].a&&!backgroundMask[i])subject[i]=1;
+      const queue=[],seed=i=>{if(!subject[i]&&!exterior[i]){exterior[i]=1;queue.push(i);}};
+      for(let x=0;x<w;x++){seed(x);seed((h-1)*w+x);}for(let y=1;y<h-1;y++){seed(y*w);seed(y*w+w-1);}
+      for(let q=0;q<queue.length;q++){
+        const i=queue[q],x=i%w,y=Math.floor(i/w);
+        for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const nx=x+dx,ny=y+dy;if(nx<0||nx>=w||ny<0||ny>=h)continue;const ni=ny*w+nx;if(!subject[ni]&&!exterior[ni]){exterior[ni]=1;queue.push(ni);}}
+      }
+      for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+        const i=y*w+x;if(!subject[i])continue;
+        for(let dy=-1;dy<=1&&!boundary[i];dy++)for(let dx=-1;dx<=1;dx++){
+          if(!dx&&!dy)continue;const nx=x+dx,ny=y+dy;
+          if(nx<0||nx>=w||ny<0||ny>=h||exterior[ny*w+nx]){boundary[i]=1;break;}
+        }
+      }
+      for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+        const i=y*w+x;if(!subject[i])continue;
+        if(boundary[i]){band[i]=1;continue;}
+        for(let dy=-1;dy<=1&&!band[i];dy++)for(let dx=-1;dx<=1;dx++){const nx=x+dx,ny=y+dy;if(nx>=0&&nx<w&&ny>=0&&ny<h&&boundary[ny*w+nx]){band[i]=1;break;}}
+      }
+      return {subject,exterior,boundary,band};
+    }
+
+    function enforceExteriorContour(map,cells,w,h,info,h7){
+      const result=map.slice();
+      for(let i=0;i<result.length;i++)if(info.boundary[i]&&(!result[i]||result[i].code!=='H7')){result[i]=h7;lastStructureStats.outerForced++;}
+      const dark=p=>p&&(p.code==='H7'||p.code==='H16');
+      for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){
+        const i=y*w+x;if(!info.boundary[i]||dark(result[i]))continue;
+        const opposed=(info.boundary[i-1]&&dark(result[i-1])&&info.boundary[i+1]&&dark(result[i+1]))||(info.boundary[i-w]&&dark(result[i-w])&&info.boundary[i+w]&&dark(result[i+w]))||(info.boundary[i-w-1]&&dark(result[i-w-1])&&info.boundary[i+w+1]&&dark(result[i+w+1]))||(info.boundary[i-w+1]&&dark(result[i-w+1])&&info.boundary[i+w-1]&&dark(result[i+w-1]));
+        if(opposed){result[i]=h7;lastStructureStats.outerBridged++;}
+      }
+      return result;
+    }
+
+    function buildProtectedNegativeSpace(cells,map,outerBoundary,w,h,enabled=true){
+      const protectedMask=new Uint8Array(map.length);if(!enabled)return protectedMask;
+      for(let i=0;i<map.length;i++){
+        const c=cells[i],p=map[i];if(!c||!c.a||outerBoundary[i])continue;
+        const chroma=c.r===undefined?0:Math.max(c.r,c.g,c.b)-Math.min(c.r,c.g,c.b),mappedLight=p&&(p.code==='H1'||p.code==='H2');
+        if(mappedLight&&c.whiteRatio>=.09||c.whiteRatio>=.28&&c.medianLum>=184&&chroma<48||c.medianLum>=218&&chroma<30)protectedMask[i]=1;
+      }
+      return protectedMask;
+    }
+
+    function dominantNonDarkNeighbour(map,i,w,h){
+      const x=i%w,y=Math.floor(i/w),freq=new Map();
+      for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
+        if(!dx&&!dy)continue;const nx=x+dx,ny=y+dy;if(nx<0||nx>=w||ny<0||ny>=h)continue;const p=map[ny*w+nx];
+        if(p&&p.code!=='H7'&&p.code!=='H16')freq.set(p.code,(freq.get(p.code)||0)+(!dx||!dy?2:1));
+      }
+      const best=[...freq.entries()].sort((a,b)=>b[1]-a[1])[0];return best?palette.find(p=>p.code===best[0]):null;
+    }
+
+    function repairInternalStructureTopology(map,cells,w,h,outerInfo,enabled=true,preserveDetails=true){
+      if(!enabled)return map;const result=map.slice(),h7=palette.find(p=>p.code==='H7'),dark=p=>p&&(p.code==='H7'||p.code==='H16');
+      let internalMask=new Uint8Array(map.length);for(let i=0;i<map.length;i++)if(dark(result[i])&&!outerInfo.boundary[i])internalMask[i]=1;
+      const skeleton=thinBinaryMask(internalMask,w,h),componentId=new Int32Array(map.length);componentId.fill(-1);let componentCount=0;
+      for(let start=0;start<skeleton.length;start++){
+        if(!skeleton[start]||componentId[start]>=0)continue;const queue=[start];componentId[start]=componentCount;
+        for(let q=0;q<queue.length;q++){const i=queue[q],x=i%w,y=Math.floor(i/w);for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){if(!dx&&!dy)continue;const nx=x+dx,ny=y+dy;if(nx<0||nx>=w||ny<0||ny>=h)continue;const ni=ny*w+nx;if(skeleton[ni]&&componentId[ni]<0){componentId[ni]=componentCount;queue.push(ni);}}}
+        componentCount++;
+      }
+      const endpoints=[];
+      for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){
+        const i=y*w+x;if(!skeleton[i])continue;const neighbours=[];
+        for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){if(!dx&&!dy)continue;const ni=(y+dy)*w+x+dx;if(skeleton[ni])neighbours.push({x:x+dx,y:y+dy});}
+        if(neighbours.length===1){const n=neighbours[0],vx=x-n.x,vy=y-n.y,len=Math.hypot(vx,vy)||1;endpoints.push({i,x,y,vx:vx/len,vy:vy/len,component:componentId[i]});}
+      }
+      const protectedNegative=buildProtectedNegativeSpace(cells,result,outerInfo.boundary,w,h,preserveDetails),used=new Set();
+      for(let a=0;a<endpoints.length;a++){
+        const p=endpoints[a];if(used.has(p.i))continue;let best=null,bestScore=-Infinity;
+        for(let b=a+1;b<endpoints.length;b++){
+          const q=endpoints[b];if(used.has(q.i))continue;const dx=q.x-p.x,dy=q.y-p.y,dist=Math.hypot(dx,dy),cheb=Math.max(Math.abs(dx),Math.abs(dy));if(cheb!==2||dist>2.85)continue;
+          const ux=dx/dist,uy=dy/dist,alignP=p.vx*ux+p.vy*uy,alignQ=q.vx*(-ux)+q.vy*(-uy);if(alignP<.32||alignQ<.32)continue;
+          const steps=Math.ceil(dist*2),between=[];for(let s=1;s<steps;s++){const x=Math.round(p.x+dx*s/steps),y=Math.round(p.y+dy*s/steps),i=y*w+x;if(i!==p.i&&i!==q.i&&!between.includes(i))between.push(i);}if(between.length!==1)continue;
+          const i=between[0],c=cells[i],current=result[i];if(!c||!c.a||outerInfo.boundary[i]||dark(current))continue;
+          const lineAngle=Math.atan2(dy,dx),orientation=Math.abs(Math.cos((c.edgeAngle||0)-lineAngle)),sourceSupport=c.referenceLineCandidate||c.darkLineRatio>=.075&&c.edgeRatio>=.05||c.blackRatio>=.015;
+          const strongDark=c.blackRatio>=.075||c.darkLineRatio>=.20;if(!sourceSupport||protectedNegative[i]&&!strongDark||c.edgeCoherence>.24&&orientation<.55)continue;
+          const touching=new Set();const x=i%w,y=Math.floor(i/w);for(let ay=-1;ay<=1;ay++)for(let ax=-1;ax<=1;ax++){if(!ax&&!ay)continue;const ni=(y+ay)*w+x+ax;if(componentId[ni]>=0)touching.add(componentId[ni]);}
+          if(touching.size>2)continue;const score=alignP+alignQ+orientation+(c.darkLineRatio||0)*2+(c.darkEdgeRatio||0);if(score>bestScore){bestScore=score;best={q,i};}
+        }
+        if(best){result[best.i]=h7;internalMask[best.i]=1;used.add(p.i);used.add(best.q.i);lastStructureStats.internalBridged++;}
+      }
+      if(preserveDetails){
+        for(let i=0;i<result.length;i++){
+          const c=cells[i],p=result[i];if(!c||!p||outerInfo.boundary[i]||!protectedNegative[i]||!dark(p))continue;
+          const weakInk=c.blackRatio<.018&&c.darkLineRatio<.07&&c.darkEdgeRatio<.055;if(!weakInk)continue;
+          const replacement=dominantNonDarkNeighbour(result,i,w,h);if(replacement){result[i]=replacement;lastStructureStats.negativeSpaceRestored++;}
+        }
+        for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){
+          const i=y*w+x,p=result[i],c=cells[i];if(!p||dark(p)||outerInfo.boundary[i]||protectedNegative[i]||!c)continue;const freq=new Map();
+          for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){if(!dx&&!dy)continue;const q=result[(y+dy)*w+x+dx];if(q&&!dark(q))freq.set(q.code,(freq.get(q.code)||0)+1);}
+          const best=[...freq.entries()].sort((a,b)=>b[1]-a[1])[0];if(!best||best[1]<7||best[0]===p.code)continue;const target=palette.find(q=>q.code===best[0]);if(target&&labDistance(c.lab,target.lab)+3<labDistance(c.lab,p.lab)){result[i]=target;lastStructureStats.colorLeaksFixed++;}
+        }
+      }
+      return result;
+    }
+
+    function buildCrispMap(cells,w,h,{limitValue='auto',simplify='standard',forceH7=true,preserveDetails=true,morphOptimize=true,internalTopologyRepair=true,useCV=false}={}){
+      lastStructureStats={outerForced:0,outerBridged:0,internalBridged:0,negativeSpaceRestored:0,colorLeaksFixed:0};
+      const backgroundMask=buildEdgeBackgroundMask(cells,w,h,true),outerInfo=buildExteriorContourInfo(cells,backgroundMask,w,h,morphOptimize&&forceH7),coloredStrokeMask=buildColoredStrokeMask(cells,w,h,preserveDetails),blockedForOutline=coloredStrokeMask.slice();
       for(let i=0;i<blockedForOutline.length;i++)if(backgroundMask[i])blockedForOutline[i]=1;
       const outline=refineOutline(cells,w,h,forceH7,blockedForOutline),h7=palette.find(p=>p.code==='H7'),h1=palette.find(p=>p.code==='H1'),whiteMask=buildWhiteMask(cells,outline,preserveDetails,w,h),protectedMask=outline.slice(),fillIndices=[],accentPalette=palette.filter(p=>p.code!=='H7'&&p.code!=='H1'&&p.code!=='H2'&&Math.hypot(p.lab.a,p.lab.b)>10);
+      if(morphOptimize&&forceH7)for(let i=0;i<outline.length;i++)if(outerInfo.boundary[i]){if(!outline[i])lastStructureStats.outerForced++;outline[i]=1;protectedMask[i]=1;whiteMask[i]=0;}
       for(let i=0;i<cells.length;i++){if(backgroundMask[i])protectedMask[i]=1;if(whiteMask[i]||coloredStrokeMask[i])protectedMask[i]=1;if(cells[i].a&&!backgroundMask[i]&&!outline[i]&&!whiteMask[i]&&!coloredStrokeMask[i])fillIndices.push(i);}
       const automatic={light:12,standard:8,strong:6},requested=limitValue==='auto'?automatic[simplify]:(Number(limitValue)||48),hasOutline=outline.some(v=>v===1),hasWhite=whiteMask.some(v=>v===1),hasAccent=preserveDetails&&cells.some(c=>c&&c.accentRatio>=.16),reserved=(hasOutline?1:0)+(hasWhite?1:0)+(hasAccent?1:0),fillK=Math.max(1,requested-reserved);
       const clustered=clusterCellColors(cells,fillIndices,fillK),map=new Array(cells.length).fill(null);
@@ -1274,11 +1388,12 @@
       if(forceH7)result=refineRoundedDarkContours(result,cells,protectedMask,w,h,h7,preserveDetails);
       if(forceH7)result=repairOuterSilhouette(result,cells,protectedMask,w,h,h7,preserveDetails);
       result=polishLargeRoundedRegions(result,w,h,preserveDetails);
-      result=refineDarkContoursMorphologically(result,cells,w,h,morphOptimize&&forceH7,useCV);
+      result=refineDarkContoursMorphologically(result,cells,w,h,morphOptimize&&forceH7,useCV,outerInfo.band);
       result=fitEllipsePolishWithOpenCV(result,cells,w,h,useCV&&preserveDetails);
-      result=regularizeShortLinesWithOpenCV(result,cells,w,h,useCV&&preserveDetails);
-      const featureAxis=detectDominantFeatureAxis(result,w,h,useCV&&preserveDetails);
-      result=regularizeFeatureLinesByAxis(result,cells,w,h,featureAxis,useCV&&preserveDetails);
+      result=regularizeShortLinesWithOpenCV(result,cells,w,h,useCV&&morphOptimize);
+      if(morphOptimize&&forceH7)result=enforceExteriorContour(result,cells,w,h,outerInfo,h7);
+      result=repairInternalStructureTopology(result,cells,w,h,outerInfo,internalTopologyRepair&&forceH7,preserveDetails);
+      if(morphOptimize&&forceH7)result=enforceExteriorContour(result,cells,w,h,outerInfo,h7);
       for(let i=0;i<result.length;i++)if(backgroundMask[i])result[i]=null;
       return result;
     }
@@ -1490,7 +1605,7 @@
       return parsed;
     }
 
-    window.__BEAD_TEST__={paletteCount:palette.length,getData:()=>currentData,loadSample,buildExportCanvas,generate,performCutout,restoreOriginal,buildCrispMap,clusterCellColors,buildColoredStrokeMask,refineOutline,bridgeDirectionalGaps,completeLightContours,buildWhiteMask,preserveSalientAccents,balancePairedAccents,refineRoundedDarkContours,snapIncidentalEdgeGrays,repairOuterSilhouette,buildEdgeBackgroundMask,polishLargeRoundedRegions,refineDarkContoursMorphologically,fitEllipsePolishWithOpenCV,regularizeShortLinesWithOpenCV,detectDominantFeatureAxis,regularizeFeatureLinesByAxis,loadOpenCV,loadOpenCVWithTimeout,buildLocalPatchGroups,detectLightRegionRescue,detectContourClosure,buildStructureDiagnostics};
+    window.__BEAD_TEST__={paletteCount:palette.length,getData:()=>currentData,getStats:()=>({morph:lastMorphStats,structure:lastStructureStats}),loadSample,buildExportCanvas,generate,performCutout,restoreOriginal,buildCrispMap,clusterCellColors,buildColoredStrokeMask,refineOutline,bridgeDirectionalGaps,completeLightContours,buildWhiteMask,preserveSalientAccents,balancePairedAccents,refineRoundedDarkContours,snapIncidentalEdgeGrays,repairOuterSilhouette,buildEdgeBackgroundMask,buildExteriorContourInfo,enforceExteriorContour,buildProtectedNegativeSpace,repairInternalStructureTopology,polishLargeRoundedRegions,refineDarkContoursMorphologically,fitEllipsePolishWithOpenCV,regularizeShortLinesWithOpenCV,detectDominantFeatureAxis,regularizeFeatureLinesByAxis,loadOpenCV,loadOpenCVWithTimeout,buildLocalPatchGroups,detectLightRegionRescue,detectContourClosure,buildStructureDiagnostics};
     if(new URLSearchParams(location.search).get('sample')==='1') setTimeout(loadSample,80);
   })();
   </script>
