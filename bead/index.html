@@ -92,18 +92,15 @@
           <label class="check"><input id="minorGrid" type="checkbox" checked><span>显示每格浅虚线<span class="help">可关闭；每 5 格实线、外框和坐标始终保留。</span></span></label>
         </div>
         <div style="margin-top:14px;padding:14px;border:1px solid #ddd2e8;border-radius:12px;background:linear-gradient(180deg,#faf8ff,#f5f0fa);">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-            <strong style="font-size:14px;">🤖 AI 视觉增强（可选）</strong>
-            <label class="check" style="margin:0"><input id="aiEnhance" type="checkbox"> <span>启用</span></label>
-          </div>
+          <strong style="font-size:14px;display:block;margin-bottom:8px;">🤖 AI 视觉优化（可选第二步）</strong>
           <div class="field" style="margin-bottom:8px">
             <input id="aiApiKey" type="password" placeholder="粘贴智谱 Coding 套餐 API Key" style="width:100%;border:1px solid #dcd3cb;border-radius:9px;background:#fff;padding:9px 10px">
-            <span class="help">使用你的智谱 Coding 套餐 Key（bigmodel.cn → API Keys）<br>Key 只保存在本地浏览器，不会上传到任何服务器。</span>
+            <span class="help">先纯算法生成图纸，再点「🤖 AI 优化」按钮做第二轮细节增强<br>使用你的智谱 Coding 套餐 Key（bigmodel.cn → API Keys）<br>Key 只保存在本地浏览器，不上传服务器。</span>
           </div>
           <div id="aiStatus" style="font-size:12px;color:var(--muted);min-height:16px"></div>
         </div>
       </details>
-      <div class="actions"><button class="btn btn-ghost" type="button" id="downloadBtn" disabled>下载高清 PNG 图纸</button></div>
+      <div class="actions"><button class="btn btn-ghost" type="button" id="downloadBtn" disabled>下载高清 PNG 图纸</button><button class="btn btn-primary" type="button" id="aiOptimizeBtn" disabled style="display:none">🤖 AI 优化细节</button></div>
       <div class="status" id="status" role="status" aria-live="polite"></div>
     </section>
 
@@ -132,6 +129,7 @@
     let originalImage = null;
     let currentImage = null;
     let currentData = null;
+    let currentCells = null;
     let cutoutBlob = null;
     let cutoutUrl = null;
     let sourceName = '图片';
@@ -145,6 +143,7 @@
     uploadZone.addEventListener('drop', e => {e.preventDefault();uploadZone.classList.remove('drag');if(e.dataTransfer.files[0]) loadFile(e.dataTransfer.files[0]);});
     fileInput.addEventListener('change', () => {if(fileInput.files[0]) loadFile(fileInput.files[0]);});
     $('generateBtn').addEventListener('click', generate);
+    $('aiOptimizeBtn').addEventListener('click', aiOptimize);
     $('downloadBtn').addEventListener('click', downloadPattern);
     $('cutoutBtn').addEventListener('click', performCutout);
     $('restoreBtn').addEventListener('click', restoreOriginal);
@@ -153,14 +152,12 @@
     $('gridWidthRange').addEventListener('input', () => $('gridWidth').value=$('gridWidthRange').value);
     $('gridWidth').addEventListener('input', () => $('gridWidthRange').value=clamp(Number($('gridWidth').value)||50,20,100));
 
-    // AI enhancement localStorage persistence
+    // AI API key localStorage persistence
     try{
       const savedKey=localStorage.getItem('bead_ai_apikey')||'';
-      const savedEnabled=localStorage.getItem('bead_ai_enabled')==='1';
-      if(savedKey){$('aiApiKey').value=savedKey;$('aiEnhance').checked=savedEnabled;}
+      if(savedKey)$('aiApiKey').value=savedKey;
     }catch(e){}
     $('aiApiKey').addEventListener('change',()=>{try{localStorage.setItem('bead_ai_apikey',$('aiApiKey').value);}catch(e){}});
-    $('aiEnhance').addEventListener('change',()=>{try{localStorage.setItem('bead_ai_enabled',$('aiEnhance').checked?'1':'0');}catch(e){}});
 
     function hexToRgb(hex){const h=hex.replace('#','');return {r:parseInt(h.slice(0,2),16),g:parseInt(h.slice(2,4),16),b:parseInt(h.slice(4,6),16)};}
     function rgbToLab(r,g,b){
@@ -260,45 +257,61 @@
       if(!cutoutBlob)return;const url=URL.createObjectURL(cutoutBlob),a=document.createElement('a');a.href=url;a.download=`${sourceName.replace(/\.[^.]+$/,'')}_抠图.png`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);setStatus('透明背景 PNG 已下载。');
     }
 
-    async function generate(){
+    function generate(){
       if(!currentImage){setStatus('请先选择图片。',true);return;}
       if(palette.length<200){setStatus('色卡加载失败，请确认 palette.js 与页面在同一文件夹。',true);return;}
       const gridW=clamp(parseInt($('gridWidth').value,10)||50,20,100);
       $('gridWidth').value=gridW;$('gridWidthRange').value=gridW;
       const gridH=clamp(Math.round(gridW*currentImage.height/currentImage.width),1,140);
       const mode=$('renderMode').value,limitValue=$('colorLimit').value,simplify=$('simplifyLevel').value;
-      const aiOn=$('aiEnhance').checked&&$('aiApiKey').value.trim();
-      let aiHints=null;
-      if(aiOn){
-        $('aiStatus').textContent='🤖 AI 分析中…';
-        setStatus('🤖 AI 正在分析图片…');
-        $('generateBtn').disabled=true;$('downloadBtn').disabled=true;
-        try{aiHints=await callVisionAPI($('aiApiKey').value.trim(),currentImage);$('aiStatus').textContent='✅ AI 完成：'+(aiHints.summary||'');}
-        catch(e){console.error('AI vision failed:',e);$('aiStatus').textContent='⚠️ AI 失败：'+e.message+'（纯算法生成）';}
-      }else{$('aiStatus').textContent='';}
-      setStatus(mode==='crisp'?'正在识别描边并统一连续色块…':'正在按色卡忠实转换图片…');$('generateBtn').disabled=true;$('downloadBtn').disabled=true;
+      setStatus(mode==='crisp'?'正在识别描边并统一连续色块…':'正在按色卡忠实转换图片…');$('generateBtn').disabled=true;$('downloadBtn').disabled=true;$('aiOptimizeBtn').style.display='none';
+      requestAnimationFrame(()=>setTimeout(()=>{
+        try{
+          let map;
+          if(mode==='crisp'){
+            const cells=analyzeImageCells(currentImage,gridW,gridH,6);
+            map=buildCrispMap(cells,gridW,gridH,{limitValue,simplify,forceH7:$('forceH7').checked,preserveDetails:$('preserveDetails').checked});
+            currentCells=cells;
+          }else{
+            const raw=sampleImage(currentImage,gridW,gridH);
+            map=raw.map(px=>px.a<96?null:nearestBead(px.lab));
+            const limit=limitValue==='auto'?0:Number(limitValue);
+            if(limit>0)map=limitColors(map,raw,limit);
+            currentCells=null;
+          }
+          const counts=countColors(map),total=map.reduce((n,p)=>n+(p?1:0),0);
+          currentData={map,gridW,gridH,counts,total,mode};
+          renderPattern($('patternCanvas'),currentData,22,$('minorGrid').checked);
+          renderSummary(currentData);
+          $('downloadBtn').disabled=total===0;
+          const showAi=$('aiApiKey').value.trim()&&currentCells;
+          if(showAi){$('aiOptimizeBtn').style.display='';$('aiOptimizeBtn').disabled=false;$('aiOptimizeBtn').textContent='🤖 AI 优化细节';}
+          const modeText=mode==='crisp'?'清晰拼豆模式':'忠实原图模式';
+          setStatus(total?`完成：${modeText}，${gridW}×${gridH}，${Object.keys(counts).length} 色，共 ${total} 颗。未删除任何格子。`:'当前图片全部为透明区域。',total===0);
+        }catch(err){console.error(err);setStatus('生成失败，请换一张图片或减小格数后重试。',true);}
+        finally{$('generateBtn').disabled=false;}
+      },30));
+    }
+
+    async function aiOptimize(){
+      if(!currentData||!currentCells){setStatus('请先生成拼豆图纸。',true);return;}
+      const key=$('aiApiKey').value.trim();if(!key){setStatus('请先填写 API Key。',true);return;}
+      const btn=$('aiOptimizeBtn');btn.disabled=true;btn.textContent='🤖 AI 分析中…';
+      $('aiStatus').textContent='🤖 正在调用视觉模型分析图片…';
+      setStatus('🤖 AI 正在分析图片细节…');
+      let aiHints;
+      try{aiHints=await callVisionAPI(key,currentImage);}
+      catch(e){console.error(e);$('aiStatus').textContent='⚠️ AI 调用失败：'+e.message;btn.disabled=false;btn.textContent='🤖 AI 优化细节';setStatus('AI 调用失败：'+e.message,true);return;}
+      $('aiStatus').textContent='✅ AI：'+(aiHints.summary||'分析完成');
       try{
-        let map;
-        if(mode==='crisp'){
-          const cells=analyzeImageCells(currentImage,gridW,gridH,6);
-          map=buildCrispMap(cells,gridW,gridH,{limitValue,simplify,forceH7:$('forceH7').checked,preserveDetails:$('preserveDetails').checked});
-          if(aiHints){map=applyAiCorrection(map,cells,gridW,gridH,aiHints);setStatus('✅ 算法+AI增强生成完成…');}
-        }else{
-          const raw=sampleImage(currentImage,gridW,gridH);
-          map=raw.map(px=>px.a<96?null:nearestBead(px.lab));
-          const limit=limitValue==='auto'?0:Number(limitValue);
-          if(limit>0)map=limitColors(map,raw,limit);
-        }
-        const counts=countColors(map),total=map.reduce((n,p)=>n+(p?1:0),0);
-        currentData={map,gridW,gridH,counts,total,mode};
+        const newMap=applyAiCorrection(currentData.map,currentCells,currentData.gridW,currentData.gridH,aiHints);
+        const counts=countColors(newMap),total=newMap.reduce((n,p)=>n+(p?1:0),0);
+        currentData={...currentData,map:newMap,counts,total};
         renderPattern($('patternCanvas'),currentData,22,$('minorGrid').checked);
         renderSummary(currentData);
-        $('downloadBtn').disabled=total===0;
-        const modeText=mode==='crisp'?'清晰拼豆模式':'忠实原图模式';
-        const aiSuffix=aiHints?' +AI增强':'';
-        setStatus(total?`完成：${modeText}${aiSuffix}，${gridW}×${gridH}，${Object.keys(counts).length} 色，共 ${total} 颗。`:'当前图片全部为透明区域。',total===0);
-      }catch(err){console.error(err);setStatus('生成失败：'+err.message,true);}
-      finally{$('generateBtn').disabled=false;}
+        setStatus(`✅ AI 优化完成：${currentData.gridW}×${currentData.gridH}，${Object.keys(counts).length} 色，共 ${total} 颗。`);
+      }catch(e){console.error(e);setStatus('AI 优化失败：'+e.message,true);}
+      btn.disabled=false;btn.textContent='🤖 再优化一次';
     }
 
     function analyzeImageCells(img,w,h,supersample=6){
