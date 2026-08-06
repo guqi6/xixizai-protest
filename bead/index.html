@@ -133,6 +133,7 @@
     let cutoutBlob = null;
     let cutoutUrl = null;
     let sourceName = '图片';
+    let cvLoadPromise=null,cvReady=false;
 
     const uploadZone=$('uploadZone'), fileInput=$('fileInput'), chooseBtn=$('chooseBtn'), sampleBtn=$('sampleBtn');
     chooseBtn.addEventListener('click', e => {e.stopPropagation();fileInput.click();});
@@ -172,6 +173,34 @@
     function labDistance(a,b){const dl=a.l-b.l,da=a.a-b.a,db=a.b-b.b;return Math.sqrt(dl*dl+da*da+db*db);}
     function nearestBead(lab,allowed=palette){let best=allowed[0],d=Infinity;for(const p of allowed){const n=labDistance(lab,p.lab);if(n<d){d=n;best=p;}}return best;}
     function clamp(v,min,max){return Math.max(min,Math.min(max,v));}
+
+    function loadOpenCV(){
+      if(cvReady&&window.cv&&window.cv.Mat)return Promise.resolve(true);
+      if(cvLoadPromise)return cvLoadPromise;
+      cvLoadPromise=new Promise((resolve,reject)=>{
+        if(window.cv){
+          const done=()=>{cvReady=true;resolve(true);};
+          if(window.cv.Mat)done();else window.cv.onRuntimeInitialized=done;
+          return;
+        }
+        const script=document.createElement('script');
+        script.src='https://docs.opencv.org/4.10.0/opencv.js';
+        script.async=true;script.dataset.opencv='1';
+        script.onerror=()=>reject(new Error('OpenCV.js 加载失败'));
+        script.onload=()=>{
+          if(!window.cv)return reject(new Error('OpenCV.js 未初始化'));
+          const done=()=>{cvReady=true;resolve(true);};
+          if(window.cv.Mat)done();else window.cv.onRuntimeInitialized=done;
+        };
+        document.head.appendChild(script);
+      }).catch(err=>{console.warn(err);cvLoadPromise=null;cvReady=false;return false;});
+      return cvLoadPromise;
+    }
+
+    async function loadOpenCVWithTimeout(ms=2200){
+      const timeout=new Promise(resolve=>setTimeout(()=>resolve(false),ms));
+      return await Promise.race([loadOpenCV(),timeout]);
+    }
 
     function loadFile(file){
       if(!file.type.startsWith('image/')) return setStatus('请选择 JPG、PNG 或 WebP 图片。',true);
@@ -267,13 +296,15 @@
       const gridH=clamp(Math.round(gridW*currentImage.height/currentImage.width),1,140);
       const mode=$('renderMode').value,limitValue=$('colorLimit').value,simplify=$('simplifyLevel').value;
       cancelDiff();aiUndoStack=[];aiRedoStack=[];refreshAIHistoryButtons();
-      setStatus(mode==='crisp'?'正在识别描边并统一连续色块…':'正在按色卡忠实转换图片…');$('generateBtn').disabled=true;$('downloadBtn').disabled=true;$('aiOptimizeBtn').style.display='none';
-      requestAnimationFrame(()=>setTimeout(()=>{
+      setStatus(mode==='crisp'?'正在加载结构引擎并识别描边…':'正在按色卡忠实转换图片…');$('generateBtn').disabled=true;$('downloadBtn').disabled=true;$('aiOptimizeBtn').style.display='none';
+      requestAnimationFrame(()=>setTimeout(async ()=>{
         try{
-          let map;
+          let map,usedCV=false;
           if(mode==='crisp'){
+            usedCV=await loadOpenCVWithTimeout(2200);
+            setStatus(usedCV?'正在使用 OpenCV 辅助拟合轮廓、圆弧和短线…':'结构引擎未就绪，正在使用内置算法生成…');
             const cells=analyzeImageCells(currentImage,gridW,gridH,6);
-            map=buildCrispMap(cells,gridW,gridH,{limitValue,simplify,forceH7:$('forceH7').checked,preserveDetails:$('preserveDetails').checked});
+            map=buildCrispMap(cells,gridW,gridH,{limitValue,simplify,forceH7:$('forceH7').checked,preserveDetails:$('preserveDetails').checked,useCV:usedCV});
             currentCells=cells;
           }else{
             const raw=sampleImage(currentImage,gridW,gridH);
@@ -290,7 +321,7 @@
           const showAi=$('aiApiKey').value.trim()&&currentCells;
           if(showAi){$('aiOptimizeBtn').style.display='';$('aiOptimizeBtn').disabled=false;$('aiOptimizeBtn').textContent='🤖 AI 优化细节';}
           const modeText=mode==='crisp'?'清晰拼豆模式':'忠实原图模式';
-          setStatus(total?`完成：${modeText}，${gridW}×${gridH}，${Object.keys(counts).length} 色，共 ${total} 颗。未删除任何格子。`:'当前图片全部为透明区域。',total===0);
+          setStatus(total?`完成：${modeText}${usedCV?' + OpenCV结构拟合':''}，${gridW}×${gridH}，${Object.keys(counts).length} 色，共 ${total} 颗。`:'当前图片全部为透明区域。',total===0);
         }catch(err){console.error(err);setStatus('生成失败，请换一张图片或减小格数后重试。',true);}
         finally{$('generateBtn').disabled=false;}
       },30));
@@ -940,6 +971,106 @@
       return result;
     }
 
+    function polishDarkContoursWithOpenCV(map,cells,w,h,enabled=true){
+      if(!enabled||!window.cv||!window.cv.Mat)return map;
+      const cv=window.cv,result=map.slice();
+      let src=null,closed=null,opened=null,kernel=null;
+      try{
+        src=new cv.Mat(h,w,cv.CV_8UC1,new cv.Scalar(0));
+        for(let y=0;y<h;y++)for(let x=0;x<w;x++){const p=map[y*w+x];if(p&&(p.code==='H7'||p.code==='H16'))src.ucharPtr(y,x)[0]=255;}
+        closed=new cv.Mat();opened=new cv.Mat();
+        kernel=cv.getStructuringElement(cv.MORPH_RECT,new cv.Size(3,3));
+        cv.morphologyEx(src,closed,cv.MORPH_CLOSE,kernel);
+        cv.morphologyEx(src,opened,cv.MORPH_OPEN,kernel);
+        const darkPalette=palette.filter(p=>(p.r*.299+p.g*.587+p.b*.114)<80),h7=palette.find(p=>p.code==='H7');
+        const darkEvidence=i=>{const c=cells[i];return c&&c.a&&(c.blackRatio>=.018||c.weakCandidate||(c.medianLum<132&&c.contrast>18));};
+        const nearDark=(x,y,r=1)=>{let n=0;for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){if(!dx&&!dy)continue;const nx=x+dx,ny=y+dy;if(nx<0||nx>=w||ny<0||ny>=h)continue;const p=result[ny*w+nx];if(p&&(p.code==='H7'||p.code==='H16'))n++;}return n;};
+        for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){
+          const i=y*w+x,p=result[i],isDark=p&&(p.code==='H7'||p.code==='H16'),becameClosed=closed.ucharPtr(y,x)[0]>0&&src.ucharPtr(y,x)[0]===0;
+          if(becameClosed&&!isDark&&darkEvidence(i)&&nearDark(x,y,1)>=3){
+            const c=cells[i],chroma=Math.max(c.r,c.g,c.b)-Math.min(c.r,c.g,c.b);
+            if(!(c.medianLum>185&&chroma<50&&c.whiteRatio>.12))result[i]=h7;
+          }
+          const removedByOpen=src.ucharPtr(y,x)[0]>0&&opened.ucharPtr(y,x)[0]===0;
+          if(removedByOpen&&isDark&&nearDark(x,y,1)<=1){
+            const c=cells[i];if(c&&c.blackRatio<.045&&c.medianLum>88)result[i]=nearestBead(c.lab,darkPalette.length?darkPalette:palette);
+          }
+        }
+      }catch(err){console.warn('OpenCV contour polish failed',err);return map;}
+      finally{for(const m of [src,closed,opened,kernel])if(m)m.delete();}
+      return result;
+    }
+
+    function fitEllipsePolishWithOpenCV(map,cells,w,h,enabled=true){
+      if(!enabled||!window.cv||!window.cv.Mat)return map;
+      const cv=window.cv,result=map.slice(),seen=new Uint8Array(map.length),minSize=Math.max(22,Math.ceil(map.length*.006));
+      const excluded=new Set(['H1','H2','H7','H16']);
+      const same=(i,code)=>result[i]&&result[i].code===code;
+      const ellipseDist=(x,y,cx,cy,rx,ry,angle)=>{
+        const cos=Math.cos(-angle),sin=Math.sin(-angle),dx=x-cx,dy=y-cy,px=dx*cos-dy*sin,py=dx*sin+dy*cos;
+        return (px*px)/(rx*rx)+(py*py)/(ry*ry);
+      };
+      for(let start=0;start<result.length;start++){
+        if(seen[start]||!result[start]||excluded.has(result[start].code))continue;
+        const code=result[start].code,component=[],queue=[start];seen[start]=1;
+        for(let q=0;q<queue.length;q++){
+          const i=queue[q],x=i%w,y=Math.floor(i/w);component.push(i);
+          for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const nx=x+dx,ny=y+dy;if(nx<0||nx>=w||ny<0||ny>=h)continue;const ni=ny*w+nx;if(!seen[ni]&&same(ni,code)){seen[ni]=1;queue.push(ni);}}
+        }
+        if(component.length<minSize)continue;
+        const xs=component.map(i=>i%w),ys=component.map(i=>Math.floor(i/w)),minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys),bw=maxX-minX+1,bh=maxY-minY+1;
+        if(bw<7||bh<7||Math.max(bw,bh)/Math.max(1,Math.min(bw,bh))>2.2)continue;
+        const fillRatio=component.length/(bw*bh);if(fillRatio<.40||fillRatio>.88)continue;
+        let mat=null;
+        try{
+          mat=cv.matFromArray(component.length,1,cv.CV_32SC2,component.flatMap(i=>[i%w,Math.floor(i/w)]));
+          if(component.length<5)continue;
+          const e=cv.fitEllipse(mat),cx=e.center.x,cy=e.center.y,rx=e.size.width/2,ry=e.size.height/2,angle=e.angle*Math.PI/180;
+          if(rx<3||ry<3)continue;
+          const fittedArea=Math.PI*rx*ry,areaRatio=component.length/Math.max(1,fittedArea);
+          if(areaRatio<.55||areaRatio>1.35)continue;
+          for(let y=Math.max(1,Math.floor(minY-1));y<=Math.min(h-2,Math.ceil(maxY+1));y++)for(let x=Math.max(1,Math.floor(minX-1));x<=Math.min(w-2,Math.ceil(maxX+1));x++){
+            const i=y*w+x,d=ellipseDist(x+.5,y+.5,cx,cy,rx,ry,angle),p=result[i],c=cells[i];
+            if(!c||!c.a)continue;
+            if(!p&&d<=.94&&labDistance(c.lab,palette.find(p=>p.code===code).lab)<28){result[i]=palette.find(p=>p.code===code);continue;}
+            if(p&&p.code!==code&&!excluded.has(p.code)&&d>=1.14&&d<=1.42){
+              let nearSame=0;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){if(!dx&&!dy)continue;const ni=(y+dy)*w+x+dx;if(same(ni,code))nearSame++;}
+              if(nearSame<=1&&labDistance(c.lab,p.lab)>18)result[i]=nearestBead(c.lab);
+            }
+          }
+        }catch(err){console.warn('OpenCV ellipse polish failed',err);}
+        finally{if(mat)mat.delete();}
+      }
+      return result;
+    }
+
+    function regularizeShortLinesWithOpenCV(map,cells,w,h,enabled=true){
+      if(!enabled||!window.cv||!window.cv.Mat)return map;
+      const cv=window.cv,result=map.slice();
+      let src=null,lines=null;
+      try{
+        src=new cv.Mat(h,w,cv.CV_8UC1,new cv.Scalar(0));
+        for(let y=0;y<h;y++)for(let x=0;x<w;x++){const p=map[y*w+x],i=y*w+x,c=cells[i];if(p&&(p.code==='H7'||p.code==='H16')&&c&&c.a)src.ucharPtr(y,x)[0]=255;}
+        lines=new cv.Mat();
+        cv.HoughLinesP(src,lines,1,Math.PI/180,4,4,2);
+        const h7=palette.find(p=>p.code==='H7');
+        const drawCandidate=(x,y)=>{
+          if(x<=0||x>=w-1||y<=0||y>=h-1)return;
+          const i=y*w+x,p=result[i],c=cells[i];if(!c||!c.a||p&&(p.code==='H1'||p.code==='H2'))return;
+          let near=0;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){if(!dx&&!dy)continue;const q=result[(y+dy)*w+x+dx];if(q&&(q.code==='H7'||q.code==='H16'))near++;}
+          if(!p&&(near>=2&&(c.weakCandidate||c.blackRatio>.01)))result[i]=h7;
+        };
+        for(let i=0;i<lines.rows;i++){
+          const data=lines.intPtr(i),x1=data[0],y1=data[1],x2=data[2],y2=data[3],len=Math.hypot(x2-x1,y2-y1);
+          if(len<4||len>Math.max(w,h)*.42)continue;
+          const steps=Math.ceil(len*1.5);
+          for(let s=0;s<=steps;s++){const x=Math.round(x1+(x2-x1)*s/steps),y=Math.round(y1+(y2-y1)*s/steps);drawCandidate(x,y);}
+        }
+      }catch(err){console.warn('OpenCV line regularize failed',err);return map;}
+      finally{if(src)src.delete();if(lines)lines.delete();}
+      return result;
+    }
+
     function buildEdgeBackgroundMask(cells,w,h,enabled=true){
       const mask=new Uint8Array(cells.length);if(!enabled)return mask;
       const edge=[];
@@ -972,7 +1103,7 @@
       return mask;
     }
 
-    function buildCrispMap(cells,w,h,{limitValue='auto',simplify='standard',forceH7=true,preserveDetails=true}={}){
+    function buildCrispMap(cells,w,h,{limitValue='auto',simplify='standard',forceH7=true,preserveDetails=true,useCV=false}={}){
       const backgroundMask=buildEdgeBackgroundMask(cells,w,h,true),coloredStrokeMask=buildColoredStrokeMask(cells,w,h,preserveDetails),blockedForOutline=coloredStrokeMask.slice();
       for(let i=0;i<blockedForOutline.length;i++)if(backgroundMask[i])blockedForOutline[i]=1;
       const outline=refineOutline(cells,w,h,forceH7,blockedForOutline),h7=palette.find(p=>p.code==='H7'),h1=palette.find(p=>p.code==='H1'),whiteMask=buildWhiteMask(cells,outline,preserveDetails,w,h),protectedMask=outline.slice(),fillIndices=[],accentPalette=palette.filter(p=>p.code!=='H7'&&p.code!=='H1'&&p.code!=='H2'&&Math.hypot(p.lab.a,p.lab.b)>10);
@@ -989,6 +1120,9 @@
       if(forceH7)result=refineRoundedDarkContours(result,cells,protectedMask,w,h,h7,preserveDetails);
       if(forceH7)result=repairOuterSilhouette(result,cells,protectedMask,w,h,h7,preserveDetails);
       result=polishLargeRoundedRegions(result,w,h,preserveDetails);
+      result=polishDarkContoursWithOpenCV(result,cells,w,h,useCV&&preserveDetails);
+      result=fitEllipsePolishWithOpenCV(result,cells,w,h,useCV&&preserveDetails);
+      result=regularizeShortLinesWithOpenCV(result,cells,w,h,useCV&&preserveDetails);
       for(let i=0;i<result.length;i++)if(backgroundMask[i])result[i]=null;
       return result;
     }
@@ -1200,7 +1334,7 @@
       return parsed;
     }
 
-    window.__BEAD_TEST__={paletteCount:palette.length,getData:()=>currentData,loadSample,buildExportCanvas,generate,performCutout,restoreOriginal,buildCrispMap,clusterCellColors,buildColoredStrokeMask,refineOutline,bridgeDirectionalGaps,completeLightContours,buildWhiteMask,preserveSalientAccents,balancePairedAccents,refineRoundedDarkContours,snapIncidentalEdgeGrays,repairOuterSilhouette,buildEdgeBackgroundMask,polishLargeRoundedRegions,buildLocalPatchGroups,detectLightRegionRescue,detectContourClosure,buildStructureDiagnostics};
+    window.__BEAD_TEST__={paletteCount:palette.length,getData:()=>currentData,loadSample,buildExportCanvas,generate,performCutout,restoreOriginal,buildCrispMap,clusterCellColors,buildColoredStrokeMask,refineOutline,bridgeDirectionalGaps,completeLightContours,buildWhiteMask,preserveSalientAccents,balancePairedAccents,refineRoundedDarkContours,snapIncidentalEdgeGrays,repairOuterSilhouette,buildEdgeBackgroundMask,polishLargeRoundedRegions,polishDarkContoursWithOpenCV,fitEllipsePolishWithOpenCV,regularizeShortLinesWithOpenCV,loadOpenCV,loadOpenCVWithTimeout,buildLocalPatchGroups,detectLightRegionRescue,detectContourClosure,buildStructureDiagnostics};
     if(new URLSearchParams(location.search).get('sample')==='1') setTimeout(loadSample,80);
   })();
   </script>
