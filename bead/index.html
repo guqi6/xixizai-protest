@@ -270,36 +270,35 @@
       const aiOn=$('aiEnhance').checked&&$('aiApiKey').value.trim();
       let aiHints=null;
       if(aiOn){
-        $('aiStatus').textContent='';
+        $('aiStatus').textContent='🤖 AI 分析中…';
         setStatus('🤖 AI 正在分析图片…');
         $('generateBtn').disabled=true;$('downloadBtn').disabled=true;
-        try{aiHints=await callVisionAPI($('aiApiKey').value.trim(),currentImage);$('aiStatus').textContent='✅ AI 分析完成：'+(aiHints.summary||'');}
-        catch(e){console.error(e);$('aiStatus').textContent='⚠️ AI 分析失败：'+e.message+'（将使用纯算法生成）';}
-      }
+        try{aiHints=await callVisionAPI($('aiApiKey').value.trim(),currentImage);$('aiStatus').textContent='✅ AI 完成：'+(aiHints.summary||'');}
+        catch(e){console.error('AI vision failed:',e);$('aiStatus').textContent='⚠️ AI 失败：'+e.message+'（纯算法生成）';}
+      }else{$('aiStatus').textContent='';}
       setStatus(mode==='crisp'?'正在识别描边并统一连续色块…':'正在按色卡忠实转换图片…');$('generateBtn').disabled=true;$('downloadBtn').disabled=true;
-      requestAnimationFrame(()=>setTimeout(()=>{
-        try{
-          let map;
-          if(mode==='crisp'){
-            const cells=analyzeImageCells(currentImage,gridW,gridH,6);
-            map=buildCrispMap(cells,gridW,gridH,{limitValue,simplify,forceH7:$('forceH7').checked,preserveDetails:$('preserveDetails').checked,aiHints});
-            if(aiHints)map=applyAiCorrection(map,cells,gridW,gridH,aiHints);
-          }else{
-            const raw=sampleImage(currentImage,gridW,gridH);
-            map=raw.map(px=>px.a<96?null:nearestBead(px.lab));
-            const limit=limitValue==='auto'?0:Number(limitValue);
-            if(limit>0)map=limitColors(map,raw,limit);
-          }
-          const counts=countColors(map),total=map.reduce((n,p)=>n+(p?1:0),0);
-          currentData={map,gridW,gridH,counts,total,mode};
-          renderPattern($('patternCanvas'),currentData,22,$('minorGrid').checked);
-          renderSummary(currentData);
-          $('downloadBtn').disabled=total===0;
-          const modeText=mode==='crisp'?'清晰拼豆模式':'忠实原图模式';
-          setStatus(total?`完成：${modeText}，${gridW}×${gridH}，${Object.keys(counts).length} 色，共 ${total} 颗。未删除任何格子。`:'当前图片全部为透明区域。',total===0);
-        }catch(err){console.error(err);setStatus('生成失败，请换一张图片或减小格数后重试。',true);}
-        finally{$('generateBtn').disabled=false;}
-      },30));
+      try{
+        let map;
+        if(mode==='crisp'){
+          const cells=analyzeImageCells(currentImage,gridW,gridH,6);
+          map=buildCrispMap(cells,gridW,gridH,{limitValue,simplify,forceH7:$('forceH7').checked,preserveDetails:$('preserveDetails').checked});
+          if(aiHints){map=applyAiCorrection(map,cells,gridW,gridH,aiHints);setStatus('✅ 算法+AI增强生成完成…');}
+        }else{
+          const raw=sampleImage(currentImage,gridW,gridH);
+          map=raw.map(px=>px.a<96?null:nearestBead(px.lab));
+          const limit=limitValue==='auto'?0:Number(limitValue);
+          if(limit>0)map=limitColors(map,raw,limit);
+        }
+        const counts=countColors(map),total=map.reduce((n,p)=>n+(p?1:0),0);
+        currentData={map,gridW,gridH,counts,total,mode};
+        renderPattern($('patternCanvas'),currentData,22,$('minorGrid').checked);
+        renderSummary(currentData);
+        $('downloadBtn').disabled=total===0;
+        const modeText=mode==='crisp'?'清晰拼豆模式':'忠实原图模式';
+        const aiSuffix=aiHints?' +AI增强':'';
+        setStatus(total?`完成：${modeText}${aiSuffix}，${gridW}×${gridH}，${Object.keys(counts).length} 色，共 ${total} 颗。`:'当前图片全部为透明区域。',total===0);
+      }catch(err){console.error(err);setStatus('生成失败：'+err.message,true);}
+      finally{$('generateBtn').disabled=false;}
     }
 
     function analyzeImageCells(img,w,h,supersample=6){
@@ -670,21 +669,26 @@
     async function callVisionAPI(apiKey,img){
       const base64=compressImageForAI(img);
       const prompt='Analyze this image for a bead-art (拼豆) pattern generator. Return ONLY valid JSON, no markdown fences.\nFormat: {"has_white": true/false, "white_areas": "brief description of where white is (clothing, eyes, background, etc.)", "eye_colors": [{"name":"blue","hex":"#4A90D9"}], "important_colors": [{"name":"description","hex":"#RRGGBB"}], "small_details": ["brief description of small but important visual details"], "summary": "one sentence summary in Chinese"}';
+      const body={
+        model:'glm-4v-flash',
+        messages:[
+          {role:'system',content:'You are a code review assistant. Analyze the provided file to extract structured data for a rendering pipeline. Return only JSON.'},
+          {role:'user',content:[{type:'text',text:prompt},{type:'image_url',image_url:{url:base64}}]}
+        ],
+        temperature:.1,
+        max_tokens:600,
+        thinking:{type:'disabled'}
+      };
       const resp=await fetch('./api/vision',{
         method:'POST',
         headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},
-        body:JSON.stringify({
-          model:'glm-4v-flash',
-          messages:[{role:'user',content:[{type:'text',text:prompt},{type:'image_url',image_url:{url:base64}}]}],
-          temperature:.1,
-          max_tokens:600
-        })
+        body:JSON.stringify(body)
       });
-      if(!resp.ok){const t=await resp.text().catch(()=>'');throw new Error('HTTP '+resp.status+(t?' '+t.slice(0,120):''));}
+      if(!resp.ok){const t=await resp.text().catch(()=>'');throw new Error('HTTP '+resp.status+(t?' '+t.slice(0,200):''));}
       const data=await resp.json();
       const text=data.choices?.[0]?.message?.content||'';
       const match=text.match(/\{[\s\S]*\}/);
-      if(!match)throw new Error('AI 返回格式异常');
+      if(!match)throw new Error('AI 返回格式异常: '+text.slice(0,100));
       return JSON.parse(match[0]);
     }
 
