@@ -88,6 +88,7 @@
         <div class="advanced">
           <label class="check"><input id="forceH7" type="checkbox" checked><span>黑灰描边统一使用 H7<span class="help">识别眼睛、嘴、头发等细线；不会把普通灰色填充区域全部变黑。</span></span></label>
           <label class="check"><input id="preserveDetails" type="checkbox" checked><span>优先保留白色、眼睛与高光<span class="help">眼白、白衣、彩色虹膜和小面积高光不会被大色块合并。</span></span></label>
+          <label class="check"><input id="morphOptimize" type="checkbox" checked><span>修复断线与重复描边<span class="help">使用方向性闭运算补齐短断点，并将误识别成双排的细描边恢复为单排；不会压缩实心黑色区域。</span></span></label>
           <div class="field"><label for="simplifyLevel">色块统一程度</label><select id="simplifyLevel"><option value="light">轻微</option><option value="standard" selected>标准</option><option value="strong">强力</option></select><span class="help">越强，皮肤和头发使用的近似颜色越少。</span></div>
           <label class="check"><input id="minorGrid" type="checkbox" checked><span>显示每格浅虚线<span class="help">可关闭；每 5 格实线、外框和坐标始终保留。</span></span></label>
         </div>
@@ -133,7 +134,7 @@
     let cutoutBlob = null;
     let cutoutUrl = null;
     let sourceName = '图片';
-    let cvLoadPromise=null,cvReady=false;
+    let cvLoadPromise=null,cvReady=false,lastMorphStats={added:0,thinned:0,removedNoise:0};
 
     const uploadZone=$('uploadZone'), fileInput=$('fileInput'), chooseBtn=$('chooseBtn'), sampleBtn=$('sampleBtn');
     chooseBtn.addEventListener('click', e => {e.stopPropagation();fileInput.click();});
@@ -304,7 +305,7 @@
             usedCV=await loadOpenCVWithTimeout(2200);
             setStatus(usedCV?'阶段 1/4：OpenCV 已加载，正在分析背景与结构轴…':'结构引擎未就绪，正在使用内置算法生成…');
             const cells=analyzeImageCells(currentImage,gridW,gridH,6);
-            map=buildCrispMap(cells,gridW,gridH,{limitValue,simplify,forceH7:$('forceH7').checked,preserveDetails:$('preserveDetails').checked,useCV:usedCV});
+            map=buildCrispMap(cells,gridW,gridH,{limitValue,simplify,forceH7:$('forceH7').checked,preserveDetails:$('preserveDetails').checked,morphOptimize:$('morphOptimize').checked,useCV:usedCV});
             currentCells=cells;
           }else{
             const raw=sampleImage(currentImage,gridW,gridH);
@@ -321,7 +322,8 @@
           const showAi=$('aiApiKey').value.trim()&&currentCells;
           if(showAi){$('aiOptimizeBtn').style.display='';$('aiOptimizeBtn').disabled=false;$('aiOptimizeBtn').textContent='🤖 AI 优化细节';}
           const modeText=mode==='crisp'?'清晰拼豆模式':'忠实原图模式';
-          setStatus(total?`完成：${modeText}${usedCV?' + OpenCV结构拟合':''}，${gridW}×${gridH}，${Object.keys(counts).length} 色，共 ${total} 颗。`:'当前图片全部为透明区域。',total===0);
+          const morphText=mode==='crisp'&&$('morphOptimize').checked?`；边缘补线 ${lastMorphStats.added} 格，双线/噪点整理 ${lastMorphStats.thinned+lastMorphStats.removedNoise} 格`:'';
+          setStatus(total?`完成：${modeText}${usedCV?' + OpenCV结构拟合':''}，${gridW}×${gridH}，${Object.keys(counts).length} 色，共 ${total} 颗${morphText}。`:'当前图片全部为透明区域。',total===0);
         }catch(err){console.error(err);setStatus('生成失败，请换一张图片或减小格数后重试。',true);}
         finally{$('generateBtn').disabled=false;}
       },30));
@@ -971,33 +973,130 @@
       return result;
     }
 
-    function polishDarkContoursWithOpenCV(map,cells,w,h,enabled=true){
-      if(!enabled||!window.cv||!window.cv.Mat)return map;
-      const cv=window.cv,result=map.slice();
-      let src=null,closed=null,opened=null,kernel=null;
+    function binaryMorph(mask,w,h,offsets,operation){
+      const out=new Uint8Array(mask.length),dilate=operation==='dilate';
+      for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+        let value=dilate?0:1;
+        for(const [dx,dy] of offsets){
+          const nx=x+dx,ny=y+dy,inside=nx>=0&&nx<w&&ny>=0&&ny<h,on=inside&&mask[ny*w+nx];
+          if(dilate&&on){value=1;break;}
+          if(!dilate&&!on){value=0;break;}
+        }
+        out[y*w+x]=value;
+      }
+      return out;
+    }
+
+    function closeBinary(mask,w,h,offsets){
+      return binaryMorph(binaryMorph(mask,w,h,offsets,'dilate'),w,h,offsets,'erode');
+    }
+
+    function directionalCloseWithOpenCV(mask,w,h){
+      if(!window.cv||!window.cv.Mat)return null;
+      const cv=window.cv,kernels=[
+        {rows:1,cols:3,data:[1,1,1]},
+        {rows:3,cols:1,data:[1,1,1]},
+        {rows:3,cols:3,data:[1,0,0,0,1,0,0,0,1]},
+        {rows:3,cols:3,data:[0,0,1,0,1,0,1,0,0]}
+      ];
+      const merged=mask.slice();let src=null,closed=null,kernel=null;
       try{
         src=new cv.Mat(h,w,cv.CV_8UC1,new cv.Scalar(0));
-        for(let y=0;y<h;y++)for(let x=0;x<w;x++){const p=map[y*w+x];if(p&&(p.code==='H7'||p.code==='H16'))src.ucharPtr(y,x)[0]=255;}
-        closed=new cv.Mat();opened=new cv.Mat();
-        kernel=cv.getStructuringElement(cv.MORPH_RECT,new cv.Size(3,3));
-        cv.morphologyEx(src,closed,cv.MORPH_CLOSE,kernel);
-        cv.morphologyEx(src,opened,cv.MORPH_OPEN,kernel);
-        const darkPalette=palette.filter(p=>(p.r*.299+p.g*.587+p.b*.114)<80),h7=palette.find(p=>p.code==='H7');
-        const darkEvidence=i=>{const c=cells[i];return c&&c.a&&(c.blackRatio>=.018||c.weakCandidate||(c.medianLum<132&&c.contrast>18));};
-        const nearDark=(x,y,r=1)=>{let n=0;for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){if(!dx&&!dy)continue;const nx=x+dx,ny=y+dy;if(nx<0||nx>=w||ny<0||ny>=h)continue;const p=result[ny*w+nx];if(p&&(p.code==='H7'||p.code==='H16'))n++;}return n;};
-        for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){
-          const i=y*w+x,p=result[i],isDark=p&&(p.code==='H7'||p.code==='H16'),becameClosed=closed.ucharPtr(y,x)[0]>0&&src.ucharPtr(y,x)[0]===0;
-          if(becameClosed&&!isDark&&darkEvidence(i)&&nearDark(x,y,1)>=3){
-            const c=cells[i],chroma=Math.max(c.r,c.g,c.b)-Math.min(c.r,c.g,c.b);
-            if(!(c.medianLum>185&&chroma<50&&c.whiteRatio>.12))result[i]=h7;
-          }
-          const removedByOpen=src.ucharPtr(y,x)[0]>0&&opened.ucharPtr(y,x)[0]===0;
-          if(removedByOpen&&isDark&&nearDark(x,y,1)<=1){
-            const c=cells[i];if(c&&c.blackRatio<.045&&c.medianLum>88)result[i]=nearestBead(c.lab,darkPalette.length?darkPalette:palette);
-          }
+        for(let y=0;y<h;y++)for(let x=0;x<w;x++)if(mask[y*w+x])src.ucharPtr(y,x)[0]=255;
+        closed=new cv.Mat();
+        for(const spec of kernels){
+          if(kernel){kernel.delete();kernel=null;}
+          kernel=cv.matFromArray(spec.rows,spec.cols,cv.CV_8UC1,spec.data);
+          cv.morphologyEx(src,closed,cv.MORPH_CLOSE,kernel);
+          for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++)if(closed.ucharPtr(y,x)[0])merged[y*w+x]=1;
         }
-      }catch(err){console.warn('OpenCV contour polish failed',err);return map;}
-      finally{for(const m of [src,closed,opened,kernel])if(m)m.delete();}
+        return merged;
+      }catch(err){console.warn('OpenCV directional close failed, using built-in morphology',err);return null;}
+      finally{for(const m of [src,closed,kernel])if(m)m.delete();}
+    }
+
+    function thinBinaryMask(mask,w,h,maxIterations=48){
+      const out=mask.slice(),at=(x,y)=>x>=0&&x<w&&y>=0&&y<h?out[y*w+x]:0;
+      for(let iteration=0;iteration<maxIterations;iteration++){
+        let changed=false;
+        for(let phase=0;phase<2;phase++){
+          const remove=[];
+          for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){
+            const i=y*w+x;if(!out[i])continue;
+            const p2=at(x,y-1),p3=at(x+1,y-1),p4=at(x+1,y),p5=at(x+1,y+1),p6=at(x,y+1),p7=at(x-1,y+1),p8=at(x-1,y),p9=at(x-1,y-1),ring=[p2,p3,p4,p5,p6,p7,p8,p9,p2];
+            const neighbours=p2+p3+p4+p5+p6+p7+p8+p9;if(neighbours<2||neighbours>6)continue;
+            let transitions=0;for(let n=0;n<8;n++)if(!ring[n]&&ring[n+1])transitions++;if(transitions!==1)continue;
+            const keep=phase===0?(p2&&p4&&p6)||(p4&&p6&&p8):(p2&&p4&&p8)||(p2&&p6&&p8);
+            if(!keep)remove.push(i);
+          }
+          if(remove.length){changed=true;for(const i of remove)out[i]=0;}
+        }
+        if(!changed)break;
+      }
+      return out;
+    }
+
+    function refineDarkContoursMorphologically(map,cells,w,h,enabled=true,useCV=false){
+      lastMorphStats={added:0,thinned:0,removedNoise:0};if(!enabled)return map;
+      const result=map.slice(),h7=palette.find(p=>p.code==='H7'),isDark=p=>p&&(p.code==='H7'||p.code==='H16'),mask=new Uint8Array(map.length);
+      for(let i=0;i<map.length;i++)if(isDark(map[i]))mask[i]=1;
+      const kernels=[[[ -1,0],[0,0],[1,0]],[[0,-1],[0,0],[0,1]],[[-1,-1],[0,0],[1,1]],[[1,-1],[0,0],[-1,1]]];
+      let closed=useCV?directionalCloseWithOpenCV(mask,w,h):null;
+      if(!closed){closed=mask.slice();for(const kernel of kernels){const candidate=closeBinary(mask,w,h,kernel);for(let i=0;i<closed.length;i++)if(candidate[i])closed[i]=1;}}
+      const canBridge=i=>{
+        const c=cells[i],p=result[i];if(!c||!c.a||p&&(p.code==='H1'||p.code==='H2'))return false;
+        const chroma=Math.max(c.r,c.g,c.b)-Math.min(c.r,c.g,c.b);
+        return !(c.whiteRatio>.28&&c.medianLum>180&&chroma<48)&&(c.blackRatio>=.012||c.weakCandidate||(c.medianLum<138&&c.contrast>16));
+      };
+      for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){
+        const i=y*w+x;if(mask[i]||!closed[i]||!canBridge(i))continue;
+        const opposed=(mask[i-1]&&mask[i+1])||(mask[i-w]&&mask[i+w])||(mask[i-w-1]&&mask[i+w+1])||(mask[i-w+1]&&mask[i+w-1]);
+        if(opposed){mask[i]=1;result[i]=h7;lastMorphStats.added++;}
+      }
+
+      const skeleton=thinBinaryMask(mask,w,h),square=[];for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)square.push([dx,dy]);
+      const solidCore=binaryMorph(mask,w,h,square,'erode'),solidZone=binaryMorph(solidCore,w,h,square,'dilate');
+      const extentSeen=new Uint8Array(mask.length);
+      for(let start=0;start<mask.length;start++){
+        if(extentSeen[start]||!mask[start])continue;const component=[],queue=[start];extentSeen[start]=1;let hasCore=false;
+        for(let q=0;q<queue.length;q++){
+          const i=queue[q],x=i%w,y=Math.floor(i/w);component.push(i);hasCore=hasCore||!!solidCore[i];
+          for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){if(!dx&&!dy)continue;const nx=x+dx,ny=y+dy;if(nx<0||nx>=w||ny<0||ny>=h)continue;const ni=ny*w+nx;if(mask[ni]&&!extentSeen[ni]){extentSeen[ni]=1;queue.push(ni);}}
+        }
+        if(hasCore||component.length<4)continue;
+        const xs=component.map(i=>i%w),ys=component.map(i=>Math.floor(i/w)),minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys),bw=maxX-minX+1,bh=maxY-minY+1;
+        const skeletonNeighbours=i=>{const x=i%w,y=Math.floor(i/w);let n=0;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){if(!dx&&!dy)continue;const nx=x+dx,ny=y+dy;if(nx>=0&&nx<w&&ny>=0&&ny<h&&skeleton[ny*w+nx])n++;}return n;};
+        const keepBest=items=>{const best=items.sort((a,b)=>skeletonNeighbours(b)-skeletonNeighbours(a)||(cells[b]?.confidence||0)-(cells[a]?.confidence||0))[0];if(best!==undefined)skeleton[best]=1;};
+        if(bw>=bh*1.6){keepBest(component.filter(i=>i%w===minX));keepBest(component.filter(i=>i%w===maxX));}
+        else if(bh>=bw*1.6){keepBest(component.filter(i=>Math.floor(i/w)===minY));keepBest(component.filter(i=>Math.floor(i/w)===maxY));}
+      }
+      const replacementFor=i=>{
+        const x=i%w,y=Math.floor(i/w),freq=new Map();
+        for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
+          if(!dx&&!dy)continue;const nx=x+dx,ny=y+dy;if(nx<0||nx>=w||ny<0||ny>=h)continue;
+          const p=result[ny*w+nx];if(p&&!isDark(p))freq.set(p.code,(freq.get(p.code)||0)+(!dx||!dy?2:1));
+        }
+        const best=[...freq.entries()].sort((a,b)=>b[1]-a[1])[0];return best?palette.find(p=>p.code===best[0]):null;
+      };
+      for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){
+        const i=y*w+x;if(!mask[i]||skeleton[i]||solidZone[i])continue;
+        const c=cells[i];if(!c||c.blackRatio>=.62||(c.medianLum<38&&c.darkRatio>.62))continue;
+        let nearbySkeleton=0,nearDark=0;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){if(!dx&&!dy)continue;const ni=(y+dy)*w+x+dx;if(skeleton[ni])nearbySkeleton++;if(mask[ni])nearDark++;}
+        if(!nearbySkeleton||nearDark>6)continue;
+        const replacement=replacementFor(i);if(!replacement)continue;
+        result[i]=replacement;mask[i]=0;lastMorphStats.thinned++;
+      }
+
+      const seen=new Uint8Array(mask.length);
+      for(let start=0;start<mask.length;start++){
+        if(seen[start]||!mask[start])continue;const component=[],queue=[start];seen[start]=1;
+        for(let q=0;q<queue.length;q++){
+          const i=queue[q],x=i%w,y=Math.floor(i/w);component.push(i);
+          for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){if(!dx&&!dy)continue;const nx=x+dx,ny=y+dy;if(nx<0||nx>=w||ny<0||ny>=h)continue;const ni=ny*w+nx;if(mask[ni]&&!seen[ni]){seen[ni]=1;queue.push(ni);}}
+        }
+        if(component.length>2)continue;
+        for(const i of component){const c=cells[i],replacement=replacementFor(i);if(replacement&&c&&c.blackRatio<.035&&c.medianLum>82){result[i]=replacement;mask[i]=0;lastMorphStats.removedNoise++;}}
+      }
       return result;
     }
 
@@ -1158,7 +1257,7 @@
       return mask;
     }
 
-    function buildCrispMap(cells,w,h,{limitValue='auto',simplify='standard',forceH7=true,preserveDetails=true,useCV=false}={}){
+    function buildCrispMap(cells,w,h,{limitValue='auto',simplify='standard',forceH7=true,preserveDetails=true,morphOptimize=true,useCV=false}={}){
       const backgroundMask=buildEdgeBackgroundMask(cells,w,h,true),coloredStrokeMask=buildColoredStrokeMask(cells,w,h,preserveDetails),blockedForOutline=coloredStrokeMask.slice();
       for(let i=0;i<blockedForOutline.length;i++)if(backgroundMask[i])blockedForOutline[i]=1;
       const outline=refineOutline(cells,w,h,forceH7,blockedForOutline),h7=palette.find(p=>p.code==='H7'),h1=palette.find(p=>p.code==='H1'),whiteMask=buildWhiteMask(cells,outline,preserveDetails,w,h),protectedMask=outline.slice(),fillIndices=[],accentPalette=palette.filter(p=>p.code!=='H7'&&p.code!=='H1'&&p.code!=='H2'&&Math.hypot(p.lab.a,p.lab.b)>10);
@@ -1175,7 +1274,7 @@
       if(forceH7)result=refineRoundedDarkContours(result,cells,protectedMask,w,h,h7,preserveDetails);
       if(forceH7)result=repairOuterSilhouette(result,cells,protectedMask,w,h,h7,preserveDetails);
       result=polishLargeRoundedRegions(result,w,h,preserveDetails);
-      result=polishDarkContoursWithOpenCV(result,cells,w,h,useCV&&preserveDetails);
+      result=refineDarkContoursMorphologically(result,cells,w,h,morphOptimize&&forceH7,useCV);
       result=fitEllipsePolishWithOpenCV(result,cells,w,h,useCV&&preserveDetails);
       result=regularizeShortLinesWithOpenCV(result,cells,w,h,useCV&&preserveDetails);
       const featureAxis=detectDominantFeatureAxis(result,w,h,useCV&&preserveDetails);
@@ -1391,7 +1490,7 @@
       return parsed;
     }
 
-    window.__BEAD_TEST__={paletteCount:palette.length,getData:()=>currentData,loadSample,buildExportCanvas,generate,performCutout,restoreOriginal,buildCrispMap,clusterCellColors,buildColoredStrokeMask,refineOutline,bridgeDirectionalGaps,completeLightContours,buildWhiteMask,preserveSalientAccents,balancePairedAccents,refineRoundedDarkContours,snapIncidentalEdgeGrays,repairOuterSilhouette,buildEdgeBackgroundMask,polishLargeRoundedRegions,polishDarkContoursWithOpenCV,fitEllipsePolishWithOpenCV,regularizeShortLinesWithOpenCV,detectDominantFeatureAxis,regularizeFeatureLinesByAxis,loadOpenCV,loadOpenCVWithTimeout,buildLocalPatchGroups,detectLightRegionRescue,detectContourClosure,buildStructureDiagnostics};
+    window.__BEAD_TEST__={paletteCount:palette.length,getData:()=>currentData,loadSample,buildExportCanvas,generate,performCutout,restoreOriginal,buildCrispMap,clusterCellColors,buildColoredStrokeMask,refineOutline,bridgeDirectionalGaps,completeLightContours,buildWhiteMask,preserveSalientAccents,balancePairedAccents,refineRoundedDarkContours,snapIncidentalEdgeGrays,repairOuterSilhouette,buildEdgeBackgroundMask,polishLargeRoundedRegions,refineDarkContoursMorphologically,fitEllipsePolishWithOpenCV,regularizeShortLinesWithOpenCV,detectDominantFeatureAxis,regularizeFeatureLinesByAxis,loadOpenCV,loadOpenCVWithTimeout,buildLocalPatchGroups,detectLightRegionRescue,detectContourClosure,buildStructureDiagnostics};
     if(new URLSearchParams(location.search).get('sample')==='1') setTimeout(loadSample,80);
   })();
   </script>
