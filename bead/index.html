@@ -100,7 +100,7 @@
           <div id="aiStatus" style="font-size:12px;color:var(--muted);min-height:16px"></div>
         </div>
       </details>
-      <div class="actions"><button class="btn btn-ghost" type="button" id="downloadBtn" disabled>下载高清 PNG 图纸</button><button class="btn btn-primary" type="button" id="aiOptimizeBtn" disabled style="display:none">🤖 AI 精修</button></div>
+      <div class="actions"><button class="btn btn-ghost" type="button" id="downloadBtn" disabled>下载高清 PNG 图纸</button><button class="btn btn-primary" type="button" id="aiOptimizeBtn" disabled style="display:none">🤖 AI 精修</button><button class="btn btn-ghost" type="button" id="undoAiBtn" disabled style="display:none">撤销 AI 精修</button><button class="btn btn-ghost" type="button" id="redoAiBtn" disabled style="display:none">恢复 AI 精修</button></div>
       <div class="status" id="status" role="status" aria-live="polite"></div>
     </section>
 
@@ -144,6 +144,8 @@
     fileInput.addEventListener('change', () => {if(fileInput.files[0]) loadFile(fileInput.files[0]);});
     $('generateBtn').addEventListener('click', generate);
     $('aiOptimizeBtn').addEventListener('click', aiOptimize);
+    $('undoAiBtn').addEventListener('click', undoAIRefine);
+    $('redoAiBtn').addEventListener('click', redoAIRefine);
     $('downloadBtn').addEventListener('click', downloadPattern);
     $('cutoutBtn').addEventListener('click', performCutout);
     $('restoreBtn').addEventListener('click', restoreOriginal);
@@ -264,6 +266,7 @@
       $('gridWidth').value=gridW;$('gridWidthRange').value=gridW;
       const gridH=clamp(Math.round(gridW*currentImage.height/currentImage.width),1,140);
       const mode=$('renderMode').value,limitValue=$('colorLimit').value,simplify=$('simplifyLevel').value;
+      cancelDiff();aiUndoStack=[];aiRedoStack=[];refreshAIHistoryButtons();
       setStatus(mode==='crisp'?'正在识别描边并统一连续色块…':'正在按色卡忠实转换图片…');$('generateBtn').disabled=true;$('downloadBtn').disabled=true;$('aiOptimizeBtn').style.display='none';
       requestAnimationFrame(()=>setTimeout(()=>{
         try{
@@ -293,7 +296,7 @@
       },30));
     }
 
-    let pendingChanges=null,originalMapSnapshot=null;
+    let pendingRefine=null,aiUndoStack=[],aiRedoStack=[];
 
     async function aiOptimize(){
       if(!currentData||!currentCells){setStatus('请先生成拼豆图纸。',true);return;}
@@ -307,26 +310,88 @@
         const patternImg=buildPatternPreviewDataURL(map,w,h);
         const paletteStr=buildPaletteString();
         const gridStr=buildGridString(map,w,h);
-        const params={canvas:{width:w,height:h,backgroundColor:'EMPTY'},constraints:{allowNewColors:false,maxChangedCells:Math.floor(w*h*.05),maxSubjectAreaChangeRatio:.03,lowConfidenceThreshold:.75,editRadius:1},mode:{scope:'wholeCanvas',strength:'conservative',operations:['repairContours','smoothCurves','cleanNoise','preserveDetails']}};
-        const result=await callRefineAPI(key,originalImg,patternImg,paletteStr,gridStr,params);
+        const diagnostics=buildStructureDiagnostics(map,currentCells,w,h);
+        const params={canvas:{width:w,height:h,backgroundColor:'EMPTY',coordinateBase:1},constraints:{allowNewColors:false,maxChangedCells:Math.floor(w*h*.08),maxSubjectAreaChangeRatio:.04,lowConfidenceThreshold:.75,editRadius:2},mode:{scope:'wholeCanvas',strength:'balanced',operations:['repairContours','smoothCurves','cleanNoise','preserveDetails','regularizeLines']}};
+        const result=await callRefineAPI(key,originalImg,patternImg,paletteStr,gridStr,params,diagnostics);
         $('aiStatus').textContent='✅ '+(result.analysis?.summary||'AI分析完成')+'（'+(result.changes?.length||0)+'处修改）';
         if(result.warnings&&result.warnings.length)$('aiStatus').textContent+=' ⚠️'+result.warnings.length+'个警告';
-        pendingChanges=(result.changes||[]).filter(c=>c.confidence>=.75);
-        originalMapSnapshot=map.slice();
-        if(!pendingChanges.length){setStatus('AI 未发现需要修改的地方。');btn.disabled=false;btn.textContent='🤖 AI 精修';return;}
-        showDiffOverlay();
-        setStatus('AI 建议修改'+pendingChanges.length+'格，请点击「✅ 应用全部」确认。');
+        const normalized=normalizeAIChanges(result.changes||[],map,w,h);
+        const groups=groupAIChanges(normalized.valid);
+        pendingRefine={snapshot:map.slice(),changes:normalized.valid,groups,warnings:[...(result.warnings||[]),...normalized.warnings]};
+        if(!pendingRefine.changes.length){setStatus(normalized.warnings.length?'AI 返回了建议，但没有通过坐标/色号校验。':'AI 未发现需要修改的地方。');btn.disabled=false;btn.textContent='🤖 AI 精修';return;}
+        showPatchReview();
+        const selected=groups.filter(g=>g.selected).reduce((n,g)=>n+g.changes.length,0),low=groups.filter(g=>!g.selected).reduce((n,g)=>n+g.changes.length,0);
+        setStatus(`AI 建议 ${pendingRefine.changes.length} 格，已按区域合并为 ${groups.length} 个补丁包；默认选择 ${selected} 格${low?`，另有 ${low} 格需确认`:''}。`);
       }catch(e){console.error(e);$('aiStatus').textContent='⚠️ '+e.message;setStatus('AI 精修失败：'+e.message,true);}
       btn.disabled=false;btn.textContent='🤖 AI 精修';
     }
 
-    function showDiffOverlay(){
-      if(!pendingChanges||!pendingChanges.length)return;
+    function normalizeAIChanges(changes,map,w,h){
+      const valid=[],warnings=[],known=new Set(palette.map(p=>p.code));
+      const codeAt=(x,y)=>{const p=map[(y-1)*w+(x-1)];return p?p.code:'EMPTY';};
+      const sameFrom=(c,x,y)=>!c.from||String(c.from).toUpperCase()===codeAt(x,y);
+      for(const raw of changes){
+        const x0=Number(raw.x),y0=Number(raw.y),to=String(raw.to||'').trim().toUpperCase();
+        if(!Number.isFinite(x0)||!Number.isFinite(y0)){warnings.push('跳过坐标异常的修改建议');continue;}
+        if(to!=='EMPTY'&&!known.has(to)){warnings.push(`跳过未知色号 ${to}`);continue;}
+        const candidates=[];
+        if(x0>=1&&x0<=w&&y0>=1&&y0<=h)candidates.push({x:Math.round(x0),y:Math.round(y0),base:1,fromMatch:sameFrom(raw,Math.round(x0),Math.round(y0))});
+        if(x0>=0&&x0<w&&y0>=0&&y0<h)candidates.push({x:Math.round(x0)+1,y:Math.round(y0)+1,base:0,fromMatch:sameFrom(raw,Math.round(x0)+1,Math.round(y0)+1)});
+        const chosen=candidates.find(c=>c.fromMatch)||candidates[0];
+        if(!chosen){warnings.push(`跳过越界坐标 (${raw.x},${raw.y})`);continue;}
+        const from=codeAt(chosen.x,chosen.y);
+        if(from===to)continue;
+        valid.push({
+          x:chosen.x,y:chosen.y,from,to,
+          reason:String(raw.reason||'AI 结构精修建议'),
+          confidence:clamp(Number(raw.confidence)||.5,0,1),
+          issueType:raw.issueType||raw.issue||raw.problemType||'structureRefine',
+          structureType:raw.structureType||'organicContour',
+          base:chosen.base
+        });
+      }
+      const dedup=new Map();
+      for(const c of valid){
+        const key=`${c.x},${c.y}`;
+        const old=dedup.get(key);
+        if(!old||c.confidence>old.confidence)dedup.set(key,c);
+      }
+      return {valid:[...dedup.values()],warnings};
+    }
+
+    function groupAIChanges(changes){
+      const remaining=new Set(changes.map((_,i)=>i)),groups=[];
+      const close=(a,b)=>Math.abs(a.x-b.x)<=2&&Math.abs(a.y-b.y)<=2;
+      while(remaining.size){
+        const start=remaining.values().next().value,queue=[start],items=[];remaining.delete(start);
+        for(let q=0;q<queue.length;q++){
+          const idx=queue[q],a=changes[idx];items.push(a);
+          for(const other of [...remaining]){
+            const b=changes[other],sameIssue=a.issueType===b.issueType||a.structureType===b.structureType;
+            if(sameIssue&&close(a,b)){remaining.delete(other);queue.push(other);}
+          }
+        }
+        const xs=items.map(c=>c.x),ys=items.map(c=>c.y),avg=items.reduce((n,c)=>n+c.confidence,0)/items.length;
+        const issue=[...new Set(items.map(c=>c.issueType))][0]||'structureRefine';
+        const structure=[...new Set(items.map(c=>c.structureType))][0]||'organicContour';
+        groups.push({id:'patch'+(groups.length+1),changes:items,bbox:{x:Math.min(...xs),y:Math.min(...ys),width:Math.max(...xs)-Math.min(...xs)+1,height:Math.max(...ys)-Math.min(...ys)+1},confidence:avg,issueType:issue,structureType:structure,reason:summarizeReasons(items),selected:items.every(c=>c.confidence>=.75)});
+      }
+      return groups.sort((a,b)=>b.confidence-a.confidence||b.changes.length-a.changes.length);
+    }
+
+    function summarizeReasons(items){
+      const freq=new Map();
+      for(const c of items){const r=c.reason.slice(0,48);freq.set(r,(freq.get(r)||0)+1);}
+      return [...freq.entries()].sort((a,b)=>b[1]-a[1])[0]?.[0]||'局部结构精修';
+    }
+
+    function showPatchReview(){
+      if(!pendingRefine||!pendingRefine.changes.length)return;
       const {gridW:w,gridH:h}=currentData;
       const overlay=document.createElement('canvas');overlay.width=w*22;overlay.height=h*22;
       const ctx=overlay.getContext('2d');ctx.clearRect(0,0,overlay.width,overlay.height);
       const changeMap=new Map();
-      for(const c of pendingChanges)changeMap.set(c.y*w+c.x,c);
+      for(const g of pendingRefine.groups)if(g.selected)for(const c of g.changes)changeMap.set((c.y-1)*w+(c.x-1),c);
       for(let y=0;y<h;y++)for(let x=0;x<w;x++){
         const c=changeMap.get(y*w+x);if(!c)continue;
         const px=x*22,py=y*22;
@@ -340,36 +405,84 @@
       if(scroll.style.position!=='relative')scroll.style.position='relative';
       scroll.appendChild(overlay);
       const actions=document.getElementById('diffActions');if(actions)actions.remove();
-      const bar=document.createElement('div');bar.id='diffActions';bar.style.cssText='display:flex;gap:8px;justify-content:center;margin-top:12px;flex-wrap:wrap';
-      const apply=document.createElement('button');apply.className='btn btn-primary';apply.textContent='✅ 应用全部 ('+pendingChanges.length+'格)';apply.onclick=applyAllChanges;
+      const bar=document.createElement('div');bar.id='diffActions';bar.style.cssText='margin-top:12px;padding:12px;border:1px solid #eadfd6;border-radius:12px;background:#fffaf6';
+      const list=document.createElement('div');list.style.cssText='display:grid;gap:8px;margin-bottom:10px';
+      for(const g of pendingRefine.groups){
+        const row=document.createElement('label');row.style.cssText='display:grid;grid-template-columns:auto 1fr;gap:9px;align-items:start;padding:9px;border:1px solid #eadfd6;border-radius:10px;background:#fff';
+        const cb=document.createElement('input');cb.type='checkbox';cb.checked=g.selected;cb.onchange=()=>{g.selected=cb.checked;showPatchReview();};
+        const text=document.createElement('span');
+        text.innerHTML=`<b>${patchTitle(g)}</b><br><span style="color:var(--muted);font-size:12px">坐标 ${g.bbox.x},${g.bbox.y} 起 ${g.bbox.width}×${g.bbox.height}；${g.changes.length} 格；置信度 ${Math.round(g.confidence*100)}%。${escapeHtml(g.reason)}</span>`;
+        row.appendChild(cb);row.appendChild(text);list.appendChild(row);
+      }
+      const summary=document.createElement('div');summary.style.cssText='font-size:12px;color:var(--muted);margin-bottom:10px';
+      if(pendingRefine.warnings.length)summary.textContent='提示：'+pendingRefine.warnings.slice(0,3).join('；');
+      const buttons=document.createElement('div');buttons.style.cssText='display:flex;gap:8px;justify-content:center;flex-wrap:wrap';
+      const selectedCount=selectedPendingChanges().length;
+      const apply=document.createElement('button');apply.className='btn btn-primary';apply.textContent='✅ 应用选中区域 ('+selectedCount+'格)';apply.disabled=!selectedCount;apply.onclick=applySelectedChanges;
       const cancel=document.createElement('button');cancel.className='btn btn-ghost';cancel.textContent='取消';cancel.onclick=cancelDiff;
-      bar.appendChild(apply);bar.appendChild(cancel);
+      const undo=document.createElement('button');undo.className='btn btn-ghost';undo.textContent='撤销本次 AI 精修';undo.disabled=!aiUndoStack.length;undo.onclick=undoAIRefine;
+      const redo=document.createElement('button');redo.className='btn btn-ghost';redo.textContent='恢复 AI 精修';redo.disabled=!aiRedoStack.length;redo.onclick=redoAIRefine;
+      buttons.appendChild(apply);buttons.appendChild(cancel);buttons.appendChild(undo);buttons.appendChild(redo);
+      bar.appendChild(list);bar.appendChild(summary);bar.appendChild(buttons);
       document.getElementById('patternCanvas').parentElement.appendChild(bar);
     }
 
-    function applyAllChanges(){
-      if(!pendingChanges||!originalMapSnapshot)return;
+    function patchTitle(g){
+      const names={outerContourGap:'外轮廓补断线',innerContourGap:'内部边界修复',isolatedPixel:'去孤立格',isolatedColorBlock:'合并孤立色块',smallHole:'补小孔洞',spike:'去毛刺',stairStepInconsistency:'曲线阶梯整理',asymmetry:'对称修正',unevenLineWidth:'线宽整理',boundaryMerge:'边界分离',detailLoss:'细节保护',colorNoise:'颜色噪点清理',structureRefine:'结构精修'};
+      return names[g.issueType]||names[g.structureType]||'区域精修';
+    }
+
+    function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+    function selectedPendingChanges(){return pendingRefine?pendingRefine.groups.filter(g=>g.selected).flatMap(g=>g.changes):[];}
+
+    function applySelectedChanges(){
+      if(!pendingRefine)return;
       const {gridW:w,gridH:h}=currentData;
-      const newMap=originalMapSnapshot.slice();
+      const selected=selectedPendingChanges();
+      if(!selected.length)return;
+      const before=currentData.map.slice(),newMap=pendingRefine.snapshot.slice();
       let applied=0;
-      for(const c of pendingChanges){
+      for(const c of selected){
         const idx=(c.y-1)*w+(c.x-1);
         if(c.y<1||c.x<1||c.y>h||c.x>w)continue;
         if(c.to==='EMPTY')newMap[idx]=null;
         else{const bead=palette.find(p=>p.code===c.to);if(bead)newMap[idx]=bead;}
         applied++;
       }
+      aiUndoStack.push({before,after:newMap.slice(),label:'AI 精修',applied});aiRedoStack=[];
       currentData={...currentData,map:newMap,counts:countColors(newMap),total:newMap.reduce((n,p)=>n+(p?1:0),0)};
       renderPattern($('patternCanvas'),currentData,22,$('minorGrid').checked);
       renderSummary(currentData);
-      cancelDiff();
+      cancelDiff();refreshAIHistoryButtons();
       setStatus('✅ AI精修已应用：修改'+applied+'格。');
+    }
+
+    function restoreAIMap(map,message){
+      currentData={...currentData,map:map.slice(),counts:countColors(map),total:map.reduce((n,p)=>n+(p?1:0),0)};
+      renderPattern($('patternCanvas'),currentData,22,$('minorGrid').checked);
+      renderSummary(currentData);cancelDiff();refreshAIHistoryButtons();setStatus(message);
+    }
+
+    function undoAIRefine(){
+      const item=aiUndoStack.pop();if(!item)return;
+      aiRedoStack.push(item);restoreAIMap(item.before,'已撤销上一次 AI 精修。');
+    }
+
+    function redoAIRefine(){
+      const item=aiRedoStack.pop();if(!item)return;
+      aiUndoStack.push(item);restoreAIMap(item.after,'已恢复上一次 AI 精修。');
+    }
+
+    function refreshAIHistoryButtons(){
+      const undo=$('undoAiBtn'),redo=$('redoAiBtn');if(!undo||!redo)return;
+      undo.style.display=aiUndoStack.length?'':'none';redo.style.display=aiRedoStack.length?'':'none';
+      undo.disabled=!aiUndoStack.length;redo.disabled=!aiRedoStack.length;
     }
 
     function cancelDiff(){
       const o=document.getElementById('diffOverlay');if(o)o.remove();
       const a=document.getElementById('diffActions');if(a)a.remove();
-      pendingChanges=null;
+      pendingRefine=null;
     }
 
     function analyzeImageCells(img,w,h,supersample=6){
@@ -737,6 +850,48 @@
       ctx.drawImage(img,0,0,w,h);return c.toDataURL('image/jpeg',.72);
     }
 
+    function buildStructureDiagnostics(map,cells,w,h){
+      const candidates=[],limit=90;
+      const codeAt=(x,y)=>{if(x<0||x>=w||y<0||y>=h)return 'OUT';const p=map[y*w+x];return p?p.code:'EMPTY';};
+      const cellAt=(x,y)=>x>=0&&x<w&&y>=0&&y<h?cells[y*w+x]:null;
+      const add=(type,structure,x,y,score,reason,extra={})=>{
+        if(x<0||x>=w||y<0||y>=h)return;
+        candidates.push({id:'d'+(candidates.length+1),issueType:type,structureType:structure,x:x+1,y:y+1,bbox:{x:x+1,y:y+1,width:1,height:1},score:Number(score.toFixed(3)),current:codeAt(x,y),reason,...extra});
+      };
+      for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){
+        const code=codeAt(x,y),c=cellAt(x,y),neighbors=[];
+        for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){if(!dx&&!dy)continue;neighbors.push(codeAt(x+dx,y+dy));}
+        const h7=neighbors.filter(v=>v==='H7').length,filled=neighbors.filter(v=>v!=='EMPTY'&&v!=='OUT').length,same=neighbors.filter(v=>v===code).length;
+        const oppositeH7=(codeAt(x-1,y)==='H7'&&codeAt(x+1,y)==='H7')||(codeAt(x,y-1)==='H7'&&codeAt(x,y+1)==='H7')||(codeAt(x-1,y-1)==='H7'&&codeAt(x+1,y+1)==='H7')||(codeAt(x+1,y-1)==='H7'&&codeAt(x-1,y+1)==='H7');
+        if(code!=='H7'&&oppositeH7&&c&&c.a&&(c.weakCandidate||c.blackRatio>.012))add('outerContourGap','line',x,y,.86,'两侧存在 H7 端点，疑似描边断格',{suggestedTo:'H7'});
+        if(code==='H7'&&same<=1&&filled>=4)add('spike','organicContour',x,y,.78,'孤立深色格，可能是外轮廓毛刺或噪点');
+        if(code!=='EMPTY'&&same===0&&filled>=5&&code!=='H1'&&code!=='H2')add('isolatedColorBlock','organicContour',x,y,.72,'颜色与周围不连续，疑似孤立色块');
+        if(code==='EMPTY'&&filled>=7)add('smallHole','hole',x,y,.8,'透明小孔被周围主体包围，疑似误删缺口');
+        if(code!=='H7'&&h7>=3&&c&&c.a&&c.blackRatio>.02)add('innerContourGap','arc',x,y,.76,'附近 H7 描边密集且本格有深色证据，疑似内部轮廓缺口',{suggestedTo:'H7'});
+      }
+      for(let y=1;y<h-1;y++){
+        const runs=[];
+        let start=-1;
+        for(let x=0;x<w;x++){
+          if(codeAt(x,y)==='H7'){if(start<0)start=x;}
+          else if(start>=0){runs.push({start,end:x-1,width:x-start});start=-1;}
+        }
+        if(start>=0)runs.push({start,end:w-1,width:w-start});
+        for(let i=1;i<runs.length;i++){
+          const gap=runs[i].start-runs[i-1].end-1;
+          if(gap>0&&gap<=2&&Math.abs(runs[i].width-runs[i-1].width)<=3){
+            for(let x=runs[i-1].end+1;x<runs[i].start;x++)add('outerContourGap','line',x,y,.74,'同一行 H7 线段之间存在短缺口',{suggestedTo:'H7'});
+          }
+        }
+      }
+      return {
+        coordinateBase:1,
+        note:'x/y 均为图纸坐标，从左上角第 1 列第 1 行开始。',
+        candidates:candidates.sort((a,b)=>b.score-a.score).slice(0,limit),
+        stats:{candidateCount:candidates.length,sentCount:Math.min(candidates.length,limit)}
+      };
+    }
+
     function buildGridString(map,w,h){
       const rows=[];
       for(let y=0;y<h;y++){const row=[];for(let x=0;x<w;x++){const p=map[y*w+x];row.push(p?p.code:'EMPTY');}rows.push(row.join(','));}
@@ -756,9 +911,9 @@
       return c.toDataURL('image/jpeg',.82);
     }
 
-    const REFINE_SYSTEM_PROMPT=`你是拼豆网格图纸结构优化器。
+    const REFINE_SYSTEM_PROMPT=`你是拼豆网格图纸结构优化器，也是一位懂像素图和拼豆限制的精修师。
 
-根据原始参考图、当前拼豆网格预览图、颜色色板和优化参数，对现有拼豆网格提出有限、可解释的优化建议。
+根据原始参考图、当前拼豆网格预览图、颜色色板、当前网格和前端结构诊断候选，对现有拼豆网格提出有限、可解释的优化建议。
 
 你不是自由绘图模型。你只能修改现有网格中的单元格颜色，不能改变画布尺寸、主体位置、姿势、整体构图和主要配色。
 
@@ -780,19 +935,22 @@
 2. 默认不新增色号
 3. 不使用抗锯齿透明色渐变
 4. 不得无差别加粗描边
-5. 优先最少修改格数
-6. 置信度低于0.75只输出warning不自动改
+5. 优先局部、有限、结构上连续的一组修改，不要只给 1-2 个零散格子
+6. 坐标必须使用图纸坐标：左上角为 x=1,y=1，x 是列，y 是行
+7. from 必须填写当前格子的原色号；to 必须来自色板或 EMPTY
+8. 置信度低于0.75可以放入changes，但会被前端作为“需确认区域”默认不选；不要把低置信格伪装成高置信
+9. 每个 change 尽量补充 issueType 和 structureType，方便前端按区域合并
 
 输出必须是JSON，不输出解释文字：
-{"analysis":{"summary":"中文简述","regions":[{"id":"r1","bbox":{"x":0,"y":0,"width":0,"height":0},"role":"mainSubject","structureType":"organicContour","confidence":0.9,"issues":["outerContourGap"]}]},"changes":[{"x":0,"y":0,"from":"H7","to":"A23","reason":"中文原因","confidence":0.9}],"warnings":[],"metrics":{"changedCellCount":0}}`;
+{"analysis":{"summary":"中文简述","regions":[{"id":"r1","bbox":{"x":1,"y":1,"width":1,"height":1},"role":"mainSubject","structureType":"organicContour","confidence":0.9,"issues":["outerContourGap"]}]},"changes":[{"x":1,"y":1,"from":"H7","to":"A23","issueType":"outerContourGap","structureType":"organicContour","reason":"中文原因","confidence":0.9}],"warnings":[],"metrics":{"changedCellCount":0}}`;
 
-    async function callRefineAPI(apiKey,originalImg,patternImg,paletteStr,gridStr,params){
+    async function callRefineAPI(apiKey,originalImg,patternImg,paletteStr,gridStr,params,diagnostics){
       const body={
         model:'glm-4.6v',
         messages:[
           {role:'system',content:REFINE_SYSTEM_PROMPT},
           {role:'user',content:[
-            {type:'text',text:'任务参数：'+JSON.stringify(params)+'\n色板：'+paletteStr+'\n当前网格（每行逗号分隔色号，EMPTY=透明）：\n'+gridStr},
+            {type:'text',text:'任务参数：'+JSON.stringify(params)+'\n色板：'+paletteStr+'\n前端结构诊断候选：'+JSON.stringify(diagnostics)+'\n当前网格（每行逗号分隔色号，第一行是 y=1，第一列是 x=1，EMPTY=透明）：\n'+gridStr},
             {type:'image_url',image_url:{url:originalImg}},
             {type:'image_url',image_url:{url:patternImg}}
           ]}
