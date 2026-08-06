@@ -788,7 +788,7 @@
 
     async function callRefineAPI(apiKey,originalImg,patternImg,paletteStr,gridStr,params){
       const body={
-        model:'glm-4v-flash',
+        model:'glm-4.6v-flash',
         messages:[
           {role:'system',content:REFINE_SYSTEM_PROMPT},
           {role:'user',content:[
@@ -798,7 +798,7 @@
           ]}
         ],
         temperature:.3,
-        max_tokens:1024,
+        max_tokens:8192,
         thinking:{type:'disabled'}
       };
       const resp=await fetch('./api/vision',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},body:JSON.stringify(body)});
