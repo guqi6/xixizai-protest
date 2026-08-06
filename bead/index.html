@@ -788,7 +788,7 @@
 
     async function callRefineAPI(apiKey,originalImg,patternImg,paletteStr,gridStr,params){
       const body={
-        model:'glm-4.6v-flash',
+        model:'glm-4.6v',
         messages:[
           {role:'system',content:REFINE_SYSTEM_PROMPT},
           {role:'user',content:[
