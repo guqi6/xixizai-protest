@@ -87,6 +87,7 @@
         <summary>清晰模式与图纸设置</summary>
         <div class="advanced">
           <label class="check"><input id="forceH7" type="checkbox" checked><span>黑灰描边统一使用 H7<span class="help">识别眼睛、嘴、头发等细线；不会把普通灰色填充区域全部变黑。</span></span></label>
+          <label class="check"><input id="preserveDetails" type="checkbox" checked><span>优先保留白色、眼睛与高光<span class="help">眼白、白衣、彩色虹膜和小面积高光不会被大色块合并。</span></span></label>
           <div class="field"><label for="simplifyLevel">色块统一程度</label><select id="simplifyLevel"><option value="light">轻微</option><option value="standard" selected>标准</option><option value="strong">强力</option></select><span class="help">越强，皮肤和头发使用的近似颜色越少。</span></div>
           <label class="check"><input id="minorGrid" type="checkbox" checked><span>显示每格浅虚线<span class="help">可关闭；每 5 格实线、外框和坐标始终保留。</span></span></label>
         </div>
@@ -252,7 +253,7 @@
           let map;
           if(mode==='crisp'){
             const cells=analyzeImageCells(currentImage,gridW,gridH,6);
-            map=buildCrispMap(cells,gridW,gridH,{limitValue,simplify,forceH7:$('forceH7').checked});
+            map=buildCrispMap(cells,gridW,gridH,{limitValue,simplify,forceH7:$('forceH7').checked,preserveDetails:$('preserveDetails').checked});
           }else{
             const raw=sampleImage(currentImage,gridW,gridH);
             map=raw.map(px=>px.a<96?null:nearestBead(px.lab));
@@ -277,25 +278,43 @@
       const data=ctx.getImageData(0,0,sw,sh).data,cells=new Array(w*h),area=supersample*supersample;
       const pct=(arr,q)=>arr[Math.min(arr.length-1,Math.max(0,Math.floor((arr.length-1)*q)))];
       for(let gy=0;gy<h;gy++)for(let gx=0;gx<w;gx++){
-        const rs=[],gs=[],bs=[],lums=[];
+        const rs=[],gs=[],bs=[],lums=[],whitePixels=[],accentR=[],accentG=[],accentB=[];
         for(let py=0;py<supersample;py++)for(let px=0;px<supersample;px++){
           const k=(((gy*supersample+py)*sw)+(gx*supersample+px))*4,a=data[k+3];if(a<72)continue;
-          const r=data[k],g=data[k+1],b=data[k+2];rs.push(r);gs.push(g);bs.push(b);lums.push(r*.299+g*.587+b*.114);
+          const r=data[k],g=data[k+1],b=data[k+2],lum=r*.299+g*.587+b*.114,max=Math.max(r,g,b),min=Math.min(r,g,b),chroma=max-min;rs.push(r);gs.push(g);bs.push(b);lums.push(lum);
+          if(lum>200&&chroma<38)whitePixels.push([r,g,b]);
+          if(chroma>48&&lum>35&&lum<242){accentR.push(r);accentG.push(g);accentB.push(b);}
         }
         const i=gy*w+gx,coverage=rs.length/area;
-        if(coverage<.34){cells[i]={a:0,coverage,outlineCandidate:false,confidence:0,blackRatio:0};continue;}
+        if(coverage<.34){cells[i]={a:0,coverage,outlineCandidate:false,weakCandidate:false,confidence:0,blackRatio:0,whiteRatio:0,accentRatio:0};continue;}
         rs.sort((a,b)=>a-b);gs.sort((a,b)=>a-b);bs.sort((a,b)=>a-b);lums.sort((a,b)=>a-b);
         const r=pct(rs,.5),g=pct(gs,.5),b=pct(bs,.5),medianLum=pct(lums,.5),low=pct(lums,.10),high=pct(lums,.90),contrast=high-low;
         const darkCut=Math.min(96,medianLum-28),darkRatio=lums.filter(v=>v<darkCut).length/lums.length,blackRatio=lums.filter(v=>v<48).length/lums.length;
         const confidence=Math.min(2,(blackRatio*2.2+darkRatio*1.35)*(contrast/52));
         const outlineCandidate=(blackRatio>=.065&&contrast>=30)||(darkRatio>=.14&&contrast>=43);
-        const weakCandidate=(blackRatio>=.025&&contrast>=20)||(darkRatio>=.075&&contrast>=30);
-        cells[i]={r,g,b,a:Math.round(coverage*255),coverage,lab:rgbToLab(r,g,b),medianLum,contrast,darkRatio,blackRatio,confidence,outlineCandidate,weakCandidate};
+        const weakCandidate=(blackRatio>=.025&&contrast>=20)||(darkRatio>=.075&&contrast>=30),whiteRatio=whitePixels.length/lums.length,accentRatio=accentR.length/lums.length;
+        const accentLab=accentR.length?rgbToLab(pct(accentR.sort((a,b)=>a-b),.5),pct(accentG.sort((a,b)=>a-b),.5),pct(accentB.sort((a,b)=>a-b),.5)):null;
+        cells[i]={r,g,b,a:Math.round(coverage*255),coverage,lab:rgbToLab(r,g,b),medianLum,contrast,darkRatio,blackRatio,confidence,outlineCandidate,weakCandidate,whiteRatio,accentRatio,accentLab};
       }
       return cells;
     }
 
-    function bridgeDirectionalGaps(mask,cells,w,h){
+    function buildColoredStrokeMask(cells,w,h,enabled){
+      const mask=new Uint8Array(cells.length);if(!enabled)return mask;const candidate=new Uint8Array(cells.length),seen=new Uint8Array(cells.length);
+      for(let i=0;i<cells.length;i++){const c=cells[i];if(c&&c.a&&c.accentLab&&c.accentRatio>=.028)candidate[i]=1;}
+      for(let start=0;start<candidate.length;start++){
+        if(!candidate[start]||seen[start])continue;const component=[],queue=[start];seen[start]=1;
+        for(let q=0;q<queue.length;q++){
+          const i=queue[q],x=i%w,y=Math.floor(i/w);component.push(i);
+          for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){if(!dx&&!dy)continue;const nx=x+dx,ny=y+dy;if(nx<0||nx>=w||ny<0||ny>=h)continue;const ni=ny*w+nx;if(candidate[ni]&&!seen[ni]&&labDistance(cells[i].accentLab,cells[ni].accentLab)<27){seen[ni]=1;queue.push(ni);}}
+        }
+        const peak=component.reduce((v,i)=>Math.max(v,cells[i].accentRatio),0);if(peak<.10)continue;const xs=component.map(i=>i%w),ys=component.map(i=>Math.floor(i/w)),bw=Math.max(...xs)-Math.min(...xs)+1,bh=Math.max(...ys)-Math.min(...ys)+1,longSide=Math.max(bw,bh),shortSide=Math.min(bw,bh),limit=Math.max(12,Math.ceil(cells.length*.009));
+        const thinStroke=longSide>=3&&shortSide<=2&&component.length<=limit,smallFeature=component.length<=8&&longSide<=5;if(thinStroke||smallFeature)for(const i of component)mask[i]=1;
+      }
+      return mask;
+    }
+
+    function bridgeDirectionalGaps(mask,cells,w,h,blocked=null){
       const endpoints=[];
       for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){
         const i=y*w+x;if(!mask[i])continue;const neighbors=[];
@@ -309,8 +328,8 @@
           const q=endpoints[b];if(used.has(q.i))continue;const dx=q.x-p.x,dy=q.y-p.y,dist=Math.hypot(dx,dy);if(dist<1.5||dist>3.25)continue;
           const ux=dx/dist,uy=dy/dist,alignA=p.tx*ux+p.ty*uy,alignB=q.tx*(-ux)+q.ty*(-uy);if(alignA<.18||alignB<.18)continue;
           const steps=Math.ceil(dist*2),between=[];let evidence=0;
-          for(let s=1;s<steps;s++){const x=Math.round(p.x+dx*s/steps),y=Math.round(p.y+dy*s/steps),i=y*w+x;if(i===p.i||i===q.i||between.includes(i))continue;between.push(i);const c=cells[i];if(c&&c.a&&(c.weakCandidate||c.contrast>15||c.blackRatio>.008))evidence++;}
-          if(between.length&&evidence/between.length>=.6&&dist<best){best=dist;chosen={q,between};}
+          let crossesBlocked=false;for(let s=1;s<steps;s++){const x=Math.round(p.x+dx*s/steps),y=Math.round(p.y+dy*s/steps),i=y*w+x;if(i===p.i||i===q.i||between.includes(i))continue;if(blocked&&blocked[i]){crossesBlocked=true;break;}between.push(i);const c=cells[i];if(c&&c.a&&(c.weakCandidate||c.contrast>15||c.blackRatio>.008))evidence++;}
+          if(!crossesBlocked&&between.length&&evidence/between.length>=.6&&dist<best){best=dist;chosen={q,between};}
         }
         if(chosen){for(const i of chosen.between)out[i]=1;used.add(p.i);used.add(chosen.q.i);}
       }
@@ -326,15 +345,15 @@
       return out;
     }
 
-    function refineOutline(cells,w,h,enabled){
+    function refineOutline(cells,w,h,enabled,blocked=null){
       const strong=new Uint8Array(cells.length);if(!enabled)return strong;
-      for(let i=0;i<cells.length;i++)if(cells[i].a&&cells[i].outlineCandidate)strong[i]=1;
+      for(let i=0;i<cells.length;i++)if(cells[i].a&&cells[i].outlineCandidate&&!(blocked&&blocked[i]))strong[i]=1;
       const mask=strong.slice(),depth=new Uint8Array(cells.length),queue=[];for(let i=0;i<strong.length;i++)if(strong[i])queue.push(i);
       for(let q=0;q<queue.length;q++){
         const i=queue[q],x=i%w,y=Math.floor(i/w);if(depth[i]>=5)continue;
         for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
           if(!dx&&!dy)continue;const nx=x+dx,ny=y+dy;if(nx<0||nx>=w||ny<0||ny>=h)continue;const ni=ny*w+nx,c=cells[ni];
-          if(!mask[ni]&&c&&c.a&&c.weakCandidate){let around=0;for(let ay=-1;ay<=1;ay++)for(let ax=-1;ax<=1;ax++){if(!ax&&!ay)continue;const px=nx+ax,py=ny+ay;if(px>=0&&px<w&&py>=0&&py<h&&mask[py*w+px])around++;}if(around<=3){mask[ni]=1;depth[ni]=depth[i]+1;queue.push(ni);}}
+          if(!mask[ni]&&!(blocked&&blocked[ni])&&c&&c.a&&c.weakCandidate){let around=0;for(let ay=-1;ay<=1;ay++)for(let ax=-1;ax<=1;ax++){if(!ax&&!ay)continue;const px=nx+ax,py=ny+ay;if(px>=0&&px<w&&py>=0&&py<h&&mask[py*w+px])around++;}if(around<=3){mask[ni]=1;depth[ni]=depth[i]+1;queue.push(ni);}}
         }
       }
       for(let y=0;y<h;y++)for(let x=0;x<w;x++){
@@ -344,11 +363,11 @@
       }
       let bridged=mask.slice();
       for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){
-        const i=y*w+x;if(bridged[i]||!cells[i].a)continue;
+        const i=y*w+x;if(bridged[i]||!cells[i].a||(blocked&&blocked[i]))continue;
         const opposite=(bridged[i-1]&&bridged[i+1])||(bridged[i-w]&&bridged[i+w])||(bridged[i-w-1]&&bridged[i+w+1])||(bridged[i-w+1]&&bridged[i+w-1]);
         if(opposite&&(cells[i].weakCandidate||cells[i].confidence>.06))bridged[i]=1;
       }
-      bridged=bridgeDirectionalGaps(bridged,cells,w,h);
+      bridged=bridgeDirectionalGaps(bridged,cells,w,h,blocked);
       return thinWeakBlocks(bridged,strong,cells,w,h);
     }
 
@@ -398,15 +417,158 @@
       return result;
     }
 
-    function buildCrispMap(cells,w,h,{limitValue='auto',simplify='standard',forceH7=true}={}){
-      const outline=refineOutline(cells,w,h,forceH7),h7=palette.find(p=>p.code==='H7'),fillIndices=[];
-      for(let i=0;i<cells.length;i++)if(cells[i].a&&!outline[i])fillIndices.push(i);
-      const automatic={light:12,standard:8,strong:6},requested=limitValue==='auto'?automatic[simplify]:(Number(limitValue)||48),hasOutline=outline.some(v=>v===1),fillK=Math.max(1,requested-(hasOutline?1:0));
+    function buildWhiteMask(cells,outline,enabled,w=cells.length,h=1){
+      const mask=new Uint8Array(cells.length);if(!enabled)return mask;
+      const candidate=new Uint8Array(cells.length),seed=new Uint8Array(cells.length),seen=new Uint8Array(cells.length);
+      for(let i=0;i<cells.length;i++){
+        const c=cells[i];if(!c||!c.a||outline[i])continue;const chroma=Math.max(c.r,c.g,c.b)-Math.min(c.r,c.g,c.b);
+        // H1 is reserved for genuinely neutral whites. Pale skin is usually
+        // bright too, but its warm chroma keeps it out of this mask.
+        if(c.medianLum>=200&&chroma<=30&&c.whiteRatio>=.20)candidate[i]=1;
+        if(c.medianLum>=215&&chroma<=24&&c.whiteRatio>=.38)seed[i]=1;
+      }
+      for(let start=0;start<candidate.length;start++){
+        if(!candidate[start]||seen[start])continue;const component=[],queue=[start];let hasSeed=false,whiteTotal=0;seen[start]=1;
+        for(let q=0;q<queue.length;q++){
+          const i=queue[q],x=i%w,y=Math.floor(i/w);component.push(i);hasSeed=hasSeed||!!seed[i];whiteTotal+=cells[i].whiteRatio;
+          for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const nx=x+dx,ny=y+dy;if(nx<0||nx>=w||ny<0||ny>=h)continue;const ni=ny*w+nx;if(candidate[ni]&&!seen[ni]){seen[ni]=1;queue.push(ni);}}
+        }
+        if(!hasSeed)continue;const componentSet=new Set(component),boundary=new Set();for(const i of component){const x=i%w,y=Math.floor(i/w);for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){if(!dx&&!dy)continue;const nx=x+dx,ny=y+dy;if(nx>=0&&nx<w&&ny>=0&&ny<h&&!componentSet.has(ny*w+nx))boundary.add(ny*w+nx);}}
+        const outlined=[...boundary].filter(i=>outline[i]).length,boundaryRatio=boundary.size?outlined/boundary.size:0,largeEnough=component.length>=Math.max(3,Math.ceil(cells.length*.0012)),solidWhite=component.length>=2&&whiteTotal/component.length>=.60,eyeLike=component.length>=2&&boundaryRatio>=.12;
+        if(largeEnough||solidWhite||eyeLike)for(const i of component)mask[i]=1;
+      }
+      return mask;
+    }
+
+    function preserveSalientAccents(map,cells,protectedMask,w,h,h1,enabled){
+      if(!enabled)return map;const result=map.slice(),candidate=new Uint8Array(map.length),seen=new Uint8Array(map.length);
+      // Use a strong pixel as the seed, then grow through lower-coverage pixels of
+      // the same colour. This keeps a small crescent or iris from collapsing to
+      // only the one row whose cells happen to be more than half covered.
+      for(let i=0;i<cells.length;i++){const c=cells[i];if(c&&c.a&&!protectedMask[i]&&c.accentLab&&c.accentRatio>=.028)candidate[i]=1;}
+      const accentPalette=palette.filter(p=>p.code!=='H7'&&p.code!=='H1'&&p.code!=='H2'&&Math.hypot(p.lab.a,p.lab.b)>10);
+      for(let start=0;start<candidate.length;start++){
+        if(!candidate[start]||seen[start])continue;const component=[],queue=[start];seen[start]=1;
+        for(let q=0;q<queue.length;q++){
+          const i=queue[q],x=i%w,y=Math.floor(i/w);component.push(i);
+          for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){if(!dx&&!dy)continue;const nx=x+dx,ny=y+dy;if(nx<0||nx>=w||ny<0||ny>=h)continue;const ni=ny*w+nx;if(candidate[ni]&&!seen[ni]&&labDistance(cells[i].accentLab,cells[ni].accentLab)<32){seen[ni]=1;queue.push(ni);}}
+        }
+        const strength=component.reduce((n,i)=>n+cells[i].accentRatio,0),peak=component.reduce((n,i)=>Math.max(n,cells[i].accentRatio),0);if((peak<.10&&strength<.24)||(component.length<2&&strength<.34))continue;
+        let l=0,a=0,b=0,total=0;for(const i of component){const weight=Math.max(.1,cells[i].accentRatio),lab=cells[i].accentLab;l+=lab.l*weight;a+=lab.a*weight;b+=lab.b*weight;total+=weight;}
+        const color=nearestBead({l:l/total,a:a/total,b:b/total},accentPalette);for(const i of component){result[i]=color;protectedMask[i]=1;}
+        if(component.length<=map.length*.025){
+          const componentSet=new Set(component),boundary=new Set();for(const i of component){const x=i%w,y=Math.floor(i/w);for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){if(!dx&&!dy)continue;const nx=x+dx,ny=y+dy;if(nx>=0&&nx<w&&ny>=0&&ny<h&&!componentSet.has(ny*w+nx))boundary.add(ny*w+nx);}}
+          const h7Count=[...boundary].filter(i=>result[i]&&result[i].code==='H7').length,lightCount=[...boundary].filter(i=>result[i]&&(result[i].code==='H1'||result[i].code==='H2')).length,enclosed=boundary.size&&h7Count>=2&&h7Count/boundary.size>=.12,eyeContext=lightCount>=1&&component.length<=Math.max(8,Math.ceil(map.length*.006));
+          if(enclosed&&eyeContext){let highlight=-1,best=.07;for(const i of component)if(cells[i].whiteRatio>best){best=cells[i].whiteRatio;highlight=i;}if(highlight>=0){result[highlight]=h1;protectedMask[highlight]=1;}}
+        }
+      }
+      return result;
+    }
+
+    function balancePairedAccents(map,cells,protectedMask,w,h,enabled){
+      if(!enabled)return map;const result=map.slice(),seen=new Uint8Array(map.length),components=[],excluded=new Set(['H1','H2','H7']);
+      const eligible=p=>p&&!excluded.has(p.code)&&Math.hypot(p.lab.a,p.lab.b)>14;
+      for(let start=0;start<result.length;start++){
+        if(seen[start]||!eligible(result[start]))continue;const code=result[start].code,items=[],queue=[start];seen[start]=1;
+        for(let q=0;q<queue.length;q++){
+          const i=queue[q],x=i%w,y=Math.floor(i/w);items.push(i);
+          for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){if(!dx&&!dy)continue;const nx=x+dx,ny=y+dy;if(nx<0||nx>=w||ny<0||ny>=h)continue;const ni=ny*w+nx;if(!seen[ni]&&result[ni]&&result[ni].code===code){seen[ni]=1;queue.push(ni);}}
+        }
+        const xs=items.map(i=>i%w),ys=items.map(i=>Math.floor(i/w)),minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys);
+        if(items.length<=Math.max(8,Math.floor(map.length*.012))&&maxX-minX<=5&&maxY-minY<=5)components.push({items,code,color:result[start],minX,maxX,minY,maxY,cx:xs.reduce((a,b)=>a+b,0)/items.length,cy:ys.reduce((a,b)=>a+b,0)/items.length});
+      }
+      const used=new Set();
+      for(let a=0;a<components.length;a++){
+        if(used.has(a))continue;const left=components[a];let best=-1,bestScore=Infinity;
+        for(let b=a+1;b<components.length;b++){
+          if(used.has(b))continue;const right=components[b],dx=Math.abs(right.cx-left.cx),dy=Math.abs(right.cy-left.cy),ratio=Math.max(left.items.length,right.items.length)/Math.max(1,Math.min(left.items.length,right.items.length));
+          if(dx<3||dx>w*.48||dy>1.35||ratio>3||labDistance(left.color.lab,right.color.lab)>13)continue;
+          const score=dy*3+ratio+dx*.015;if(score<bestScore){bestScore=score;best=b;}
+        }
+        if(best<0)continue;const p=components[a],q=components[best],l=p.cx<q.cx?p:q,r=p.cx<q.cx?q:p,midX=(l.cx+r.cx)/2,shiftY=r.cy-l.cy,pairColor=l.items.length>=r.items.length?l.color:r.color;
+        const addMirror=(source,target,dy)=>{
+          for(const i of source.items){const x=i%w,y=Math.floor(i/w),tx=Math.round(midX+(midX-x)),ty=Math.round(y+dy);if(tx<0||tx>=w||ty<0||ty>=h)continue;const ti=ty*w+tx,c=cells[ti];if(!c||!c.a||result[ti]&&result[ti].code===pairColor.code)continue;
+            const colourEvidence=c.accentLab&&labDistance(c.accentLab,pairColor.lab)<22,nearTarget=tx>=target.minX-1&&tx<=target.maxX+1&&ty>=target.minY-1&&ty<=target.maxY+1;
+            if(colourEvidence&&c.accentRatio>=.025&&nearTarget){result[ti]=pairColor;protectedMask[ti]=1;}
+          }
+        };
+        addMirror(l,r,shiftY);addMirror(r,l,-shiftY);for(const i of [...l.items,...r.items])protectedMask[i]=1;used.add(a);used.add(best);
+      }
+      return result;
+    }
+
+    function refineRoundedDarkContours(map,cells,protectedMask,w,h,h7,enabled){
+      if(!enabled)return map;const result=map.slice(),seen=new Uint8Array(map.length),isDark=p=>p&&(p.r*.299+p.g*.587+p.b*.114)<72,darkPalette=palette.filter(isDark);
+      for(let start=0;start<result.length;start++){
+        if(seen[start]||!isDark(result[start]))continue;const component=[],queue=[start];seen[start]=1;
+        for(let q=0;q<queue.length;q++){
+          const i=queue[q],x=i%w,y=Math.floor(i/w);component.push(i);
+          for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){if(!dx&&!dy)continue;const nx=x+dx,ny=y+dy;if(nx<0||nx>=w||ny<0||ny>=h)continue;const ni=ny*w+nx;if(!seen[ni]&&isDark(result[ni])){seen[ni]=1;queue.push(ni);}}
+        }
+        if(component.length<Math.max(36,map.length*.025)||component.length>map.length*.55)continue;
+        const xs=component.map(i=>i%w),ys=component.map(i=>Math.floor(i/w)),minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys),bw=maxX-minX+1,bh=maxY-minY+1;if(bw<8||bh<8)continue;
+        const rows=[];for(let y=minY;y<=maxY;y++){const row=component.filter(i=>Math.floor(i/w)===y).map(i=>i%w);if(row.length)rows.push({y,min:Math.min(...row),max:Math.max(...row),count:row.length,width:Math.max(...row)-Math.min(...row)+1});}
+        const middle=rows.filter(r=>r.y>=minY+bh*.28&&r.y<=minY+bh*.72);if(!middle.length)continue;const peak=middle.reduce((a,b)=>b.width>a.width?b:a),lower=rows.filter(r=>r.y>=peak.y),centres=lower.map(r=>(r.min+r.max)/2),centre=centres.reduce((a,b)=>a+b,0)/centres.length,centreDrift=Math.max(...centres.map(v=>Math.abs(v-centre))),bottom=lower[lower.length-1];
+        const filled=lower.filter(r=>r.count/r.width>=.62).length/lower.length,decreases=lower.slice(1).filter((r,n)=>r.width<=lower[n].width+2).length/Math.max(1,lower.length-1);
+        if(peak.width<bw*.76||lower.length<Math.max(4,bh*.25)||centreDrift>2.1||filled<.62||decreases<.68||bottom.width>peak.width*.86)continue;
+        for(const row of lower){
+          const evidence=[];for(let x=Math.max(0,minX-2);x<=Math.min(w-1,maxX+2);x++){const c=cells[row.y*w+x];if(c&&c.a&&(c.blackRatio>=.13||c.medianLum<53))evidence.push(x);}if(evidence.length<Math.max(3,peak.width*.16))continue;
+          const sourceLeft=Math.min(...evidence),sourceRight=Math.max(...evidence);if(Math.abs((sourceLeft+sourceRight)/2-centre)>2.4)continue;
+          for(let x=Math.max(minX-1,0);x<=Math.min(maxX+1,w-1);x++){
+            const i=row.y*w+x,c=cells[i];if(!c||!c.a)continue;
+            if(x<sourceLeft||x>sourceRight){if(isDark(result[i])&&c.blackRatio<.075&&c.medianLum>72&&c.accentRatio<.12){result[i]=nearestBead(c.lab);protectedMask[i]=1;}continue;}
+            if((x===sourceLeft||x===sourceRight)&&c.blackRatio>=.13&&c.accentRatio<.12){result[i]=h7;protectedMask[i]=1;continue;}
+            if(!isDark(result[i])&&!protectedMask[i]&&c.blackRatio>=.48){result[i]=nearestBead(c.lab,darkPalette);protectedMask[i]=1;}
+          }
+        }
+      }
+      return result;
+    }
+
+    function snapIncidentalEdgeGrays(map,cells,protectedMask,w,h,h7,enabled){
+      if(!enabled)return map;const result=map.slice();
+      for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){
+        const i=y*w+x,p=result[i];if(!p||protectedMask[i]||p.code==='H7'||p.code==='H1'||p.code==='H2')continue;const labChroma=Math.hypot(p.lab.a,p.lab.b),rgbChroma=Math.max(p.r,p.g,p.b)-Math.min(p.r,p.g,p.b);if(labChroma>17||rgbChroma>34||p.lab.l>63)continue;
+        const neighbours=[];for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){if(!dx&&!dy)continue;const q=result[(y+dy)*w+x+dx];if(q)neighbours.push(q);}const same=neighbours.filter(q=>q.code===p.code).length,h7Count=neighbours.filter(q=>q.code==='H7').length,freq=new Map();
+        for(const q of neighbours){const chroma=Math.max(q.r,q.g,q.b)-Math.min(q.r,q.g,q.b);if(q.code!=='H7'&&q.lab.l>68&&chroma>=27)freq.set(q.code,(freq.get(q.code)||0)+1);}
+        const dominant=[...freq.entries()].sort((a,b)=>b[1]-a[1])[0];if(!dominant||h7Count<1||same>3)continue;const fill=palette.find(q=>q.code===dominant[0]),c=cells[i];if(!fill||!c)continue;
+        result[i]=(c.blackRatio>=.075||c.medianLum<68)?h7:fill;protectedMask[i]=1;
+      }
+      return result;
+    }
+
+    function repairOuterSilhouette(map,cells,protectedMask,w,h,h7,enabled){
+      if(!enabled)return map;const result=map.slice(),seen=new Uint8Array(map.length),components=[];
+      for(let start=0;start<cells.length;start++){
+        if(seen[start]||!cells[start]||!cells[start].a)continue;const component=[],queue=[start];seen[start]=1;
+        for(let q=0;q<queue.length;q++){const i=queue[q],x=i%w,y=Math.floor(i/w);component.push(i);for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){if(!dx&&!dy)continue;const nx=x+dx,ny=y+dy;if(nx<0||nx>=w||ny<0||ny>=h)continue;const ni=ny*w+nx;if(!seen[ni]&&cells[ni]&&cells[ni].a){seen[ni]=1;queue.push(ni);}}}
+        components.push(component);
+      }
+      if(!components.length)return result;const subject=components.sort((a,b)=>b.length-a.length)[0];if(subject.length<Math.max(20,map.length*.015)||subject.length>map.length*.94)return result;const subjectSet=new Set(subject),boundary=new Uint8Array(map.length);
+      for(const i of subject){const x=i%w,y=Math.floor(i/w);for(let dy=-1;dy<=1&&!boundary[i];dy++)for(let dx=-1;dx<=1;dx++){if(!dx&&!dy)continue;const nx=x+dx,ny=y+dy;if(nx<0||nx>=w||ny<0||ny>=h||!subjectSet.has(ny*w+nx)){boundary[i]=1;break;}}}
+      const evidence=i=>{const c=cells[i];return c&&c.a&&(c.blackRatio>=.018||c.weakCandidate||(c.medianLum<118&&c.contrast>18));},nearH7=(i,radius=1)=>{const x=i%w,y=Math.floor(i/w);for(let dy=-radius;dy<=radius;dy++)for(let dx=-radius;dx<=radius;dx++){if(!dx&&!dy)continue;const nx=x+dx,ny=y+dy;if(nx>=0&&nx<w&&ny>=0&&ny<h){const ni=ny*w+nx;if(boundary[ni]&&result[ni]&&result[ni].code==='H7')return true;}}return false;};
+      const detailBlocked=i=>protectedMask[i]&&result[i]&&result[i].code!=='H1'&&result[i].code!=='H2';
+      for(const threshold of [.075,.045,.018])for(let pass=0;pass<2;pass++)for(const i of subject){if(!boundary[i]||detailBlocked(i)||!result[i]||result[i].code==='H7'||!nearH7(i,1))continue;const c=cells[i];if(evidence(i)&&(c.blackRatio>=threshold||(threshold<=.018&&c.weakCandidate))){result[i]=h7;protectedMask[i]=1;}}
+      for(let pass=0;pass<2;pass++)for(const i of subject){if(!boundary[i]||detailBlocked(i)||!result[i]||result[i].code==='H7'||!evidence(i))continue;const x=i%w,y=Math.floor(i/w),vectors=[];for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){if(!dx&&!dy)continue;const nx=x+dx,ny=y+dy;if(nx<0||nx>=w||ny<0||ny>=h)continue;const ni=ny*w+nx;if(boundary[ni]&&result[ni]&&result[ni].code==='H7')vectors.push({dx,dy,len:Math.hypot(dx,dy)});}
+        let opposed=false;for(let a=0;a<vectors.length&&!opposed;a++)for(let b=a+1;b<vectors.length;b++){const p=vectors[a],q=vectors[b],cos=(p.dx*q.dx+p.dy*q.dy)/(p.len*q.len);if(cos<-.18){opposed=true;break;}}if(opposed){result[i]=h7;protectedMask[i]=1;}
+      }
+      return result;
+    }
+
+    function buildCrispMap(cells,w,h,{limitValue='auto',simplify='standard',forceH7=true,preserveDetails=true}={}){
+      const coloredStrokeMask=buildColoredStrokeMask(cells,w,h,preserveDetails),outline=refineOutline(cells,w,h,forceH7,coloredStrokeMask),h7=palette.find(p=>p.code==='H7'),h1=palette.find(p=>p.code==='H1'),whiteMask=buildWhiteMask(cells,outline,preserveDetails,w,h),protectedMask=outline.slice(),fillIndices=[],accentPalette=palette.filter(p=>p.code!=='H7'&&p.code!=='H1'&&p.code!=='H2'&&Math.hypot(p.lab.a,p.lab.b)>10);
+      for(let i=0;i<cells.length;i++){if(whiteMask[i]||coloredStrokeMask[i])protectedMask[i]=1;if(cells[i].a&&!outline[i]&&!whiteMask[i]&&!coloredStrokeMask[i])fillIndices.push(i);}
+      const automatic={light:12,standard:8,strong:6},requested=limitValue==='auto'?automatic[simplify]:(Number(limitValue)||48),hasOutline=outline.some(v=>v===1),hasWhite=whiteMask.some(v=>v===1),hasAccent=preserveDetails&&cells.some(c=>c&&c.accentRatio>=.16),reserved=(hasOutline?1:0)+(hasWhite?1:0)+(hasAccent?1:0),fillK=Math.max(1,requested-reserved);
       const clustered=clusterCellColors(cells,fillIndices,fillK),map=new Array(cells.length).fill(null);
-      for(let i=0;i<cells.length;i++){if(!cells[i].a)continue;if(outline[i])map[i]=h7;else{const n=clustered.assignments[i];map[i]=clustered.colors[n]||nearestBead(cells[i].lab);}}
+      for(let i=0;i<cells.length;i++){if(!cells[i].a)continue;if(outline[i])map[i]=h7;else if(whiteMask[i])map[i]=h1;else if(coloredStrokeMask[i])map[i]=nearestBead(cells[i].accentLab||cells[i].lab,accentPalette);else{const n=clustered.assignments[i];map[i]=clustered.colors[n]||nearestBead(cells[i].lab);}}
       const passes=simplify==='strong'?2:simplify==='standard'?1:0;
-      let result=smoothRegionColors(map,outline,w,h,passes,simplify);
+      let result=smoothRegionColors(map,protectedMask,w,h,passes,simplify);
+      result=preserveSalientAccents(result,cells,protectedMask,w,h,h1,preserveDetails);
+      result=balancePairedAccents(result,cells,protectedMask,w,h,preserveDetails);
+      result=snapIncidentalEdgeGrays(result,cells,protectedMask,w,h,h7,preserveDetails);
       if(forceH7)result=completeLightContours(result,cells,outline,w,h,h7);
+      if(forceH7)result=refineRoundedDarkContours(result,cells,protectedMask,w,h,h7,preserveDetails);
+      if(forceH7)result=repairOuterSilhouette(result,cells,protectedMask,w,h,h7,preserveDetails);
       return result;
     }
 
@@ -468,7 +630,7 @@
       c.toBlob(blob=>{if(!blob){setStatus('下载生成失败，请重试。',true);return;}const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`拼豆图纸_${currentData.gridW}x${currentData.gridH}.png`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);setStatus('高清 PNG 图纸已生成。');},'image/png');
     }
 
-    window.__BEAD_TEST__={paletteCount:palette.length,getData:()=>currentData,loadSample,buildExportCanvas,generate,performCutout,restoreOriginal,buildCrispMap,clusterCellColors,refineOutline,bridgeDirectionalGaps,completeLightContours};
+    window.__BEAD_TEST__={paletteCount:palette.length,getData:()=>currentData,loadSample,buildExportCanvas,generate,performCutout,restoreOriginal,buildCrispMap,clusterCellColors,buildColoredStrokeMask,refineOutline,bridgeDirectionalGaps,completeLightContours,buildWhiteMask,preserveSalientAccents,balancePairedAccents,refineRoundedDarkContours,snapIncidentalEdgeGrays,repairOuterSilhouette};
     if(new URLSearchParams(location.search).get('sample')==='1') setTimeout(loadSample,80);
   })();
   </script>
