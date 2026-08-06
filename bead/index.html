@@ -296,34 +296,74 @@
       },30));
     }
 
-    let pendingRefine=null,aiUndoStack=[],aiRedoStack=[];
+    let pendingRefine=null,aiUndoStack=[],aiRedoStack=[],aiRunning=false,aiAbortController=null,aiProgressTimer=null,aiProgressStart=0,aiProgressStage='';
 
     async function aiOptimize(){
+      if(aiRunning){
+        if(aiAbortController)aiAbortController.abort();
+        setAIProgress('正在取消 AI 精修…');
+        return;
+      }
       if(!currentData||!currentCells){setStatus('请先生成拼豆图纸。',true);return;}
       const key=$('aiApiKey').value.trim();if(!key){setStatus('请先填写 API Key。',true);return;}
-      const btn=$('aiOptimizeBtn');btn.disabled=true;btn.textContent='🤖 AI 分析中…';
-      $('aiStatus').textContent='🤖 正在分析图纸结构…';
-      setStatus('🤖 AI 正在分析图片结构并生成精修方案…');
+      const btn=$('aiOptimizeBtn');startAIProgress(btn,'正在检测可确定修复区域…');
+      let localGroups=[];
       try{
         const {gridW:w,gridH:h,map}=currentData;
+        await new Promise(resolve=>setTimeout(resolve,20));
+        localGroups=buildLocalPatchGroups(map,currentCells,w,h);
+        setAIProgress(`已生成 ${localGroups.length} 个本地修复包，正在准备 AI 复核…`);
         const originalImg=compressImageForAI(currentImage,448);
         const patternImg=buildPatternPreviewDataURL(map,w,h);
         const paletteStr=buildPaletteString();
         const gridStr=buildGridString(map,w,h);
-        const diagnostics=buildStructureDiagnostics(map,currentCells,w,h);
-        const params={canvas:{width:w,height:h,backgroundColor:'EMPTY',coordinateBase:1},constraints:{allowNewColors:false,maxChangedCells:Math.floor(w*h*.08),maxSubjectAreaChangeRatio:.04,lowConfidenceThreshold:.75,editRadius:2},mode:{scope:'wholeCanvas',strength:'balanced',operations:['repairContours','smoothCurves','cleanNoise','preserveDetails','regularizeLines']}};
-        const result=await callRefineAPI(key,originalImg,patternImg,paletteStr,gridStr,params,diagnostics);
+        const diagnostics=buildStructureDiagnostics(map,currentCells,w,h,localGroups);
+        const params={canvas:{width:w,height:h,backgroundColor:'EMPTY',coordinateBase:1},constraints:{allowNewColors:false,maxChangedCells:Math.floor(w*h*.10),maxSubjectAreaChangeRatio:.05,lowConfidenceThreshold:.75,editRadius:3},mode:{scope:'wholeCanvas',strength:'balanced',operations:['reviewPatchPacks','repairContours','rescueLightRegions','smoothCurves','cleanNoise','preserveDetails','regularizeLines']}};
+        setAIProgress('AI 正在复核修复包和补充细节…');
+        const result=await callRefineAPI(key,originalImg,patternImg,paletteStr,gridStr,params,diagnostics,aiAbortController.signal);
         $('aiStatus').textContent='✅ '+(result.analysis?.summary||'AI分析完成')+'（'+(result.changes?.length||0)+'处修改）';
         if(result.warnings&&result.warnings.length)$('aiStatus').textContent+=' ⚠️'+result.warnings.length+'个警告';
+        const reviewedLocalGroups=applyPatchReviews(localGroups,result.patchReviews||result.patch_reviews||[]);
         const normalized=normalizeAIChanges(result.changes||[],map,w,h);
-        const groups=groupAIChanges(normalized.valid);
-        pendingRefine={snapshot:map.slice(),changes:normalized.valid,groups,warnings:[...(result.warnings||[]),...normalized.warnings]};
+        const groups=[...reviewedLocalGroups,...groupAIChanges(normalized.valid).map((g,i)=>({...g,id:'ai'+(i+1),source:'ai'}))];
+        const allChanges=groups.flatMap(g=>g.changes);
+        pendingRefine={snapshot:map.slice(),changes:allChanges,groups,warnings:[...(result.warnings||[]),...normalized.warnings]};
         if(!pendingRefine.changes.length){setStatus(normalized.warnings.length?'AI 返回了建议，但没有通过坐标/色号校验。':'AI 未发现需要修改的地方。');btn.disabled=false;btn.textContent='🤖 AI 精修';return;}
         showPatchReview();
         const selected=groups.filter(g=>g.selected).reduce((n,g)=>n+g.changes.length,0),low=groups.filter(g=>!g.selected).reduce((n,g)=>n+g.changes.length,0);
         setStatus(`AI 建议 ${pendingRefine.changes.length} 格，已按区域合并为 ${groups.length} 个补丁包；默认选择 ${selected} 格${low?`，另有 ${low} 格需确认`:''}。`);
-      }catch(e){console.error(e);$('aiStatus').textContent='⚠️ '+e.message;setStatus('AI 精修失败：'+e.message,true);}
+      }catch(e){
+        if(e.name==='AbortError'){setStatus('已取消 AI 精修。');$('aiStatus').textContent='已取消。';}
+        else{
+          console.error(e);
+          if(localGroups.length&&currentData){
+            pendingRefine={snapshot:currentData.map.slice(),changes:localGroups.flatMap(g=>g.changes),groups:localGroups,warnings:['AI 复核失败，已展示前端本地修复包：'+e.message]};
+            showPatchReview();
+            $('aiStatus').textContent='⚠️ AI 复核失败，已先展示本地修复包。';
+            setStatus(`AI 复核失败，但本地已生成 ${localGroups.length} 个可预览修复区域。`);
+          }else{$('aiStatus').textContent='⚠️ '+e.message;setStatus('AI 精修失败：'+e.message,true);}
+        }
+      }finally{
+        stopAIProgress(btn);
+      }
+    }
+
+    function startAIProgress(btn,stage){
+      aiRunning=true;aiAbortController=new AbortController();aiProgressStart=Date.now();aiProgressStage=stage;
+      btn.disabled=false;btn.textContent='取消 AI 精修';setAIProgress(stage);
+      aiProgressTimer=setInterval(()=>setAIProgress(aiProgressStage),1000);
+    }
+
+    function stopAIProgress(btn){
+      aiRunning=false;aiAbortController=null;if(aiProgressTimer)clearInterval(aiProgressTimer);aiProgressTimer=null;
       btn.disabled=false;btn.textContent='🤖 AI 精修';
+    }
+
+    function setAIProgress(stage){
+      aiProgressStage=stage;
+      const elapsed=aiProgressStart?Math.max(0,Math.round((Date.now()-aiProgressStart)/1000)):0;
+      $('aiStatus').textContent=`${stage}${elapsed?`（已用 ${elapsed} 秒，可点按钮取消）`:''}`;
+      setStatus(stage);
     }
 
     function normalizeAIChanges(changes,map,w,h){
@@ -357,6 +397,102 @@
         if(!old||c.confidence>old.confidence)dedup.set(key,c);
       }
       return {valid:[...dedup.values()],warnings};
+    }
+
+    function buildLocalPatchGroups(map,cells,w,h){
+      const changes=[...detectLightRegionRescue(map,cells,w,h),...detectContourClosure(map,cells,w,h)];
+      const dedup=new Map();
+      for(const c of changes){
+        const key=`${c.x},${c.y}`;
+        const old=dedup.get(key);
+        if(!old||c.confidence>old.confidence)dedup.set(key,c);
+      }
+      return groupAIChanges([...dedup.values()]).map((g,i)=>({...g,id:'local'+(i+1),source:'local'}));
+    }
+
+    function makePatchChange(map,w,x,y,to,issueType,structureType,reason,confidence){
+      const p=map[y*w+x],from=p?p.code:'EMPTY';
+      if(from===to)return null;
+      return {x:x+1,y:y+1,from,to,issueType,structureType,reason,confidence,base:1,source:'local'};
+    }
+
+    function detectLightRegionRescue(map,cells,w,h){
+      const h1=palette.find(p=>p.code==='H1'),h2=palette.find(p=>p.code==='H2'),lightCodes=new Set(['H1','H2','H9','H10','H12','H17','H18','H19','H21']);
+      const out=[],candidate=new Uint8Array(map.length),seen=new Uint8Array(map.length),codeAt=(x,y)=>{if(x<0||x>=w||y<0||y>=h)return 'OUT';const p=map[y*w+x];return p?p.code:'EMPTY';};
+      const lightEvidence=i=>{
+        const c=cells[i],p=map[i];if(!c||!c.a||!p||p.code!=='H7')return false;
+        const chroma=Math.max(c.r,c.g,c.b)-Math.min(c.r,c.g,c.b);
+        const sourceLight=(c.whiteRatio>=.10)||(c.medianLum>=178&&chroma<=48&&c.blackRatio<=.28)||(c.medianLum>=205&&c.blackRatio<=.36);
+        if(!sourceLight)return false;
+        const x=i%w,y=Math.floor(i/w);let nearLight=0,nearSkinOrPaper=0,nearEmpty=0,nearDark=0;
+        for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){
+          if(!dx&&!dy)continue;const code=codeAt(x+dx,y+dy);
+          if(lightCodes.has(code))nearLight++;
+          else if(code==='EMPTY'||code==='OUT')nearEmpty++;
+          else if(code==='H7'||code==='H16')nearDark++;
+          else nearSkinOrPaper++;
+        }
+        return nearLight>=1||nearSkinOrPaper>=7||nearEmpty>=6&&nearDark<=8;
+      };
+      for(let i=0;i<map.length;i++)if(lightEvidence(i))candidate[i]=1;
+      for(let start=0;start<candidate.length;start++){
+        if(!candidate[start]||seen[start])continue;const component=[],queue=[start];seen[start]=1;
+        for(let q=0;q<queue.length;q++){
+          const i=queue[q],x=i%w,y=Math.floor(i/w);component.push(i);
+          for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const nx=x+dx,ny=y+dy;if(nx<0||nx>=w||ny<0||ny>=h)continue;const ni=ny*w+nx;if(candidate[ni]&&!seen[ni]){seen[ni]=1;queue.push(ni);}}
+        }
+        const avgLum=component.reduce((n,i)=>n+cells[i].medianLum,0)/component.length,avgWhite=component.reduce((n,i)=>n+cells[i].whiteRatio,0)/component.length;
+        const xs=component.map(i=>i%w),ys=component.map(i=>Math.floor(i/w)),bw=Math.max(...xs)-Math.min(...xs)+1,bh=Math.max(...ys)-Math.min(...ys)+1;
+        if(component.length<2&&avgWhite<.22)continue;
+        if(component.length>Math.max(24,map.length*.06)&&bw>6&&bh>6)continue;
+        const to=(avgLum>210&&h1?h1:h2||h1)?.code||'H1';
+        const confidence=Math.min(.92,.72+avgWhite*.42+(avgLum-178)/220);
+        for(const i of component){const c=makePatchChange(map,w,i%w,Math.floor(i/w),to,'lightRegionRescue','organicContour','原图该格以白色/浅色为主，当前被 H7 吞成黑块，优先恢复衣服/纸张/眼白等浅色结构',confidence);if(c)out.push(c);}
+      }
+      return out;
+    }
+
+    function detectContourClosure(map,cells,w,h){
+      const out=[],codeAt=(x,y)=>{if(x<0||x>=w||y<0||y>=h)return 'OUT';const p=map[y*w+x];return p?p.code:'EMPTY';},isH7=(x,y)=>codeAt(x,y)==='H7';
+      const darkEvidence=(x,y)=>{const c=cells[y*w+x],p=map[y*w+x];return c&&c.a&&p&&p.code!=='H1'&&p.code!=='H2'&&(c.blackRatio>=.012||c.weakCandidate||c.medianLum<150);};
+      const tryAdd=(x,y,confidence,reason)=>{
+        if(x<=0||x>=w-1||y<=0||y>=h-1||isH7(x,y)||!darkEvidence(x,y))return;
+        const c=makePatchChange(map,w,x,y,'H7','contourClosure','line',reason,confidence);if(c)out.push(c);
+      };
+      const dirs=[[1,0],[0,1],[1,1],[1,-1]];
+      for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++)for(const [dx,dy] of dirs){
+        if(!isH7(x,y))continue;
+        for(let gap=1;gap<=3;gap++){
+          const ex=x+dx*(gap+1),ey=y+dy*(gap+1);
+          if(ex<1||ex>=w-1||ey<1||ey>=h-1||!isH7(ex,ey))continue;
+          let clear=true,between=[];
+          for(let s=1;s<=gap;s++){const bx=x+dx*s,by=y+dy*s;if(isH7(bx,by)){clear=false;break;}between.push([bx,by]);}
+          if(clear){
+            const evidence=between.filter(([bx,by])=>darkEvidence(bx,by)).length/between.length;
+            if(evidence>=.5)for(const [bx,by] of between)tryAdd(bx,by,.82-gap*.035,'H7 描边短距离断裂，按相邻线段方向补齐闭环/边界');
+          }
+        }
+      }
+      for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){
+        if(isH7(x,y))continue;
+        const opposed=(isH7(x-1,y)&&isH7(x+1,y))||(isH7(x,y-1)&&isH7(x,y+1))||(isH7(x-1,y-1)&&isH7(x+1,y+1))||(isH7(x+1,y-1)&&isH7(x-1,y+1));
+        if(opposed)tryAdd(x,y,.86,'两侧 H7 端点相对，补一格让描边连续');
+      }
+      return out;
+    }
+
+    function applyPatchReviews(groups,reviews){
+      const byId=new Map((reviews||[]).map(r=>[String(r.id||r.patchId||r.patch_id||''),r]));
+      return groups.map(g=>{
+        const r=byId.get(g.id);if(!r)return g;
+        const action=String(r.action||r.decision||'').toLowerCase(),confidence=Number(r.confidence);
+        const next={...g};
+        if(Number.isFinite(confidence))next.confidence=clamp(confidence,0,1);
+        if(action==='reject'||action==='skip'||action==='deny')next.selected=false;
+        if(action==='accept'||action==='approve')next.selected=next.confidence>=.72;
+        if(r.reason)next.reason=String(r.reason);
+        return next;
+      });
     }
 
     function groupAIChanges(changes){
@@ -428,12 +564,21 @@
     }
 
     function patchTitle(g){
-      const names={outerContourGap:'外轮廓补断线',innerContourGap:'内部边界修复',isolatedPixel:'去孤立格',isolatedColorBlock:'合并孤立色块',smallHole:'补小孔洞',spike:'去毛刺',stairStepInconsistency:'曲线阶梯整理',asymmetry:'对称修正',unevenLineWidth:'线宽整理',boundaryMerge:'边界分离',detailLoss:'细节保护',colorNoise:'颜色噪点清理',structureRefine:'结构精修'};
-      return names[g.issueType]||names[g.structureType]||'区域精修';
+      const names={lightRegionRescue:'白色/浅色结构救援',contourClosure:'黑描边闭环补齐',outerContourGap:'外轮廓补断线',innerContourGap:'内部边界修复',isolatedPixel:'去孤立格',isolatedColorBlock:'合并孤立色块',smallHole:'补小孔洞',spike:'去毛刺',stairStepInconsistency:'曲线阶梯整理',asymmetry:'对称修正',unevenLineWidth:'线宽整理',boundaryMerge:'边界分离',detailLoss:'细节保护',colorNoise:'颜色噪点清理',structureRefine:'结构精修'};
+      const prefix=g.source==='local'?'本地修复':'AI 建议';
+      return `${prefix}：${names[g.issueType]||names[g.structureType]||'区域精修'}`;
     }
 
     function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
-    function selectedPendingChanges(){return pendingRefine?pendingRefine.groups.filter(g=>g.selected).flatMap(g=>g.changes):[];}
+    function selectedPendingChanges(){
+      if(!pendingRefine)return [];
+      const byKey=new Map();
+      for(const g of pendingRefine.groups)if(g.selected)for(const c of g.changes){
+        const key=`${c.x},${c.y}`,old=byKey.get(key);
+        if(!old||c.confidence>old.confidence)byKey.set(key,c);
+      }
+      return [...byKey.values()];
+    }
 
     function applySelectedChanges(){
       if(!pendingRefine)return;
@@ -850,7 +995,7 @@
       ctx.drawImage(img,0,0,w,h);return c.toDataURL('image/jpeg',.72);
     }
 
-    function buildStructureDiagnostics(map,cells,w,h){
+    function buildStructureDiagnostics(map,cells,w,h,localGroups=[]){
       const candidates=[],limit=90;
       const codeAt=(x,y)=>{if(x<0||x>=w||y<0||y>=h)return 'OUT';const p=map[y*w+x];return p?p.code:'EMPTY';};
       const cellAt=(x,y)=>x>=0&&x<w&&y>=0&&y<h?cells[y*w+x]:null;
@@ -888,6 +1033,7 @@
         coordinateBase:1,
         note:'x/y 均为图纸坐标，从左上角第 1 列第 1 行开始。',
         candidates:candidates.sort((a,b)=>b.score-a.score).slice(0,limit),
+        patchPacks:localGroups.map(g=>({id:g.id,title:patchTitle(g),bbox:g.bbox,issueType:g.issueType,structureType:g.structureType,changedCellCount:g.changes.length,confidence:Number(g.confidence.toFixed(3)),reason:g.reason,sampleChanges:g.changes.slice(0,10).map(c=>({x:c.x,y:c.y,from:c.from,to:c.to}))})),
         stats:{candidateCount:candidates.length,sentCount:Math.min(candidates.length,limit)}
       };
     }
@@ -913,11 +1059,11 @@
 
     const REFINE_SYSTEM_PROMPT=`你是拼豆网格图纸结构优化器，也是一位懂像素图和拼豆限制的精修师。
 
-根据原始参考图、当前拼豆网格预览图、颜色色板、当前网格和前端结构诊断候选，对现有拼豆网格提出有限、可解释的优化建议。
+根据原始参考图、当前拼豆网格预览图、颜色色板、当前网格、前端结构诊断候选和前端生成的 patchPacks，对现有拼豆网格做结构精修复核。
 
 你不是自由绘图模型。你只能修改现有网格中的单元格颜色，不能改变画布尺寸、主体位置、姿势、整体构图和主要配色。
 
-核心目标：在保持原图主体辨识度的前提下，使外轮廓更连续、内部结构更清晰、圆形椭圆弧线等曲线更自然、保留五官文字高光尖角等关键细节。
+核心目标：在保持原图主体辨识度的前提下，使外轮廓更连续、内部结构更清晰、圆形椭圆弧线等曲线更自然、保留五官文字高光尖角等关键细节。优先修复两类大问题：1. 原图是白衣、白纸、眼白、高光等浅色结构，但当前网格被 H7 黑色吞掉；2. H7 描边/闭环存在短距离断裂、缺口和不规则阶梯。
 
 结构类型：circle, ellipse, arc, ring, roundedRectangle, line, sharpCorner, hole, organicContour, smallFeature
 问题类型：outerContourGap, innerContourGap, isolatedPixel, isolatedColorBlock, smallHole, spike, stairStepInconsistency, asymmetry, unevenLineWidth, boundaryMerge, detailLoss, colorNoise
@@ -930,6 +1076,14 @@
 5. organicContour：修断裂去毛刺，保持原始形状辨识度
 6. smallFeature（眼睛眉毛文字高光等）：只修复明确损坏，置信不足只输出warning
 
+前端 patchPacks 复核规则：
+1. patchPacks 是前端根据原图亮度、白色比例、H7 连通性生成的候选修复包，尚未应用
+2. 你的首要任务是判断每个 patchPack 是否应该接受；比起重新生成大量坐标，优先输出 patchReviews
+3. 对白衣/白纸/眼白被 H7 吞掉的 patchPack，如果原图该区域明显是浅色主体，应该 accept
+4. 对嘴巴、瞳孔、眉毛、头发、真正黑线等关键深色细节，如果 patchPack 会误删，应 reject
+5. 对描边闭环补齐 patchPack，如果补线方向符合原图边缘或线条走势，应 accept
+6. 只有 patchPacks 覆盖不到的问题，再在 changes 中补充少量逐格修改
+
 强制约束：
 1. 不改变网格宽高，不移动主体
 2. 默认不新增色号
@@ -940,11 +1094,12 @@
 7. from 必须填写当前格子的原色号；to 必须来自色板或 EMPTY
 8. 置信度低于0.75可以放入changes，但会被前端作为“需确认区域”默认不选；不要把低置信格伪装成高置信
 9. 每个 change 尽量补充 issueType 和 structureType，方便前端按区域合并
+10. patchReviews 的 id 必须来自输入 patchPacks
 
 输出必须是JSON，不输出解释文字：
-{"analysis":{"summary":"中文简述","regions":[{"id":"r1","bbox":{"x":1,"y":1,"width":1,"height":1},"role":"mainSubject","structureType":"organicContour","confidence":0.9,"issues":["outerContourGap"]}]},"changes":[{"x":1,"y":1,"from":"H7","to":"A23","issueType":"outerContourGap","structureType":"organicContour","reason":"中文原因","confidence":0.9}],"warnings":[],"metrics":{"changedCellCount":0}}`;
+{"analysis":{"summary":"中文简述","regions":[{"id":"r1","bbox":{"x":1,"y":1,"width":1,"height":1},"role":"mainSubject","structureType":"organicContour","confidence":0.9,"issues":["outerContourGap"]}]},"patchReviews":[{"id":"local1","action":"accept","reason":"中文原因","confidence":0.9}],"changes":[{"x":1,"y":1,"from":"H7","to":"A23","issueType":"outerContourGap","structureType":"organicContour","reason":"中文原因","confidence":0.9}],"warnings":[],"metrics":{"changedCellCount":0}}`;
 
-    async function callRefineAPI(apiKey,originalImg,patternImg,paletteStr,gridStr,params,diagnostics){
+    async function callRefineAPI(apiKey,originalImg,patternImg,paletteStr,gridStr,params,diagnostics,signal){
       const body={
         model:'glm-4.6v',
         messages:[
@@ -959,7 +1114,7 @@
         max_tokens:8192,
         thinking:{type:'disabled'}
       };
-      const resp=await fetch('./api/vision',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},body:JSON.stringify(body)});
+      const resp=await fetch('./api/vision',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},body:JSON.stringify(body),signal});
       if(!resp.ok){const t=await resp.text().catch(()=>'');throw new Error('HTTP '+resp.status+(t?' '+t.slice(0,200):''));}
       const data=await resp.json();
       const text=data.choices?.[0]?.message?.content||'';
@@ -969,7 +1124,6 @@
       let parsed;
       try{parsed=JSON.parse(cleaned);}
       catch(e){
-        // 如果直接解析失败，尝试提取 {...} 块
         const start=cleaned.indexOf('{');
         if(start<0)throw new Error('AI返回格式异常: '+cleaned.slice(0,200));
         let depth=0,end=-1;
@@ -984,7 +1138,7 @@
       return parsed;
     }
 
-    window.__BEAD_TEST__={paletteCount:palette.length,getData:()=>currentData,loadSample,buildExportCanvas,generate,performCutout,restoreOriginal,buildCrispMap,clusterCellColors,buildColoredStrokeMask,refineOutline,bridgeDirectionalGaps,completeLightContours,buildWhiteMask,preserveSalientAccents,balancePairedAccents,refineRoundedDarkContours,snapIncidentalEdgeGrays,repairOuterSilhouette};
+    window.__BEAD_TEST__={paletteCount:palette.length,getData:()=>currentData,loadSample,buildExportCanvas,generate,performCutout,restoreOriginal,buildCrispMap,clusterCellColors,buildColoredStrokeMask,refineOutline,bridgeDirectionalGaps,completeLightContours,buildWhiteMask,preserveSalientAccents,balancePairedAccents,refineRoundedDarkContours,snapIncidentalEdgeGrays,repairOuterSilhouette,buildLocalPatchGroups,detectLightRegionRescue,detectContourClosure,buildStructureDiagnostics};
     if(new URLSearchParams(location.search).get('sample')==='1') setTimeout(loadSample,80);
   })();
   </script>
