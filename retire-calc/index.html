@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>退休金测算器</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --primary:#6C5CE7;--primary-light:#A29BFE;--primary-dark:#5A4BD1;
+  --bg:#F8F7FF;--card:#fff;--text:#2D3436;--text-light:#636E72;
+  --border:#EEE;--success:#00B894;--warn:#FDCB6E;--danger:#FF7675;
+  --shadow:0 4px 20px rgba(108,92,231,.08);
+  --radius:16px;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Helvetica Neue',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:40px}
+.wrap{max-width:420px;margin:0 auto;padding:16px}
+
+/* Header */
+.header{text-align:center;padding:28px 0 12px}
+.header h1{font-size:24px;font-weight:700;background:linear-gradient(135deg,var(--primary),var(--primary-light));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.header p{font-size:13px;color:var(--text-light);margin-top:6px}
+
+/* Tab切换 */
+.tabs{display:flex;gap:8px;margin-bottom:16px}
+.tab{flex:1;padding:12px 8px;border-radius:12px;font-size:14px;font-weight:600;text-align:center;cursor:pointer;background:var(--card);color:var(--text-light);border:2px solid var(--border);transition:all .25s}
+.tab.active{background:var(--primary);color:#fff;border-color:var(--primary);box-shadow:0 4px 14px rgba(108,92,231,.3)}
+.tab .tab-icon{font-size:20px;display:block;margin-bottom:4px}
+
+/* Card */
+.card{background:var(--card);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);margin-bottom:16px}
+.card-title{font-size:16px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.card-title .step-num{width:24px;height:24px;border-radius:50%;background:var(--primary);color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;font-weight:700}
+
+/* Form */
+.form-group{margin-bottom:16px}
+.form-group:last-child{margin-bottom:0}
+label{display:block;font-size:13px;font-weight:600;color:var(--text-light);margin-bottom:6px}
+label .unit{font-weight:400;color:#B2BEC3}
+input[type="number"],select{
+  width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:10px;
+  font-size:16px;color:var(--text);background:#FAFAFF;transition:border-color .2s;
+  -webkit-appearance:none;outline:none;
+}
+input[type="number"]:focus,select:focus{border-color:var(--primary)}
+select{background:#FAFAFF url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23636E72' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 14px center}
+
+/* Radio cards */
+.radio-group{display:flex;gap:8px}
+.radio-card{flex:1;padding:12px 8px;border-radius:10px;border:2px solid var(--border);text-align:center;cursor:pointer;font-size:13px;font-weight:600;transition:all .2s;background:#FAFAFF}
+.radio-card.active{border-color:var(--primary);background:rgba(108,92,231,.06);color:var(--primary)}
+.radio-card .rc-icon{font-size:22px;display:block;margin-bottom:4px}
+
+/* Slider */
+.slider-wrap{display:flex;align-items:center;gap:12px}
+input[type="range"]{flex:1;height:6px;border-radius:3px;background:var(--border);-webkit-appearance:none;outline:none}
+input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--primary);cursor:pointer;box-shadow:0 2px 8px rgba(108,92,231,.4)}
+.slider-val{font-size:16px;font-weight:700;color:var(--primary);min-width:64px;text-align:right}
+
+/* Button */
+.btn-calc{
+  width:100%;padding:16px;border:none;border-radius:14px;
+  background:linear-gradient(135deg,var(--primary),var(--primary-light));
+  color:#fff;font-size:17px;font-weight:700;cursor:pointer;
+  box-shadow:0 6px 20px rgba(108,92,231,.3);
+  transition:transform .15s;
+}
+.btn-calc:active{transform:scale(.97)}
+
+/* Result */
+.result-card{display:none}
+.result-card.show{display:block;animation:fadeUp .4s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+.result-highlight{text-align:center;padding:20px 0;border-bottom:1px solid var(--border);margin-bottom:16px}
+.result-highlight .big-num{font-size:42px;font-weight:800;color:var(--primary);letter-spacing:-1px}
+.result-highlight .big-num .yuan{font-size:20px;font-weight:600}
+.result-highlight .label{font-size:13px;color:var(--text-light);margin-top:4px}
+
+.result-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #F5F5F5}
+.result-row:last-child{border-bottom:none}
+.result-row .r-label{font-size:14px;color:var(--text-light)}
+.result-row .r-val{font-size:15px;font-weight:700}
+
+.badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600}
+.badge-blue{background:rgba(108,92,231,.1);color:var(--primary)}
+.badge-green{background:rgba(0,184,148,.1);color:var(--success)}
+.badge-orange{background:rgba(253,203,110,.15);color:#E17055}
+
+.disclaimer{text-align:center;font-size:12px;color:#B2BEC3;margin-top:16px;line-height:1.6}
+
+/* Animations */
+.tip-card{background:linear-gradient(135deg,rgba(108,92,231,.05),rgba(162,155,254,.05));border-radius:12px;padding:14px;margin-top:12px;font-size:13px;color:var(--text-light);line-height:1.6}
+.tip-card strong{color:var(--primary)}
+
+/* Retire age result */
+.age-result{text-align:center;padding:16px 0}
+.age-result .age-big{font-size:36px;font-weight:800;color:var(--primary)}
+.age-result .age-detail{font-size:14px;color:var(--text-light);margin-top:6px}
+.age-result .age-date{font-size:15px;font-weight:600;margin-top:8px;color:var(--text)}
+
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <h1>📅 退休金测算器</h1>
+    <p>退休年龄 · 养老金一键测算</p>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <div class="tab active" data-tab="age"><span class="tab-icon">📅</span>退休年龄</div>
+    <div class="tab" data-tab="city"><span class="tab-icon">🏙️</span>职工养老金</div>
+    <div class="tab" data-tab="rural"><span class="tab-icon">🌾</span>居民养老金</div>
+  </div>
+
+  <!-- ========== Tab 1: 退休年龄 ========== -->
+  <div id="tab-age" class="tab-content">
+    <div class="card">
+      <div class="card-title"><span class="step-num">1</span>选择性别</div>
+      <div class="radio-group">
+        <div class="radio-card active" data-gender="male"><span class="rc-icon">👨</span>男性</div>
+        <div class="radio-card" data-gender="female50"><span class="rc-icon">👷‍♀️</span>女职工<br><span style="font-size:11px;font-weight:400">原50岁退休</span></div>
+        <div class="radio-card" data-gender="female55"><span class="rc-icon">👩‍💼</span>女干部<br><span style="font-size:11px;font-weight:400">原55岁退休</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="step-num">2</span>出生年月</div>
+      <div class="form-group">
+        <label>选择您的出生年月</label>
+        <input type="month" id="birthDate" min="1945-01" max="2010-12" value="1990-01" style="width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:10px;font-size:16px;background:#FAFAFF">
+      </div>
+      <button class="btn-calc" onclick="calcRetireAge()">🔍 查看我的退休年龄</button>
+    </div>
+    <div id="ageResult" class="card result-card">
+      <div class="card-title">📊 测算结果</div>
+      <div id="ageResultContent"></div>
+    </div>
+  </div>
+
+  <!-- ========== Tab 2: 城镇职工养老金 ========== -->
+  <div id="tab-city" class="tab-content" style="display:none">
+    <div class="card">
+      <div class="card-title"><span class="step-num">1</span>基本信息</div>
+      <div class="form-group">
+        <label>所在城市</label>
+        <select id="citySelect"></select>
+      </div>
+      <div class="form-group">
+        <label>退休年龄 <span class="unit">岁</span></label>
+        <div class="slider-wrap">
+          <input type="range" id="cityRetireAge" min="50" max="70" value="60" step="1">
+          <span class="slider-val" id="cityRetireAgeVal">60岁</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>缴费年限 <span class="unit">年</span></label>
+        <div class="slider-wrap">
+          <input type="range" id="cityYears" min="15" max="45" value="30" step="1">
+          <span class="slider-val" id="cityYearsVal">30年</span>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="step-num">2</span>工资信息</div>
+      <div class="form-group">
+        <label>本人月平均缴费工资 <span class="unit">元/月</span></label>
+        <input type="number" id="citySalary" value="8000" min="3000" max="50000" step="500">
+      </div>
+      <div class="form-group">
+        <label>个人账户余额（预估）<span class="unit">元</span></label>
+        <input type="number" id="cityAccount" value="150000" min="0" max="1000000" step="10000">
+        <div style="font-size:12px;color:#B2BEC3;margin-top:4px">💡 一般为月工资×8%×12×缴费年限</div>
+      </div>
+      <button class="btn-calc" onclick="calcCityPension()">💰 测算我的养老金</button>
+    </div>
+    <div id="cityResult" class="card result-card">
+      <div class="card-title">📊 测算结果</div>
+      <div id="cityResultContent"></div>
+    </div>
+  </div>
+
+  <!-- ========== Tab 3: 城乡居民养老金 ========== -->
+  <div id="tab-rural" class="tab-content" style="display:none">
+    <div class="card">
+      <div class="card-title"><span class="step-num">1</span>基本信息</div>
+      <div class="form-group">
+        <label>所在省份</label>
+        <select id="ruralSelect"></select>
+      </div>
+      <div class="form-group">
+        <label>缴费年限 <span class="unit">年</span></label>
+        <div class="slider-wrap">
+          <input type="range" id="ruralYears" min="15" max="45" value="20" step="1">
+          <span class="slider-val" id="ruralYearsVal">20年</span>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="step-num">2</span>缴费信息</div>
+      <div class="form-group">
+        <label>每年缴费档次 <span class="unit">元/年</span></label>
+        <select id="ruralLevel">
+          <option value="200">200元/年（最低档）</option>
+          <option value="300">300元/年</option>
+          <option value="500">500元/年</option>
+          <option value="800">800元/年</option>
+          <option value="1000" selected>1000元/年</option>
+          <option value="1500">1500元/年</option>
+          <option value="2000">2000元/年</option>
+          <option value="3000">3000元/年</option>
+          <option value="5000">5000元/年（最高档）</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>政府年补贴 <span class="unit">元/年（选填）</span></label>
+        <input type="number" id="ruralSubsidy" value="60" min="0" max="500" step="10">
+        <div style="font-size:12px;color:#B2BEC3;margin-top:4px">💡 一般每年补贴30-200元，多数地区60-120元</div>
+      </div>
+      <button class="btn-calc" onclick="calcRuralPension()">💰 测算我的养老金</button>
+    </div>
+    <div id="ruralResult" class="card result-card">
+      <div class="card-title">📊 测算结果</div>
+      <div id="ruralResultContent"></div>
+    </div>
+  </div>
+
+  <p class="disclaimer">
+    ⚠️ 本工具测算结果仅供参考，实际养老金以当地社保局核定为准<br>
+    数据基于2024-2025年政策，各地标准可能有所不同
+  </p>
+</div>
+
+<script>
+// ============ 数据 ============
+// 各省市上年度在岗职工月平均工资（2024年参考值，元/月）
+const CITY_AVG_SALARY = {
+  '北京':12183,'上海':12183,'天津':8355,'重庆':7800,
+  '广东':9500,'深圳':12964,'广州':11300,'浙江':8500,'杭州':9200,
+  '江苏':8200,'南京':8500,'四川':7200,'成都':7800,'湖北':7000,'武汉':7800,
+  '湖南':6500,'长沙':7200,'河南':6000,'郑州':6500,'山东':7200,'济南':7500,'青岛':7800,
+  '河北':6200,'山西':5800,'辽宁':6500,'大连':7200,'沈阳':6800,'吉林':5500,'黑龙江':5500,
+  '安徽':6500,'合肥':7000,'福建':7000,'厦门':7800,'福州':7200,'江西':5800,'南昌':6200,
+  '广西':5800,'南宁':6200,'海南':6500,'海口':6800,'贵州':5800,'贵阳':6200,
+  '云南':6000,'昆明':6500,'陕西':6500,'西安':7000,'甘肃':5200,'兰州':5500,
+  '青海':5500,'宁夏':5500,'新疆':5800,'乌鲁木齐':6200,'西藏':6500,
+  '内蒙古':6000,'呼和浩特':6200,
+};
+
+// 各省城乡居民基础养老金最低标准（2024年参考值，元/月）
+const RURAL_BASE = {
+  '北京':961,'上海':1490,'天津':337,'重庆':155,
+  '广东':220,'深圳':525,'广州':242,'浙江':330,'杭州':350,
+  '江苏':228,'南京':268,'四川':148,'成都':155,'湖北':145,'武汉':155,
+  '湖南':140,'长沙':150,'河南':130,'郑州':140,'山东':168,'济南':175,'青岛':210,
+  '河北':133,'山西':150,'辽宁':134,'大连':155,'沈阳':145,'吉林':128,'黑龙江':128,
+  '安徽':155,'合肥':165,'福建':160,'厦门':350,'福州':175,'江西':130,'南昌':140,
+  '广西':136,'南宁':145,'海南':162,'海口':172,'贵州':128,'贵阳':135,
+  '云南':143,'昆明':150,'陕西':146,'西安':155,'甘肃':128,'兰州':135,
+  '青海':185,'宁夏':165,'新疆':165,'乌鲁木齐':175,'西藏':245,
+  '内蒙古':150,'呼和浩特':155,
+};
+
+// 计发月数表（退休年龄→计发月数）
+const PENSION_MONTHS = {
+  45:216,46:212,47:208,48:204,49:199,50:195,51:190,52:185,53:180,
+  54:175,55:170,56:164,57:158,58:152,59:145,60:139,61:132,62:125,
+  63:117,64:109,65:101,66:93,67:84,68:75,69:65,70:56
+};
+
+// 延迟退休对照计算
+// 男职工：原60岁，每4个月延迟1个月，目标63岁
+// 女干部：原55岁，每4个月延迟1个月，目标58岁
+// 女工人：原50岁，每2个月延迟1个月，目标55岁
+function calcDelayedRetirement(birthYear, birthMonth, originalAge, stepMonths) {
+  // 原退休年月
+  const originalRetireYear = birthYear + originalAge;
+  const originalRetireMonth = birthMonth; // 1-12
+  
+  // 从2025年1月开始实施
+  const startDate = new Date(2025, 0); // 2025-01
+  
+  // 目标退休年龄
+  const targetAge = originalAge + 3; // 都是延迟3年
+  
+  // 如果在2025年之前就到了原退休年龄，不受影响
+  const originalRetireDate = new Date(originalRetireYear, originalRetireMonth - 1);
+  if (originalRetireDate <= startDate) {
+    return { age: originalAge, year: originalRetireYear, month: birthMonth, delayed: 0, original: true };
+  }
+  
+  // 计算从2025年1月到原退休年月的月数差
+  const monthsDiff = (originalRetireYear - 2025) * 12 + (originalRetireMonth - 1);
+  
+  // 每 stepMonths 个月延迟1个月
+  const delayedMonths = Math.min(Math.floor(monthsDiff / stepMonths), 36); // 最多36个月
+  
+  // 实际退休年龄
+  const totalMonths = originalAge * 12 + delayedMonths;
+  const retireAge = Math.floor(totalMonths / 12);
+  const retireAgeMonth = totalMonths % 12;
+  
+  // 实际退休年月
+  const retireYear = birthYear + retireAge;
+  const retireMonth = birthMonth + retireAgeMonth;
+  const finalYear = retireMonth > 12 ? retireYear + 1 : retireYear;
+  const finalMonth = retireMonth > 12 ? retireMonth - 12 : retireMonth;
+  
+  return {
+    age: retireAge,
+    ageMonth: retireAgeMonth,
+    year: finalYear,
+    month: finalMonth,
+    delayed: delayedMonths,
+    original: false
+  };
+}
+
+// ============ Tab切换 ============
+document.querySelectorAll('.tab').forEach(t => {
+  t.onclick = () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+    document.getElementById('tab-' + t.dataset.tab).style.display = '';
+  };
+});
+
+// Radio cards
+document.querySelectorAll('.radio-card').forEach(c => {
+  c.onclick = () => {
+    const group = c.parentElement;
+    group.querySelectorAll('.radio-card').forEach(x => x.classList.remove('active'));
+    c.classList.add('active');
+  };
+});
+
+// Sliders
+const sliderConfigs = [
+  ['cityRetireAge','cityRetireAgeVal','岁'],
+  ['cityYears','cityYearsVal','年'],
+  ['ruralYears','ruralYearsVal','年'],
+];
+sliderConfigs.forEach(([id, valId, unit]) => {
+  const el = document.getElementById(id);
+  const val = document.getElementById(valId);
+  el.oninput = () => val.textContent = el.value + unit;
+});
+
+// 填充城市/省份下拉
+function fillSelect(id, data) {
+  const sel = document.getElementById(id);
+  const keys = Object.keys(data).sort((a,b) => data[b] - data[a]);
+  keys.forEach(k => {
+    const opt = document.createElement('option');
+    opt.value = k;
+    opt.textContent = `${k}（${data[k]}元/月）`;
+    sel.appendChild(opt);
+  });
+}
+fillSelect('citySelect', CITY_AVG_SALARY);
+document.getElementById('citySelect').value = '成都';
+fillSelect('ruralSelect', RURAL_BASE);
+
+// 修复rural data语法错误
+RURAL_BASE['呼和浩特'] = 155;
+
+// ============ 退休年龄计算 ============
+function calcRetireAge() {
+  const gender = document.querySelector('#tab-age .radio-card.active').dataset.gender;
+  const birthInput = document.getElementById('birthDate').value;
+  if (!birthInput) { alert('请选择出生年月'); return; }
+  
+  const [by, bm] = birthInput.split('-').map(Number);
+  
+  let originalAge, stepMonths, genderLabel;
+  if (gender === 'male') { originalAge = 60; stepMonths = 4; genderLabel = '男职工'; }
+  else if (gender === 'female50') { originalAge = 50; stepMonths = 2; genderLabel = '女职工（原50岁）'; }
+  else { originalAge = 55; stepMonths = 4; genderLabel = '女干部（原55岁）'; }
+  
+  const result = calcDelayedRetirement(by, bm, originalAge, stepMonths);
+  const el = document.getElementById('ageResultContent');
+  const elCard = document.getElementById('ageResult');
+  
+  const monthNames = ['一月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月'];
+  
+  if (result.original) {
+    el.innerHTML = `
+      <div class="age-result">
+        <div class="age-big">${result.age}<span style="font-size:20px">岁</span></div>
+        <div class="age-detail">您在延迟退休政策实施前已到退休年龄</div>
+        <div class="age-date">📅 退休时间：${result.year}年${monthNames[result.month-1]}</div>
+      </div>
+      <div class="tip-card">
+        ✅ <strong>不受延迟退休影响</strong>，您的法定退休年龄仍为<strong>${originalAge}岁</strong>。
+      </div>
+    `;
+  } else {
+    const totalDelay = result.delayed;
+    const y = Math.floor(totalDelay / 12);
+    const m = totalDelay % 12;
+    let delayStr = '';
+    if (y > 0) delayStr += `${y}年`;
+    if (m > 0) delayStr += `${m}个月`;
+    
+    const ageStr = result.ageMonth > 0 ? `${result.age}岁${result.ageMonth}个月` : `${result.age}岁`;
+    
+    el.innerHTML = `
+      <div class="age-result">
+        <div class="age-big">${ageStr}</div>
+        <div class="age-detail">较原退休年龄延迟 <strong>${delayStr}</strong></div>
+        <div class="age-date">📅 退休时间：${result.year}年${monthNames[result.month-1]}</div>
+      </div>
+      <div class="result-row">
+        <span class="r-label">原法定退休年龄</span>
+        <span class="r-val">${originalAge}岁</span>
+      </div>
+      <div class="result-row">
+        <span class="r-label">延迟月数</span>
+        <span class="r-val">${totalDelay}个月（${delayStr}）</span>
+      </div>
+      <div class="result-row">
+        <span class="r-label">实际退休年龄</span>
+        <span class="r-val">${ageStr}</span>
+      </div>
+      <div class="result-row">
+        <span class="r-label">退休年月</span>
+        <span class="r-val">${result.year}年${result.month}月</span>
+      </div>
+      <div class="tip-card">
+        💡 根据<strong>渐进式延迟退休</strong>政策（2025年起实施），${genderLabel}每${stepMonths}个月延迟1个月。您属于<strong>${by}年${bm}月</strong>出生，适用延迟${delayStr}。
+      </div>
+    `;
+  }
+  elCard.classList.add('show');
+  elCard.scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+// ============ 城镇职工养老金 ============
+function calcCityPension() {
+  const city = document.getElementById('citySelect').value;
+  const retireAge = parseInt(document.getElementById('cityRetireAge').value);
+  const years = parseInt(document.getElementById('cityYears').value);
+  const salary = parseFloat(document.getElementById('citySalary').value);
+  const account = parseFloat(document.getElementById('cityAccount').value);
+  
+  if (!salary || salary < 3000) { alert('请输入有效的月工资'); return; }
+  
+  const avgSalary = CITY_AVG_SALARY[city] || 7000;
+  const months = PENSION_MONTHS[retireAge] || 139;
+  
+  // 本人指数化月平均缴费工资 = 个人平均缴费指数 × 当地平均工资
+  // 简化：假设缴费指数 = salary / avgSalary（范围0.6-3.0）
+  const index = Math.min(Math.max(salary / avgSalary, 0.6), 3.0);
+  const indexedSalary = index * avgSalary;
+  
+  // 基础养老金 = (当地平均工资 + 本人指数化月平均缴费工资) / 2 × 缴费年限 × 1%
+  const basePension = (avgSalary + indexedSalary) / 2 * years * 0.01;
+  
+  // 个人账户养老金 = 个人账户余额 / 计发月数
+  const accountPension = account / months;
+  
+  // 月养老金合计
+  const total = basePension + accountPension;
+  
+  // 替代率
+  const replaceRate = (total / salary * 100).toFixed(1);
+  
+  const el = document.getElementById('cityResultContent');
+  const elCard = document.getElementById('cityResult');
+  
+  el.innerHTML = `
+    <div class="result-highlight">
+      <div class="big-num"><span class="yuan">¥</span>${Math.round(total).toLocaleString()}</div>
+      <div class="label">预计每月领取养老金</div>
+    </div>
+    <div class="result-row">
+      <span class="r-label">基础养老金</span>
+      <span class="r-val">¥${Math.round(basePension).toLocaleString()}/月</span>
+    </div>
+    <div class="result-row">
+      <span class="r-label">个人账户养老金</span>
+      <span class="r-val">¥${Math.round(accountPension).toLocaleString()}/月</span>
+    </div>
+    <div class="result-row">
+      <span class="r-label">所在城市平均工资</span>
+      <span class="r-val">¥${avgSalary.toLocaleString()}/月</span>
+    </div>
+    <div class="result-row">
+      <span class="r-label">缴费指数</span>
+      <span class="r-val">${index.toFixed(2)} <span class="badge ${index < 0.8 ? 'badge-orange' : index > 1.5 ? 'badge-green' : 'badge-blue'}">${index < 0.8 ? '偏低' : index > 1.5 ? '较高' : '中等'}</span></span>
+    </div>
+    <div class="result-row">
+      <span class="r-label">养老金替代率</span>
+      <span class="r-val">${replaceRate}% <span class="badge ${replaceRate < 40 ? 'badge-orange' : replaceRate > 60 ? 'badge-green' : 'badge-blue'}">${replaceRate < 40 ? '偏低' : replaceRate > 60 ? '良好' : '中等'}</span></span>
+    </div>
+    <div class="tip-card">
+      📊 <strong>养老金替代率</strong>是指退休金占退休前工资的比例。国际劳工组织建议最低标准为<strong>55%</strong>，您目前为<strong>${replaceRate}%</strong>。
+      <br><br>
+      💡 <strong>多缴多得、长缴多得</strong>：缴费年限每增加1年，基础养老金增加约¥${Math.round((avgSalary + indexedSalary) / 2 * 0.01)}；个人账户余额每增加¥10,000，月养老金增加约¥${Math.round(10000/months)}。
+    </div>
+  `;
+  elCard.classList.add('show');
+  elCard.scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+// ============ 城乡居民养老金 ============
+function calcRuralPension() {
+  const province = document.getElementById('ruralSelect').value;
+  const years = parseInt(document.getElementById('ruralYears').value);
+  const level = parseInt(document.getElementById('ruralLevel').value);
+  const subsidy = parseFloat(document.getElementById('ruralSubsidy').value) || 0;
+  
+  const basePension = RURAL_BASE[province] || 150;
+  
+  // 个人账户总额 = (每年缴费 + 政府补贴) × 缴费年限 + 利息（按年化3%估算）
+  const annualTotal = level + subsidy;
+  let accountTotal = 0;
+  for (let i = 0; i < years; i++) {
+    accountTotal = (accountTotal + annualTotal) * 1.03; // 复利
+  }
+  
+  // 个人账户养老金 = 个人账户总额 / 139（60岁退休计发月数）
+  const accountPension = accountTotal / 139;
+  
+  // 长缴多得（缴费超15年部分每年加发基础养老金，按各地平均约2元/月估算）
+  const extraYears = Math.max(0, years - 15);
+  const extraBase = extraYears * 2;
+  
+  // 月养老金合计
+  const total = basePension + extraBase + accountPension;
+  
+  const el = document.getElementById('ruralResultContent');
+  const elCard = document.getElementById('ruralResult');
+  
+  // 年收益
+  const annualContribution = level + subsidy;
+  const totalContribution = annualContribution * years;
+  const annualPension = total * 12;
+  const paybackMonths = totalContribution / total;
+  const paybackYears = (paybackMonths / 12).toFixed(1);
+  
+  el.innerHTML = `
+    <div class="result-highlight">
+      <div class="big-num"><span class="yuan">¥</span>${Math.round(total).toLocaleString()}</div>
+      <div class="label">预计每月领取养老金</div>
+    </div>
+    <div class="result-row">
+      <span class="r-label">基础养老金（${province}）</span>
+      <span class="r-val">¥${basePension}/月</span>
+    </div>
+    <div class="result-row">
+      <span class="r-label">长缴多得加发</span>
+      <span class="r-val">¥${extraBase}/月（${extraYears}年×2元）</span>
+    </div>
+    <div class="result-row">
+      <span class="r-label">个人账户养老金</span>
+      <span class="r-val">¥${Math.round(accountPension)}/月</span>
+    </div>
+    <div class="result-row">
+      <span class="r-label">个人账户累计总额</span>
+      <span class="r-val">¥${Math.round(accountTotal).toLocaleString()}（含利息）</span>
+    </div>
+    <div class="result-row">
+      <span class="r-label">实际缴费总额</span>
+      <span class="r-val">¥${totalContribution.toLocaleString()}</span>
+    </div>
+    <div class="result-row">
+      <span class="r-label">回本周期</span>
+      <span class="r-val">约${paybackYears}年</span>
+    </div>
+    <div class="tip-card">
+      🌾 <strong>城乡居民养老保险</strong>由基础养老金和个人账户养老金组成。基础养老金各地不同，${province}为<strong>¥${basePension}/月</strong>。
+      <br><br>
+      💡 <strong>提高档次的收益</strong>：如果每年多缴¥${level < 1000 ? 1000 - level : 1000}，到60岁每月可多领约¥${Math.round(((level < 1000 ? 1000 : 1000 + level) + subsidy) * Math.pow(1.03, years) / 139 - accountPension)}。
+      <br><br>
+      📊 按当前测算，您缴满${years}年，退休后约<strong>${paybackYears}年</strong>可收回全部缴费。
+    </div>
+  `;
+  elCard.classList.add('show');
+  elCard.scrollIntoView({behavior:'smooth',block:'center'});
+}
+</script>
+</body>
+</html>
