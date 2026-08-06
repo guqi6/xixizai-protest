@@ -670,7 +670,7 @@
     async function callVisionAPI(apiKey,img){
       const base64=compressImageForAI(img);
       const prompt='Analyze this image for a bead-art (拼豆) pattern generator. Return ONLY valid JSON, no markdown fences.\nFormat: {"has_white": true/false, "white_areas": "brief description of where white is (clothing, eyes, background, etc.)", "eye_colors": [{"name":"blue","hex":"#4A90D9"}], "important_colors": [{"name":"description","hex":"#RRGGBB"}], "small_details": ["brief description of small but important visual details"], "summary": "one sentence summary in Chinese"}';
-      const resp=await fetch('https://open.bigmodel.cn/api/coding/paas/v4/chat/completions',{
+      const resp=await fetch('./api/vision',{
         method:'POST',
         headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},
         body:JSON.stringify({
