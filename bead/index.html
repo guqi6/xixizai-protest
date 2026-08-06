@@ -302,7 +302,7 @@
           let map,usedCV=false;
           if(mode==='crisp'){
             usedCV=await loadOpenCVWithTimeout(2200);
-            setStatus(usedCV?'正在使用 OpenCV 辅助拟合轮廓、圆弧和短线…':'结构引擎未就绪，正在使用内置算法生成…');
+            setStatus(usedCV?'阶段 1/4：OpenCV 已加载，正在分析背景与结构轴…':'结构引擎未就绪，正在使用内置算法生成…');
             const cells=analyzeImageCells(currentImage,gridW,gridH,6);
             map=buildCrispMap(cells,gridW,gridH,{limitValue,simplify,forceH7:$('forceH7').checked,preserveDetails:$('preserveDetails').checked,useCV:usedCV});
             currentCells=cells;
@@ -1071,6 +1071,61 @@
       return result;
     }
 
+    function detectDominantFeatureAxis(map,w,h,enabled=true){
+      if(!enabled)return null;
+      const seen=new Uint8Array(map.length),segments=[];
+      const isDark=i=>map[i]&&(map[i].code==='H7'||map[i].code==='H16');
+      for(let start=0;start<map.length;start++){
+        if(seen[start]||!isDark(start))continue;const component=[],queue=[start];seen[start]=1;
+        for(let q=0;q<queue.length;q++){
+          const i=queue[q],x=i%w,y=Math.floor(i/w);component.push(i);
+          for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){if(!dx&&!dy)continue;const nx=x+dx,ny=y+dy;if(nx<0||nx>=w||ny<0||ny>=h)continue;const ni=ny*w+nx;if(!seen[ni]&&isDark(ni)){seen[ni]=1;queue.push(ni);}}
+        }
+        if(component.length<3||component.length>Math.max(28,map.length*.018))continue;
+        const xs=component.map(i=>i%w),ys=component.map(i=>Math.floor(i/w)),minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys),bw=maxX-minX+1,bh=maxY-minY+1;
+        if(Math.max(bw,bh)<4||Math.max(bw,bh)/Math.max(1,Math.min(bw,bh))<1.8)continue;
+        const cx=xs.reduce((a,b)=>a+b,0)/xs.length,cy=ys.reduce((a,b)=>a+b,0)/ys.length;
+        let sxx=0,syy=0,sxy=0;for(const i of component){const dx=i%w-cx,dy=Math.floor(i/w)-cy;sxx+=dx*dx;syy+=dy*dy;sxy+=dx*dy;}
+        const angle=.5*Math.atan2(2*sxy,sxx-syy);
+        const deg=angle*180/Math.PI;
+        if(Math.abs(deg)>35)continue;
+        segments.push({angle,deg,weight:component.length*Math.max(bw,bh),bbox:{x:minX,y:minY,w:bw,h:bh},cx,cy});
+      }
+      if(segments.length<2)return null;
+      const weighted=segments.reduce((a,s)=>({x:a.x+Math.cos(2*s.angle)*s.weight,y:a.y+Math.sin(2*s.angle)*s.weight,w:a.w+s.weight}),{x:0,y:0,w:0});
+      const angle=.5*Math.atan2(weighted.y,weighted.x),deg=angle*180/Math.PI;
+      const support=segments.filter(s=>Math.abs(s.deg-deg)<=10).reduce((n,s)=>n+s.weight,0)/Math.max(1,weighted.w);
+      if(support<.58||Math.abs(deg)<3)return null;
+      return {angle,deg,support,segments};
+    }
+
+    function regularizeFeatureLinesByAxis(map,cells,w,h,axis,enabled=true){
+      if(!enabled||!axis)return map;
+      const result=map.slice(),h7=palette.find(p=>p.code==='H7'),cos=Math.cos(axis.angle),sin=Math.sin(axis.angle);
+      const lineDistance=(x,y,cx,cy)=>Math.abs((x-cx)*(-sin)+(y-cy)*cos);
+      const dark=p=>p&&(p.code==='H7'||p.code==='H16');
+      const visited=new Uint8Array(map.length);
+      for(let start=0;start<map.length;start++){
+        if(visited[start]||!dark(result[start]))continue;const component=[],queue=[start];visited[start]=1;
+        for(let q=0;q<queue.length;q++){
+          const i=queue[q],x=i%w,y=Math.floor(i/w);component.push(i);
+          for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){if(!dx&&!dy)continue;const nx=x+dx,ny=y+dy;if(nx<0||nx>=w||ny<0||ny>=h)continue;const ni=ny*w+nx;if(!visited[ni]&&dark(result[ni])){visited[ni]=1;queue.push(ni);}}
+        }
+        if(component.length<3||component.length>Math.max(24,map.length*.014))continue;
+        const xs=component.map(i=>i%w),ys=component.map(i=>Math.floor(i/w)),cx=xs.reduce((a,b)=>a+b,0)/xs.length,cy=ys.reduce((a,b)=>a+b,0)/ys.length;
+        const projections=component.map(i=>(i%w-cx)*cos+(Math.floor(i/w)-cy)*sin),minP=Math.min(...projections),maxP=Math.max(...projections);
+        if(maxP-minP<3||maxP-minP>Math.max(w,h)*.22)continue;
+        for(let p=Math.floor(minP);p<=Math.ceil(maxP);p++){
+          const x=Math.round(cx+p*cos),y=Math.round(cy+p*sin);if(x<=0||x>=w-1||y<=0||y>=h-1)continue;
+          const i=y*w+x,c=cells[i];if(!c||!c.a||lineDistance(x,y,cx,cy)>.85)continue;
+          const current=result[i];if(current&&(current.code==='H1'||current.code==='H2'))continue;
+          let near=0;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){if(!dx&&!dy)continue;if(dark(result[(y+dy)*w+x+dx]))near++;}
+          if(!dark(current)&&near>=2&&(c.weakCandidate||c.blackRatio>.006||c.medianLum<145))result[i]=h7;
+        }
+      }
+      return result;
+    }
+
     function buildEdgeBackgroundMask(cells,w,h,enabled=true){
       const mask=new Uint8Array(cells.length);if(!enabled)return mask;
       const edge=[];
@@ -1123,6 +1178,8 @@
       result=polishDarkContoursWithOpenCV(result,cells,w,h,useCV&&preserveDetails);
       result=fitEllipsePolishWithOpenCV(result,cells,w,h,useCV&&preserveDetails);
       result=regularizeShortLinesWithOpenCV(result,cells,w,h,useCV&&preserveDetails);
+      const featureAxis=detectDominantFeatureAxis(result,w,h,useCV&&preserveDetails);
+      result=regularizeFeatureLinesByAxis(result,cells,w,h,featureAxis,useCV&&preserveDetails);
       for(let i=0;i<result.length;i++)if(backgroundMask[i])result[i]=null;
       return result;
     }
@@ -1334,7 +1391,7 @@
       return parsed;
     }
 
-    window.__BEAD_TEST__={paletteCount:palette.length,getData:()=>currentData,loadSample,buildExportCanvas,generate,performCutout,restoreOriginal,buildCrispMap,clusterCellColors,buildColoredStrokeMask,refineOutline,bridgeDirectionalGaps,completeLightContours,buildWhiteMask,preserveSalientAccents,balancePairedAccents,refineRoundedDarkContours,snapIncidentalEdgeGrays,repairOuterSilhouette,buildEdgeBackgroundMask,polishLargeRoundedRegions,polishDarkContoursWithOpenCV,fitEllipsePolishWithOpenCV,regularizeShortLinesWithOpenCV,loadOpenCV,loadOpenCVWithTimeout,buildLocalPatchGroups,detectLightRegionRescue,detectContourClosure,buildStructureDiagnostics};
+    window.__BEAD_TEST__={paletteCount:palette.length,getData:()=>currentData,loadSample,buildExportCanvas,generate,performCutout,restoreOriginal,buildCrispMap,clusterCellColors,buildColoredStrokeMask,refineOutline,bridgeDirectionalGaps,completeLightContours,buildWhiteMask,preserveSalientAccents,balancePairedAccents,refineRoundedDarkContours,snapIncidentalEdgeGrays,repairOuterSilhouette,buildEdgeBackgroundMask,polishLargeRoundedRegions,polishDarkContoursWithOpenCV,fitEllipsePolishWithOpenCV,regularizeShortLinesWithOpenCV,detectDominantFeatureAxis,regularizeFeatureLinesByAxis,loadOpenCV,loadOpenCVWithTimeout,buildLocalPatchGroups,detectLightRegionRescue,detectContourClosure,buildStructureDiagnostics};
     if(new URLSearchParams(location.search).get('sample')==='1') setTimeout(loadSample,80);
   })();
   </script>
