@@ -91,6 +91,17 @@
           <div class="field"><label for="simplifyLevel">色块统一程度</label><select id="simplifyLevel"><option value="light">轻微</option><option value="standard" selected>标准</option><option value="strong">强力</option></select><span class="help">越强，皮肤和头发使用的近似颜色越少。</span></div>
           <label class="check"><input id="minorGrid" type="checkbox" checked><span>显示每格浅虚线<span class="help">可关闭；每 5 格实线、外框和坐标始终保留。</span></span></label>
         </div>
+        <div style="margin-top:14px;padding:14px;border:1px solid #ddd2e8;border-radius:12px;background:linear-gradient(180deg,#faf8ff,#f5f0fa);">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+            <strong style="font-size:14px;">🤖 AI 视觉增强（可选）</strong>
+            <label class="check" style="margin:0"><input id="aiEnhance" type="checkbox"> <span>启用</span></label>
+          </div>
+          <div class="field" style="margin-bottom:8px">
+            <input id="aiApiKey" type="password" placeholder="粘贴智谱 API Key（glm-4v-flash 免费）" style="width:100%;border:1px solid #dcd3cb;border-radius:9px;background:#fff;padding:9px 10px">
+            <span class="help">免费获取：bigmodel.cn 注册 → API Keys → 创建 Key<br>Key 只保存在本地浏览器，不会上传到任何服务器。</span>
+          </div>
+          <div id="aiStatus" style="font-size:12px;color:var(--muted);min-height:16px"></div>
+        </div>
       </details>
       <div class="actions"><button class="btn btn-ghost" type="button" id="downloadBtn" disabled>下载高清 PNG 图纸</button></div>
       <div class="status" id="status" role="status" aria-live="polite"></div>
@@ -141,6 +152,15 @@
     $('minorGrid').addEventListener('change', () => {if(currentData) renderPattern($('patternCanvas'),currentData,22,$('minorGrid').checked);});
     $('gridWidthRange').addEventListener('input', () => $('gridWidth').value=$('gridWidthRange').value);
     $('gridWidth').addEventListener('input', () => $('gridWidthRange').value=clamp(Number($('gridWidth').value)||50,20,100));
+
+    // AI enhancement localStorage persistence
+    try{
+      const savedKey=localStorage.getItem('bead_ai_apikey')||'';
+      const savedEnabled=localStorage.getItem('bead_ai_enabled')==='1';
+      if(savedKey){$('aiApiKey').value=savedKey;$('aiEnhance').checked=savedEnabled;}
+    }catch(e){}
+    $('aiApiKey').addEventListener('change',()=>{try{localStorage.setItem('bead_ai_apikey',$('aiApiKey').value);}catch(e){}});
+    $('aiEnhance').addEventListener('change',()=>{try{localStorage.setItem('bead_ai_enabled',$('aiEnhance').checked?'1':'0');}catch(e){}});
 
     function hexToRgb(hex){const h=hex.replace('#','');return {r:parseInt(h.slice(0,2),16),g:parseInt(h.slice(2,4),16),b:parseInt(h.slice(4,6),16)};}
     function rgbToLab(r,g,b){
@@ -240,20 +260,30 @@
       if(!cutoutBlob)return;const url=URL.createObjectURL(cutoutBlob),a=document.createElement('a');a.href=url;a.download=`${sourceName.replace(/\.[^.]+$/,'')}_抠图.png`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);setStatus('透明背景 PNG 已下载。');
     }
 
-    function generate(){
+    async function generate(){
       if(!currentImage){setStatus('请先选择图片。',true);return;}
       if(palette.length<200){setStatus('色卡加载失败，请确认 palette.js 与页面在同一文件夹。',true);return;}
       const gridW=clamp(parseInt($('gridWidth').value,10)||50,20,100);
       $('gridWidth').value=gridW;$('gridWidthRange').value=gridW;
       const gridH=clamp(Math.round(gridW*currentImage.height/currentImage.width),1,140);
       const mode=$('renderMode').value,limitValue=$('colorLimit').value,simplify=$('simplifyLevel').value;
+      const aiOn=$('aiEnhance').checked&&$('aiApiKey').value.trim();
+      let aiHints=null;
+      if(aiOn){
+        $('aiStatus').textContent='';
+        setStatus('🤖 AI 正在分析图片…');
+        $('generateBtn').disabled=true;$('downloadBtn').disabled=true;
+        try{aiHints=await callVisionAPI($('aiApiKey').value.trim(),currentImage);$('aiStatus').textContent='✅ AI 分析完成：'+(aiHints.summary||'');}
+        catch(e){console.error(e);$('aiStatus').textContent='⚠️ AI 分析失败：'+e.message+'（将使用纯算法生成）';}
+      }
       setStatus(mode==='crisp'?'正在识别描边并统一连续色块…':'正在按色卡忠实转换图片…');$('generateBtn').disabled=true;$('downloadBtn').disabled=true;
       requestAnimationFrame(()=>setTimeout(()=>{
         try{
           let map;
           if(mode==='crisp'){
             const cells=analyzeImageCells(currentImage,gridW,gridH,6);
-            map=buildCrispMap(cells,gridW,gridH,{limitValue,simplify,forceH7:$('forceH7').checked,preserveDetails:$('preserveDetails').checked});
+            map=buildCrispMap(cells,gridW,gridH,{limitValue,simplify,forceH7:$('forceH7').checked,preserveDetails:$('preserveDetails').checked,aiHints});
+            if(aiHints)map=applyAiCorrection(map,cells,gridW,gridH,aiHints);
           }else{
             const raw=sampleImage(currentImage,gridW,gridH);
             map=raw.map(px=>px.a<96?null:nearestBead(px.lab));
@@ -628,6 +658,104 @@
       if(!currentData||!currentData.total)return;
       setStatus('正在制作高清图纸…');const c=buildExportCanvas();
       c.toBlob(blob=>{if(!blob){setStatus('下载生成失败，请重试。',true);return;}const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`拼豆图纸_${currentData.gridW}x${currentData.gridH}.png`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);setStatus('高清 PNG 图纸已生成。');},'image/png');
+    }
+
+    function compressImageForAI(img){
+      const maxSide=512,scale=Math.min(1,maxSide/Math.max(img.width,img.height));
+      const w=Math.max(1,Math.round(img.width*scale)),h=Math.max(1,Math.round(img.height*scale));
+      const c=document.createElement('canvas');c.width=w;c.height=h;const ctx=c.getContext('2d');
+      ctx.drawImage(img,0,0,w,h);return c.toDataURL('image/jpeg',.72);
+    }
+
+    async function callVisionAPI(apiKey,img){
+      const base64=compressImageForAI(img);
+      const prompt='Analyze this image for a bead-art (拼豆) pattern generator. Return ONLY valid JSON, no markdown fences.\nFormat: {"has_white": true/false, "white_areas": "brief description of where white is (clothing, eyes, background, etc.)", "eye_colors": [{"name":"blue","hex":"#4A90D9"}], "important_colors": [{"name":"description","hex":"#RRGGBB"}], "small_details": ["brief description of small but important visual details"], "summary": "one sentence summary in Chinese"}';
+      const resp=await fetch('https://open.bigmodel.cn/api/paas/v4/chat/completions',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},
+        body:JSON.stringify({
+          model:'glm-4v-flash',
+          messages:[{role:'user',content:[{type:'text',text:prompt},{type:'image_url',image_url:{url:base64}}]}],
+          temperature:.1,
+          max_tokens:600
+        })
+      });
+      if(!resp.ok){const t=await resp.text().catch(()=>'');throw new Error('HTTP '+resp.status+(t?' '+t.slice(0,120):''));}
+      const data=await resp.json();
+      const text=data.choices?.[0]?.message?.content||'';
+      const match=text.match(/\{[\s\S]*\}/);
+      if(!match)throw new Error('AI 返回格式异常');
+      return JSON.parse(match[0]);
+    }
+
+    function applyAiCorrection(map,cells,w,h,hints){
+      const result=map.slice();
+      const h1=palette.find(p=>p.code==='H1');
+      if(!h1)return result;
+      // 1. Force white: if AI says has_white but result has no/few H1 cells
+      if(hints.has_white){
+        const h1Count=result.filter(p=>p&&p.code==='H1').length;
+        if(h1Count<2){
+          // Find brightest non-outline cells and convert to H1
+          const candidates=[];
+          for(let i=0;i<cells.length;i++){
+            if(!cells[i]||!cells[i].a||!result[i])continue;
+            if(result[i].code==='H7')continue;
+            const c=cells[i],chroma=Math.max(c.r,c.g,c.b)-Math.min(c.r,c.g,c.b);
+            if(c.medianLum>=195&&chroma<42)candidates.push({i,lum:c.medianLum,chroma});
+          }
+          candidates.sort((a,b)=>b.lum-a.lum);
+          const topN=Math.max(3,Math.min(Math.floor(candidates.length*.15),cells.length*.06));
+          for(let k=0;k<topN&&k<candidates.length;k++)result[candidates[k].i]=h1;
+        }
+      }
+      // 2. Force important accent colors
+      if(hints.important_colors&&Array.isArray(hints.important_colors)){
+        for(const ic of hints.important_colors){
+          if(!ic.hex)continue;
+          const rgb=hexToRgb(ic.hex),targetLab=rgbToLab(rgb.r,rgb.g,rgb.b);
+          // Check if this color already exists in result (within tolerance)
+          const existing=result.find(p=>p&&labDistance(p.lab,targetLab)<18);
+          if(existing)continue;
+          // Find cells closest to this color that aren't outline/white
+          const sorted=[];
+          for(let i=0;i<cells.length;i++){
+            if(!cells[i]||!cells[i].a||!result[i])continue;
+            if(result[i].code==='H7'||result[i].code==='H1')continue;
+            const d=labDistance(cells[i].lab,targetLab);
+            if(d<55)sorted.push({i,d});
+          }
+          sorted.sort((a,b)=>a.d-b.d);
+          // Convert top matches to nearest bead of this color
+          const bead=nearestBead(targetLab);
+          const topCount=Math.max(1,Math.min(sorted.length,Math.floor(cells.length*.008)));
+          for(let k=0;k<topCount;k++)result[sorted[k].i]=bead;
+        }
+      }
+      // 3. Force eye colors
+      if(hints.eye_colors&&Array.isArray(hints.eye_colors)){
+        for(const ec of hints.eye_colors){
+          if(!ec.hex)continue;
+          const rgb=hexToRgb(ec.hex),targetLab=rgbToLab(rgb.r,rgb.g,rgb.b);
+          const existing=result.find(p=>p&&labDistance(p.lab,targetLab)<22);
+          if(existing)continue;
+          // Find cells matching eye color
+          const sorted=[];
+          for(let i=0;i<cells.length;i++){
+            if(!cells[i]||!cells[i].a||!result[i])continue;
+            if(result[i].code==='H7'||result[i].code==='H1')continue;
+            const d=labDistance(cells[i].lab,targetLab);
+            if(d<48)sorted.push({i,d});
+          }
+          sorted.sort((a,b)=>a.d-b.d);
+          if(sorted.length){
+            const bead=nearestBead(targetLab);
+            const topCount=Math.max(1,Math.min(sorted.length,Math.floor(cells.length*.005)));
+            for(let k=0;k<topCount;k++)result[sorted[k].i]=bead;
+          }
+        }
+      }
+      return result;
     }
 
     window.__BEAD_TEST__={paletteCount:palette.length,getData:()=>currentData,loadSample,buildExportCanvas,generate,performCutout,restoreOriginal,buildCrispMap,clusterCellColors,buildColoredStrokeMask,refineOutline,bridgeDirectionalGaps,completeLightContours,buildWhiteMask,preserveSalientAccents,balancePairedAccents,refineRoundedDarkContours,snapIncidentalEdgeGrays,repairOuterSilhouette};
