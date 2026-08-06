@@ -100,7 +100,7 @@
           <div id="aiStatus" style="font-size:12px;color:var(--muted);min-height:16px"></div>
         </div>
       </details>
-      <div class="actions"><button class="btn btn-ghost" type="button" id="downloadBtn" disabled>下载高清 PNG 图纸</button><button class="btn btn-primary" type="button" id="aiOptimizeBtn" disabled style="display:none">🤖 AI 精修</button></div>
+      <div class="actions"><button class="btn btn-ghost" type="button" id="downloadBtn" disabled>下载高清 PNG 图纸</button><button class="btn btn-primary" type="button" id="aiOptimizeBtn" disabled style="display:none">🤖 AI 优化细节</button></div>
       <div class="status" id="status" role="status" aria-live="polite"></div>
     </section>
 
@@ -293,83 +293,25 @@
       },30));
     }
 
-    let pendingChanges=null,originalMapSnapshot=null;
-
     async function aiOptimize(){
       if(!currentData||!currentCells){setStatus('请先生成拼豆图纸。',true);return;}
       const key=$('aiApiKey').value.trim();if(!key){setStatus('请先填写 API Key。',true);return;}
       const btn=$('aiOptimizeBtn');btn.disabled=true;btn.textContent='🤖 AI 分析中…';
-      $('aiStatus').textContent='🤖 正在分析图纸结构…';
-      setStatus('🤖 AI 正在分析图片结构并生成精修方案…');
+      $('aiStatus').textContent='🤖 正在调用视觉模型分析图片…';
+      setStatus('🤖 AI 正在分析图片细节…');
+      let aiHints;
+      try{aiHints=await callVisionAPI(key,currentImage);}
+      catch(e){console.error(e);$('aiStatus').textContent='⚠️ AI 调用失败：'+e.message;btn.disabled=false;btn.textContent='🤖 AI 优化细节';setStatus('AI 调用失败：'+e.message,true);return;}
+      $('aiStatus').textContent='✅ AI：'+(aiHints.summary||'分析完成');
       try{
-        const {gridW:w,gridH:h,map}=currentData;
-        const originalImg=compressImageForAI(currentImage,448);
-        const patternImg=buildPatternPreviewDataURL(map,w,h);
-        const paletteStr=buildPaletteString();
-        const gridStr=buildGridString(map,w,h);
-        const params={canvas:{width:w,height:h,backgroundColor:'EMPTY'},constraints:{allowNewColors:false,maxChangedCells:Math.floor(w*h*.05),maxSubjectAreaChangeRatio:.03,lowConfidenceThreshold:.75,editRadius:1},mode:{scope:'wholeCanvas',strength:'conservative',operations:['repairContours','smoothCurves','cleanNoise','preserveDetails']}};
-        const result=await callRefineAPI(key,originalImg,patternImg,paletteStr,gridStr,params);
-        $('aiStatus').textContent='✅ '+(result.analysis?.summary||'AI分析完成')+'（'+(result.changes?.length||0)+'处修改）';
-        if(result.warnings&&result.warnings.length)$('aiStatus').textContent+=' ⚠️'+result.warnings.length+'个警告';
-        pendingChanges=(result.changes||[]).filter(c=>c.confidence>=.75);
-        originalMapSnapshot=map.slice();
-        if(!pendingChanges.length){setStatus('AI 未发现需要修改的地方。');btn.disabled=false;btn.textContent='🤖 AI 精修';return;}
-        showDiffOverlay();
-        setStatus('AI 建议修改'+pendingChanges.length+'格，请点击「✅ 应用全部」确认。');
-      }catch(e){console.error(e);$('aiStatus').textContent='⚠️ '+e.message;setStatus('AI 精修失败：'+e.message,true);}
-      btn.disabled=false;btn.textContent='🤖 AI 精修';
-    }
-
-    function showDiffOverlay(){
-      if(!pendingChanges||!pendingChanges.length)return;
-      const {gridW:w,gridH:h}=currentData;
-      const overlay=document.createElement('canvas');overlay.width=w*22;overlay.height=h*22;
-      const ctx=overlay.getContext('2d');ctx.clearRect(0,0,overlay.width,overlay.height);
-      const changeMap=new Map();
-      for(const c of pendingChanges)changeMap.set(c.y*w+c.x,c);
-      for(let y=0;y<h;y++)for(let x=0;x<w;x++){
-        const c=changeMap.get(y*w+x);if(!c)continue;
-        const px=x*22,py=y*22;
-        ctx.fillStyle=c.to==='EMPTY'?'rgba(220,40,40,.55)':'rgba(40,200,80,.55)';
-        ctx.fillRect(px,py,22,22);
-        ctx.strokeStyle=c.to==='EMPTY'?'#c00':'#0a0';ctx.lineWidth=1.5;ctx.strokeRect(px+1,py+1,20,20);
-      }
-      const scroll=document.querySelector('.canvas-scroll');
-      let old=document.getElementById('diffOverlay');if(old)old.remove();
-      overlay.id='diffOverlay';overlay.style.cssText='position:absolute;top:6px;left:6px;pointer-events:none;width:100%;';
-      if(scroll.style.position!=='relative')scroll.style.position='relative';
-      scroll.appendChild(overlay);
-      const actions=document.getElementById('diffActions');if(actions)actions.remove();
-      const bar=document.createElement('div');bar.id='diffActions';bar.style.cssText='display:flex;gap:8px;justify-content:center;margin-top:12px;flex-wrap:wrap';
-      const apply=document.createElement('button');apply.className='btn btn-primary';apply.textContent='✅ 应用全部 ('+pendingChanges.length+'格)';apply.onclick=applyAllChanges;
-      const cancel=document.createElement('button');cancel.className='btn btn-ghost';cancel.textContent='取消';cancel.onclick=cancelDiff;
-      bar.appendChild(apply);bar.appendChild(cancel);
-      document.getElementById('patternCanvas').parentElement.appendChild(bar);
-    }
-
-    function applyAllChanges(){
-      if(!pendingChanges||!originalMapSnapshot)return;
-      const {gridW:w,gridH:h}=currentData;
-      const newMap=originalMapSnapshot.slice();
-      let applied=0;
-      for(const c of pendingChanges){
-        const idx=(c.y-1)*w+(c.x-1);
-        if(c.y<1||c.x<1||c.y>h||c.x>w)continue;
-        if(c.to==='EMPTY')newMap[idx]=null;
-        else{const bead=palette.find(p=>p.code===c.to);if(bead)newMap[idx]=bead;}
-        applied++;
-      }
-      currentData={...currentData,map:newMap,counts:countColors(newMap),total:newMap.reduce((n,p)=>n+(p?1:0),0)};
-      renderPattern($('patternCanvas'),currentData,22,$('minorGrid').checked);
-      renderSummary(currentData);
-      cancelDiff();
-      setStatus('✅ AI精修已应用：修改'+applied+'格。');
-    }
-
-    function cancelDiff(){
-      const o=document.getElementById('diffOverlay');if(o)o.remove();
-      const a=document.getElementById('diffActions');if(a)a.remove();
-      pendingChanges=null;
+        const newMap=applyAiCorrection(currentData.map,currentCells,currentData.gridW,currentData.gridH,aiHints);
+        const counts=countColors(newMap),total=newMap.reduce((n,p)=>n+(p?1:0),0);
+        currentData={...currentData,map:newMap,counts,total};
+        renderPattern($('patternCanvas'),currentData,22,$('minorGrid').checked);
+        renderSummary(currentData);
+        setStatus(`✅ AI 优化完成：${currentData.gridW}×${currentData.gridH}，${Object.keys(counts).length} 色，共 ${total} 颗。`);
+      }catch(e){console.error(e);setStatus('AI 优化失败：'+e.message,true);}
+      btn.disabled=false;btn.textContent='🤖 再优化一次';
     }
 
     function analyzeImageCells(img,w,h,supersample=6){
@@ -730,84 +672,106 @@
       c.toBlob(blob=>{if(!blob){setStatus('下载生成失败，请重试。',true);return;}const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`拼豆图纸_${currentData.gridW}x${currentData.gridH}.png`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);setStatus('高清 PNG 图纸已生成。');},'image/png');
     }
 
-    function compressImageForAI(img,maxSide=512){
-      const scale=Math.min(1,maxSide/Math.max(img.width,img.height));
+    function compressImageForAI(img){
+      const maxSide=512,scale=Math.min(1,maxSide/Math.max(img.width,img.height));
       const w=Math.max(1,Math.round(img.width*scale)),h=Math.max(1,Math.round(img.height*scale));
       const c=document.createElement('canvas');c.width=w;c.height=h;const ctx=c.getContext('2d');
       ctx.drawImage(img,0,0,w,h);return c.toDataURL('image/jpeg',.72);
     }
 
-    function buildGridString(map,w,h){
-      const rows=[];
-      for(let y=0;y<h;y++){const row=[];for(let x=0;x<w;x++){const p=map[y*w+x];row.push(p?p.code:'EMPTY');}rows.push(row.join(','));}
-      return rows.join('\n');
-    }
-
-    function buildPaletteString(){
-      const used=new Set();if(currentData)for(const p of currentData.map)if(p)used.add(p.code);
-      const items=palette.filter(p=>used.has(p.code));
-      return JSON.stringify(items.map(p=>({code:p.code,hex:p.hex,name:p.name})));
-    }
-
-    function buildPatternPreviewDataURL(map,w,h){
-      const cell=10,c=document.createElement('canvas');c.width=w*cell;c.height=h*cell;const ctx=c.getContext('2d');
-      ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);
-      for(let y=0;y<h;y++)for(let x=0;x<w;x++){const p=map[y*w+x];if(!p)continue;ctx.fillStyle=p.hex;ctx.fillRect(x*cell,y*cell,cell,cell);}
-      return c.toDataURL('image/jpeg',.82);
-    }
-
-    const REFINE_SYSTEM_PROMPT=`你是拼豆网格图纸结构优化器。
-
-根据原始参考图、当前拼豆网格预览图、颜色色板和优化参数，对现有拼豆网格提出有限、可解释的优化建议。
-
-你不是自由绘图模型。你只能修改现有网格中的单元格颜色，不能改变画布尺寸、主体位置、姿势、整体构图和主要配色。
-
-核心目标：在保持原图主体辨识度的前提下，使外轮廓更连续、内部结构更清晰、圆形椭圆弧线等曲线更自然、保留五官文字高光尖角等关键细节。
-
-结构类型：circle, ellipse, arc, ring, roundedRectangle, line, sharpCorner, hole, organicContour, smallFeature
-问题类型：outerContourGap, innerContourGap, isolatedPixel, isolatedColorBlock, smallHole, spike, stairStepInconsistency, asymmetry, unevenLineWidth, boundaryMerge, detailLoss, colorNoise
-
-优化规则：
-1. circle/ellipse/arc：轮廓连续规律对称，相邻行宽变化平滑，去毛刺补缺口，规律像素阶梯
-2. ring/hole：内外边界闭合，边框厚度一致，不误填眼白文字孔洞高光
-3. line：连续线宽稳定，斜线规律阶梯，不破坏文字武器褶皱
-4. sharpCorner：保留尖角方向感，禁止圆润化
-5. organicContour：修断裂去毛刺，保持原始形状辨识度
-6. smallFeature（眼睛眉毛文字高光等）：只修复明确损坏，置信不足只输出warning
-
-强制约束：
-1. 不改变网格宽高，不移动主体
-2. 默认不新增色号
-3. 不使用抗锯齿透明色渐变
-4. 不得无差别加粗描边
-5. 优先最少修改格数
-6. 置信度低于0.75只输出warning不自动改
-
-输出必须是JSON，不输出解释文字：
-{"analysis":{"summary":"中文简述","regions":[{"id":"r1","bbox":{"x":0,"y":0,"width":0,"height":0},"role":"mainSubject","structureType":"organicContour","confidence":0.9,"issues":["outerContourGap"]}]},"changes":[{"x":0,"y":0,"from":"H7","to":"A23","reason":"中文原因","confidence":0.9}],"warnings":[],"metrics":{"changedCellCount":0}}`;
-
-    async function callRefineAPI(apiKey,originalImg,patternImg,paletteStr,gridStr,params){
+    async function callVisionAPI(apiKey,img){
+      const base64=compressImageForAI(img);
+      const prompt='Analyze this image for a bead-art (拼豆) pattern generator. Return ONLY valid JSON, no markdown fences.\nFormat: {"has_white": true/false, "white_areas": "brief description of where white is (clothing, eyes, background, etc.)", "eye_colors": [{"name":"blue","hex":"#4A90D9"}], "important_colors": [{"name":"description","hex":"#RRGGBB"}], "small_details": ["brief description of small but important visual details"], "summary": "one sentence summary in Chinese"}';
       const body={
         model:'glm-4v-flash',
         messages:[
-          {role:'system',content:REFINE_SYSTEM_PROMPT},
-          {role:'user',content:[
-            {type:'text',text:'任务参数：'+JSON.stringify(params)+'\n色板：'+paletteStr+'\n当前网格（每行逗号分隔色号，EMPTY=透明）：\n'+gridStr},
-            {type:'image_url',image_url:{url:originalImg}},
-            {type:'image_url',image_url:{url:patternImg}}
-          ]}
+          {role:'system',content:'You are a code review assistant. Analyze the provided file to extract structured data for a rendering pipeline. Return only JSON.'},
+          {role:'user',content:[{type:'text',text:prompt},{type:'image_url',image_url:{url:base64}}]}
         ],
-        temperature:.3,
-        max_tokens:2000,
+        temperature:.1,
+        max_tokens:600,
         thinking:{type:'disabled'}
       };
-      const resp=await fetch('./api/vision',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},body:JSON.stringify(body)});
+      const resp=await fetch('./api/vision',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},
+        body:JSON.stringify(body)
+      });
       if(!resp.ok){const t=await resp.text().catch(()=>'');throw new Error('HTTP '+resp.status+(t?' '+t.slice(0,200):''));}
       const data=await resp.json();
       const text=data.choices?.[0]?.message?.content||'';
       const match=text.match(/\{[\s\S]*\}/);
-      if(!match)throw new Error('AI返回格式异常: '+text.slice(0,200));
+      if(!match)throw new Error('AI 返回格式异常: '+text.slice(0,100));
       return JSON.parse(match[0]);
+    }
+
+    function applyAiCorrection(map,cells,w,h,hints){
+      if(!cells||!cells.length)return map;
+      const result=map.slice();
+      const h1=palette.find(p=>p.code==='H1');
+      if(!h1)return result;
+      // 1. Force white: if AI says has_white but result has no/few H1 cells
+      if(hints.has_white){
+        const h1Count=result.filter(p=>p&&p.code==='H1').length;
+        if(h1Count<2){
+          const candidates=[];
+          for(let i=0;i<cells.length;i++){
+            if(!cells[i]||!cells[i].a||!result[i])continue;
+            if(result[i].code==='H7')continue;
+            const c=cells[i],chroma=Math.max(c.r,c.g,c.b)-Math.min(c.r,c.g,c.b);
+            if(c.medianLum>=195&&chroma<42)candidates.push({i,lum:c.medianLum,chroma});
+          }
+          if(candidates.length){
+            candidates.sort((a,b)=>b.lum-a.lum);
+            const topN=Math.min(Math.max(3,Math.floor(candidates.length*.15)),candidates.length);
+            for(let k=0;k<topN;k++)result[candidates[k].i]=h1;
+          }
+        }
+      }
+      // 2. Force important accent colors
+      if(hints.important_colors&&Array.isArray(hints.important_colors)){
+        for(const ic of hints.important_colors){
+          if(!ic.hex)continue;
+          const rgb=hexToRgb(ic.hex),targetLab=rgbToLab(rgb.r,rgb.g,rgb.b);
+          const existing=result.find(p=>p&&labDistance(p.lab,targetLab)<18);
+          if(existing)continue;
+          const sorted=[];
+          for(let i=0;i<cells.length;i++){
+            if(!cells[i]||!cells[i].a||!result[i])continue;
+            if(result[i].code==='H7'||result[i].code==='H1')continue;
+            const d=labDistance(cells[i].lab,targetLab);
+            if(d<55)sorted.push({i,d});
+          }
+          if(sorted.length){
+            sorted.sort((a,b)=>a.d-b.d);
+            const bead=nearestBead(targetLab);
+            const topCount=Math.min(Math.max(1,Math.floor(cells.length*.008)),sorted.length);
+            for(let k=0;k<topCount;k++)result[sorted[k].i]=bead;
+          }
+        }
+      }
+      // 3. Force eye colors
+      if(hints.eye_colors&&Array.isArray(hints.eye_colors)){
+        for(const ec of hints.eye_colors){
+          if(!ec.hex)continue;
+          const rgb=hexToRgb(ec.hex),targetLab=rgbToLab(rgb.r,rgb.g,rgb.b);
+          const existing=result.find(p=>p&&labDistance(p.lab,targetLab)<22);
+          if(existing)continue;
+          const sorted=[];
+          for(let i=0;i<cells.length;i++){
+            if(!cells[i]||!cells[i].a||!result[i])continue;
+            if(result[i].code==='H7'||result[i].code==='H1')continue;
+            const d=labDistance(cells[i].lab,targetLab);
+            if(d<48)sorted.push({i,d});
+          }
+          if(sorted.length){
+            const bead=nearestBead(targetLab);
+            const topCount=Math.min(Math.max(1,Math.floor(cells.length*.005)),sorted.length);
+            for(let k=0;k<topCount;k++)result[sorted[k].i]=bead;
+          }
+        }
+      }
+      return result;
     }
 
     window.__BEAD_TEST__={paletteCount:palette.length,getData:()=>currentData,loadSample,buildExportCanvas,generate,performCutout,restoreOriginal,buildCrispMap,clusterCellColors,buildColoredStrokeMask,refineOutline,bridgeDirectionalGaps,completeLightContours,buildWhiteMask,preserveSalientAccents,balancePairedAccents,refineRoundedDarkContours,snapIncidentalEdgeGrays,repairOuterSilhouette};
