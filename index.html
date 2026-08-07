@@ -2,538 +2,530 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>你天生该吃哪碗饭？ | 西西崽测评</title>
-<meta name="description" content="一分钟趣味心理测试，测出你天生的职业基因">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>退休金测算器</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{
-  --bg1:#e8f5e9;--bg2:#c8e6c9;--bg3:#a5d6a7;
-  --primary:#2e7d32;--primary-d:#1b5e20;--primary-l:#4caf50;
-  --accent:#ff9800;--card-bg:rgba(255,255,255,.92);
-  --text:#1b5e20;--text-l:#388e3c;--text-d:#000;
-  --border:#81c784;--shadow:0 8px 32px rgba(46,125,50,.12);
+  --p:#7c6cf6;--pl:#a78bfa;--pd:#6d5ef0;
+  --bg:#eef0f4;--card:#fff;--text:#1e1b3a;--tl:#6b6800;
+  --tlight:#9ca3af;--border:#e5e7eb;--gold:#f59e0b;
+  --success:#10b981;--danger:#ef4444;--amber:#fbbf24;
+  --shadow:0 4px 20px rgba(99,91,255,.08);
+  --shadow-lg:0 6px 24px rgba(124,108,246,.15);
 }
-body{
-  font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
-  min-height:100vh;color:var(--text);overflow-x:hidden;
-}
-/* 渐变网格背景 */
-.bg{position:fixed;inset:0;z-index:-1;
-  background:linear-gradient(135deg,#e8f5e9 0%,#c8e6c9 40%,#dcedc8 100%);
-}
-.bg::before{content:"";position:absolute;inset:0;
-  background-image:
-    linear-gradient(rgba(129,199,132,.15) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(129,199,132,.15) 1px,transparent 1px);
-  background-size:30px 30px;
-}
-.app{max-width:500px;margin:0 auto;min-height:100vh;position:relative}
+body{font-family:-apple-system,"PingFang SC","Helvetica Neue",sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.wrap{max-width:420px;margin:0 auto;background:var(--bg);min-height:100vh;padding-bottom:30px}
 
-/* === 封面页 === */
-.cover{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:40px 24px;text-align:center}
-.cover .tag{display:inline-flex;align-items:center;gap:8px;margin-bottom:32px}
-.cover .tag-label{border:1.5px solid var(--primary);border-radius:6px;padding:3px 14px;font-size:13px;color:var(--primary);background:#fff;font-weight:600}
-.cover .tag-num{font-size:13px;color:var(--text-l);font-weight:600}
-.cover .tag-line{flex:1;width:60px;height:1px;background:var(--border)}
-.cover h1{font-size:38px;font-weight:900;color:var(--primary-d);line-height:1.3;margin-bottom:20px;letter-spacing:-1px}
-.cover .subtags{display:flex;flex-direction:column;gap:6px;margin-bottom:48px}
-.cover .subtag{font-size:15px;color:var(--text-l)}
-.cover .quote-deco{position:absolute;right:24px;bottom:120px;font-size:64px;color:rgba(46,125,50,.08);font-weight:900;line-height:1}
-.cover .footer-en{position:absolute;bottom:24px;left:0;right:0;text-align:center;font-size:11px;color:rgba(46,125,50,.35);letter-spacing:3px}
-.btn-start{
-  background:var(--primary);color:#fff;border:none;
-  padding:16px 56px;border-radius:50px;font-size:17px;font-weight:700;
-  cursor:pointer;transition:.3s;box-shadow:0 4px 20px rgba(46,125,50,.3);
-}
-.btn-start:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(46,125,50,.4);background:var(--primary-d)}
-.btn-start:active{transform:translateY(0)}
+/* Header */
+.header{background:linear-gradient(135deg,var(--p) 0%,var(--pl) 50%,#818cf8 100%);padding:20px 16px 50px;border-radius:0 0 28px 28px;position:relative;overflow:hidden}
+.header::before{content:'';position:absolute;top:-30px;right:-30px;width:120px;height:120px;background:rgba(255,255,255,.1);border-radius:50%}
+.header::after{content:'';position:absolute;top:60px;left:-20px;width:60px;height:60px;background:rgba(255,255,255,.1);border-radius:50%}
+.header-inner{position:relative;z-index:1;display:flex;align-items:center;gap:10px}
+.header-logo{width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center}
+.header-logo i{color:#fff;font-size:16px}
+.header h1{color:#fff;font-size:18px;font-weight:700}
+.header p{color:rgba(255,255,255,.7);font-size:11px;margin-top:2px}
 
-/* === 答题页 === */
-.quiz{display:none;flex-direction:column;min-height:100vh;padding:32px 24px}
-.quiz .progress-wrap{margin-bottom:40px}
-.quiz .progress-bar{height:6px;background:rgba(255,255,255,.5);border-radius:3px;overflow:hidden}
-.quiz .progress-fill{height:100%;background:var(--primary);border-radius:3px;transition:width .2s ease}
-.quiz .progress-text{display:flex;justify-content:space-between;margin-top:8px;font-size:12px;color:var(--text-l)}
-.quiz .q-num{font-size:13px;color:var(--primary);font-weight:600;margin-bottom:8px}
-.quiz .q-title{font-size:24px;font-weight:800;color:var(--primary-d);line-height:1.4;margin-bottom:32px}
-.quiz .options{display:flex;flex-direction:column;gap:12px}
-.quiz .option{
-  background:var(--card-bg);border:2px solid transparent;
-  border-radius:16px;padding:18px 20px;font-size:16px;color:var(--text);
-  cursor:pointer;transition:.25s;display:flex;align-items:center;gap:14px;
-  box-shadow:0 2px 12px rgba(0,0,0,.04);
-}
-.quiz .option:hover{border-color:var(--primary);transform:translateX(4px);box-shadow:var(--shadow)}
-.quiz .option:active{transform:scale(.98)}
-.quiz .option .opt-label{
-  width:36px;height:36px;border-radius:50%;flex-shrink:0;
-  display:flex;align-items:center;justify-content:center;
-  font-size:15px;font-weight:700;background:rgba(46,125,50,.1);color:var(--primary);
-  transition:.25s;
-}
-.quiz .option:hover .opt-label{background:var(--primary);color:#fff}
-.quiz .option .opt-text{flex:1;font-weight:500}
+/* Tabs */
+.tabs{display:flex;gap:4px;margin:-32px 16px 0;background:#fff;border-radius:14px;padding:6px;box-shadow:var(--shadow-lg);position:relative;z-index:2}
+.tab{flex:1;padding:10px 4px;border-radius:10px;font-size:12px;font-weight:600;text-align:center;cursor:pointer;color:#9ca3af;transition:all .25s;display:flex;flex-direction:column;align-items:center;gap:3px}
+.tab.active{background:linear-gradient(135deg,var(--p),var(--pl));color:#fff;box-shadow:0 4px 14px rgba(124,108,246,.3)}
+.tab i{font-size:16px}
 
-/* === 结果页 === */
-.result{display:none;flex-direction:column;align-items:center;min-height:100vh;padding:40px 24px;text-align:center}
-.result .r-icon{font-size:72px;margin-bottom:16px;animation:bounceIn .6s ease}
-.result .r-label{font-size:14px;color:var(--text-l);margin-bottom:8px}
-.result .r-title{font-size:36px;font-weight:900;color:var(--primary-d);margin-bottom:8px;line-height:1.3}
-.result .r-badge{display:inline-block;background:var(--primary);color:#fff;font-size:12px;padding:4px 16px;border-radius:14px;margin-bottom:24px}
-.result .r-desc{
-  background:var(--card-bg);border-radius:16px;padding:24px;
-  font-size:15px;line-height:1.8;color:var(--text);margin-bottom:24px;
-  box-shadow:var(--shadow);text-align:left;
-}
-.result .r-traits{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:32px}
-.result .r-trait{background:rgba(46,125,50,.1);color:var(--primary-d);font-size:13px;padding:6px 16px;border-radius:16px;font-weight:600}
-.result .r-actions{display:flex;flex-direction:column;gap:12px;width:100%;max-width:300px;margin-bottom:24px}
-.btn-share{background:var(--accent);color:#fff;border:none;padding:14px;border-radius:50px;font-size:15px;font-weight:700;cursor:pointer;transition:.3s;box-shadow:0 4px 16px rgba(255,152,0,.3)}
-.btn-share:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(255,152,0,.4)}
-.btn-retry{background:transparent;color:var(--primary);border:2px solid var(--primary);padding:12px;border-radius:50px;font-size:14px;font-weight:600;cursor:pointer;transition:.3s}
-.btn-retry:hover{background:var(--primary);color:#fff}
+/* Content */
+.content{padding:16px;margin-top:14px}
+.card{background:#fff;border-radius:16px;box-shadow:var(--shadow);padding:16px;margin-bottom:14px}
+.card-title{font-size:11px;letter-spacing:.5px;color:#9ca3af;font-weight:600;margin-bottom:12px;text-transform:uppercase}
+.section-title{font-size:15px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.step-badge{width:22px;height:22px;border-radius:50%;background:var(--p);color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center;font-weight:700}
 
-/* 分享图弹窗 */
-.share-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:999;align-items:center;justify-content:center;padding:20px}
-.share-modal.show{display:flex}
-.share-card{
-  background:#fff;border-radius:20px;overflow:hidden;max-width:360px;width:100%;
-  box-shadow:0 20px 60px rgba(0,0,0,.3);
-}
-.share-card-img{width:100%;display:block}
-.share-card-actions{padding:16px;display:flex;gap:12px}
-.share-card-actions button{flex:1;padding:10px;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer}
-.btn-dl{background:var(--primary);color:#fff}
-.btn-close{background:#f0f0f0;color:#333}
+/* Form */
+.form-group{margin-bottom:14px}
+.form-group:last-child{margin-bottom:0}
+label{display:block;font-size:12px;font-weight:600;color:#9ca3af;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}
+label .val{color:var(--p);font-weight:700;font-size:14px}
+input[type=number],select{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:12px;font-size:15px;color:var(--text);background:#f9fafb;transition:border-color .2s;-webkit-appearance:none;outline:none;font-weight:600}
+input[type=number]:focus,select:focus{border-color:var(--p);background:#fff}
+select{background:#f9fafb url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%239ca3af' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 14px center}
+.hint{font-size:11px;color:var(--p);background:#f5f3ff;border-radius:8px;padding:6px 10px;margin-top:6px;display:flex;align-items:center;gap:4px;line-height:1.4}
+.hint-gray{font-size:11px;color:#9ca3af;margin-top:4px;line-height:1.5}
 
-@keyframes bounceIn{0%{transform:scale(0);opacity:0}60%{transform:scale(1.2)}100%{transform:scale(1);opacity:1}}
-@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-.fadeIn{animation:fadeIn .2s ease}
+/* Radio */
+.radio-group{display:flex;gap:8px}
+.radio-card{flex:1;padding:14px 6px;border-radius:12px;border:2px solid var(--border);text-align:center;cursor:pointer;transition:all .2s;background:#f9fafb;position:relative}
+.radio-card.active{border-color:var(--p);background:#f5f3ff}
+.radio-card.active .rc-icon,.radio-card.active .rc-label{color:var(--p)}
+.radio-card.active::after{content:'\f00c';font-family:"Font Awesome 6 Free";font-weight:900;position:absolute;top:6px;right:6px;color:var(--p);font-size:10px}
+.radio-card i.rc-icon{font-size:20px;color:#d1d5db;margin-bottom:4px;display:block}
+.radio-card .rc-label{font-size:12px;font-weight:600;color:#6b7280}
+.radio-card .rc-sub{font-size:10px;color:#9ca3af;margin-top:2px}
+
+/* Slider */
+input[type=range]{-webkit-appearance:none;width:100%;height:6px;border-radius:6px;background:var(--border);outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:#fff;border:4px solid var(--p);box-shadow:0 2px 8px rgba(124,108,246,.4);cursor:pointer}
+
+/* Toggle */
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0}
+.toggle-row .t-label{font-size:13px;font-weight:600}
+.toggle-row .t-desc{font-size:11px;color:#9ca3af;margin-top:2px}
+.toggle{width:40px;height:22px;border-radius:12px;background:#d1d5db;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0}
+.toggle.on{background:var(--p)}
+.toggle::after{content:'';width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.toggle.on::after{transform:translateX(18px)}
+
+/* Button */
+.btn-primary{width:100%;padding:14px;border:none;border-radius:14px;background:linear-gradient(135deg,var(--p),var(--pl));color:#fff;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 6px 20px rgba(124,108,246,.25);transition:transform .15s;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-primary:active{transform:scale(.97)}
+
+/* Result */
+.result-card{display:none}
+.result-card.show{display:block;animation:fadeUp .4s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+.result-hero{background:linear-gradient(135deg,var(--p) 0%,var(--pl) 50%,#818cf8 100%);border-radius:20px;padding:24px 16px;position:relative;overflow:hidden;margin-bottom:14px}
+.result-hero::before{content:'';position:absolute;top:-30px;right:-30px;width:100px;height:100px;background:rgba(255,255,255,.1);border-radius:50%}
+.result-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.18);backdrop-filter:blur(6px);color:#fff;font-size:11px;font-weight:500;padding:4px 12px;border-radius:20px;margin-bottom:12px}
+.result-label{color:rgba(255,255,255,.8);font-size:13px;margin-bottom:4px}
+.result-big{display:flex;align-items:baseline;justify-content:center;gap:4px}
+.result-big .yuan{color:#fff;font-size:22px;font-weight:700}
+.result-big .num{color:#fff;font-size:56px;font-weight:900;letter-spacing:-1px;font-family:Arial,sans-serif;line-height:1}
+.result-sub{color:#fff;font-size:13px;font-weight:500;margin-top:6px;text-align:center}
+
+/* Social comparison */
+.compare-card{background:linear-gradient(135deg,#f5f3ff,#fff)}
+.compare-ring{width:60px;height:60px;position:relative;flex-shrink:0}
+.compare-ring svg{transform:rotate(-90deg)}
+.compare-ring .pct{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--p);font-size:12px}
+.compare-bar-row{margin-bottom:8px}
+.compare-bar-row:last-child{margin-bottom:0}
+.compare-bar-label{display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px}
+.compare-bar{height:8px;background:#f3f4f6;border-radius:8px;overflow:hidden}
+.compare-bar .fill{height:100%;border-radius:8px;transition:width .5s ease}
+
+/* Breakdown */
+.breakdown-bar{display:flex;height:32px;border-radius:16px;overflow:hidden;margin-bottom:12px}
+.breakdown-item{display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700}
+.breakdown-row{display:flex;align-items:center;justify-content:space-between;background:#f9fafb;border-radius:12px;padding:10px 14px;margin-bottom:8px;font-size:13px}
+.breakdown-row:last-child{margin-bottom:0}
+.breakdown-row .dot{width:8px;height:8px;border-radius:50%;margin-right:8px;display:inline-block}
+
+/* Calc steps */
+.calc-step{display:flex;gap:8px;padding:8px 0;font-size:12px;line-height:1.6}
+.calc-step-tag{background:#ede9fe;color:var(--p);font-weight:700;padding:2px 8px;border-radius:6px;font-size:10px;flex-shrink:0;height:fit-content}
+.calc-step-text{color:#6b7280}
+.calc-step-text b{color:var(--text)}
+
+/* Details grid */
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+ detail-cell{background:#f9fafb;border-radius:12px;padding:12px}
+.detail-cell .dc-label{font-size:11px;color:#9ca3af;margin-bottom:3px}
+.detail-cell .dc-val{font-size:14px;font-weight:700;color:var(--text)}
+
+/* Share CTA */
+.share-cta{background:linear-gradient(135deg,var(--amber),var(--gold));border-radius:16px;padding:14px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 4px 16px rgba(251,191,36,.3)}
+.share-cta .st-title{color:#fff;font-size:13px;font-weight:700}
+.share-cta .st-sub{color:rgba(255,255,255,.85);font-size:11px}
+.share-cta .st-btn{background:#fff;color:var(--gold);font-size:11px;font-weight:700;padding:7px 14px;border-radius:20px;flex-shrink:0}
+
+/* Action buttons */
+.action-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn-ghost{border:1.5px solid var(--border);background:#fff;color:#6b7280;font-weight:700;padding:12px;border-radius:14px;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
+.btn-purple{background:linear-gradient(135deg,var(--p),var(--pl));color:#fff;font-weight:700;padding:12px;border-radius:14px;font-size:13px;cursor:pointer;box-shadow:0 4px 14px rgba(124,108,246,.2);display:flex;align-items:center;justify-content:center;gap:6px}
+
+.disclaimer{text-align:center;font-size:11px;color:#9ca3af;margin-top:16px;line-height:1.6;padding:0 20px}
+
+/* Progress steps */
+.progress-bar{display:flex;gap:6px;margin-bottom:16px}
+.progress-step{flex:1;height:5px;border-radius:5px;background:var(--border);transition:background .3s}
+.progress-step.done{background:var(--p)}
+.progress-step.active{background:var(--p);opacity:.5}
+
+/* Poster modal */
+.poster-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:100;align-items:center;justify-content:center;padding:20px;flex-direction:column}
+.poster-overlay.show{display:flex}
+.poster-close{position:absolute;top:16px;right:16px;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.15);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;z-index:10}
+#posterCanvas{border-radius:16px;box-shadow:0 8px 40px rgba(0,0,0,.4);max-width:320px;width:100%}
+.poster-actions{display:flex;gap:12px;margin-top:18px;width:100%;max-width:320px}
+.poster-actions button{flex:1;padding:12px;border:none;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
+.poster-actions .pa-save{background:rgba(255,255,255,.15);color:#fff;backdrop-filter:blur(4px)}
+.poster-actions .pa-share{background:linear-gradient(135deg,var(--p),var(--pl));color:#fff;box-shadow:0 4px 14px rgba(124,108,246,.3)}
+
+/* History */
+.history-empty{text-align:center;padding:30px 20px;color:#9ca3af}
+.history-empty i{font-size:36px;margin-bottom:10px;opacity:.4}
+.hist-item{background:#fff;border-radius:14px;box-shadow:var(--shadow);padding:14px;display:flex;align-items:center;gap:12px;margin-bottom:10px;cursor:pointer;transition:transform .15s}
+.hist-item:active{transform:scale(.98)}
+.hist-icon{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.hist-icon i{color:#fff;font-size:15px}
+.hist-info{flex:1}
+.hist-title{font-size:13px;font-weight:700}
+.hist-date{font-size:11px;color:#9ca3af}
+.hist-val{font-size:17px;font-weight:700}
+.hist-del{color:#d1d5db;font-size:14px;padding:4px;cursor:pointer}
+.hist-del:active{color:var(--danger)}
+.hist-clear{width:100%;padding:10px;border:1.5px solid var(--border);background:#fff;border-radius:12px;color:#9ca3af;font-size:12px;cursor:pointer;margin-top:8px}
+
+/* Sticky countdown */
+.countdown-sticky{margin:14px 16px 0;background:linear-gradient(135deg,#fff5eb,#fffbeb);border:1.5px solid #fde68a;border-radius:16px;padding:16px;text-align:center;position:relative;overflow:hidden}
+.countdown-sticky::before{content:'';position:absolute;top:-20px;right:-20px;width:80px;height:80px;background:rgba(251,191,36,.08);border-radius:50%}
+.cd-sticky-label{font-size:11px;color:#9ca3af;font-weight:600;margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:4px}
+.cd-sticky-main{display:flex;justify-content:center;gap:10px;align-items:baseline;margin-bottom:6px}
+.cd-sticky-main .cd-n{font-size:28px;font-weight:900;color:#f59e0b;font-family:Arial,sans-serif;line-height:1}
+.cd-sticky-main .cd-u{font-size:11px;color:#9ca3af}
+.cd-sticky-sub{font-size:11px;color:#9ca3af;line-height:1.5}
+.cd-sticky-retire{font-size:12px;font-weight:700;color:#374151;margin-top:4px}
+.cd-sticky-close{position:absolute;top:8px;right:10px;font-size:12px;color:#d1d5db;cursor:pointer;padding:4px}
+.cd-sticky-redo{font-size:11px;color:var(--p);font-weight:600;margin-top:6px;cursor:pointer;display:inline-block}
 </style>
 </head>
 <body>
-<script>
-// 域名路由：pua.xixizai.com → 跳转PUA测评
-if(location.hostname==='pua.xixizai.com'&&location.pathname==='/'){
-  location.replace('/pua.html');
-}
-if(location.hostname==='talent.xixizai.com'&&location.pathname==='/'){
-  location.replace('/talent.html');
-}
-</script>
-<div class="bg"></div>
-<div class="app">
-
-<!-- 封面页 -->
-<div class="cover" id="page-cover">
-  <div class="tag">
-    <span class="tag-label">职业基因</span>
-    <span class="tag-line"></span>
-    <span class="tag-num">NO.001</span>
-  </div>
-  <h1>你天生该吃哪碗饭？</h1>
-  <div class="subtags">
-    <div class="subtag">⏱️ 两分钟自测</div>
-    <div class="subtag">📝 10道趣味题</div>
-    <div class="subtag">✨ 凭第一直觉选</div>
-  </div>
-  <button class="btn-start" onclick="startQuiz()">开始测试 →</button>
-  <div class="quote-deco">"</div>
-  <div class="footer-en">CAREER PERSONALITY TEST</div>
-</div>
-
-<!-- 答题页 -->
-<div class="quiz" id="page-quiz">
-  <div class="progress-wrap">
-    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
-    <div class="progress-text">
-      <span id="progressLabel">第 1 题</span>
-      <span id="progressCount">1 / 10</span>
+<div class="wrap">
+  <div class="header">
+    <div class="header-inner">
+      <div class="header-logo"><i class="fa-solid fa-piggy-bank"></i></div>
+      <div>
+        <h1>退休金测算器</h1>
+        <p>退休年龄 · 养老金一键测算</p>
+      </div>
     </div>
   </div>
-  <div class="q-num" id="qNum">问题 1</div>
-  <div class="q-title" id="qTitle">加载中...</div>
-  <div class="options" id="qOptions"></div>
-</div>
 
-<!-- 结果页 -->
-<div class="result" id="page-result">
-  <div class="r-icon" id="rIcon">🔥</div>
-  <div class="r-label">你的职业基因是</div>
-  <div class="r-title" id="rTitle">天生的创业者</div>
-  <div class="r-badge" id="rBadge">ESTP型</div>
-  <div class="r-desc" id="rDesc"></div>
-  
-  <!-- 天赋指数+4维度评分 -->
-  <div class="r-desc" id="rScores" style="margin-bottom:16px"></div>
-  
-  <!-- 最适合职业 -->
-  <div class="r-desc" id="rCareers" style="margin-bottom:16px"></div>
-  
-  <!-- 职场雷区 -->
-  <div class="r-desc" id="rTraps" style="margin-bottom:16px"></div>
-  
-  <div class="r-traits" id="rTraits"></div>
-  <div class="r-actions">
-    <button class="btn-share" onclick="showShare()">📸 生成分享图</button>
-    <button class="btn-retry" onclick="resetQuiz()">🔄 再测一次</button>
+  <div id="stickyCountdown" style="display:none"></div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="age"><i class="fa-solid fa-hourglass-half"></i>退休年龄</div>
+    <div class="tab" data-tab="city"><i class="fa-solid fa-briefcase"></i>职工养老金</div>
+    <div class="tab" data-tab="rural"><i class="fa-solid fa-house-chimney"></i>居民养老金</div>
+    <div class="tab" data-tab="history"><i class="fa-solid fa-clock-rotate-left"></i>记录</div>
   </div>
-  <div style="font-size:12px;color:rgba(46,125,50,.4);margin-top:16px">更多测试请访问 protest.xixizai.com</div>
-</div>
 
-</div>
-
-<!-- 分享图弹窗 -->
-<div class="share-modal" id="shareModal">
-  <div class="share-card">
-    <canvas id="shareCanvas" class="share-card-img" width="360" height="540"></canvas>
-    <div class="share-card-actions">
-      <button class="btn-dl" onclick="downloadShare()">💾 保存图片</button>
-      <button class="btn-close" onclick="closeShare()">关闭</button>
+  <div class="content">
+    <!-- ====== TAB 1: 退休年龄 ====== -->
+    <div id="tab-age">
+      <div class="card">
+        <div class="section-title"><span class="step-badge">1</span>选择性别 / 身份</div>
+        <div class="radio-group">
+          <div class="radio-card active" data-gender="male"><i class="fa-solid fa-person rc-icon"></i><div class="rc-label">男性</div><div class="rc-sub">63岁退休</div></div>
+          <div class="radio-card" data-gender="female50"><i class="fa-solid fa-person-dress rc-icon"></i><div class="rc-label">女职工</div><div class="rc-sub">原50岁</div></div>
+          <div class="radio-card" data-gender="female55"><i class="fa-solid fa-user-tie rc-icon"></i><div class="rc-label">女干部</div><div class="rc-sub">原55岁</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-title"><span class="step-badge">2</span>出生年月</div>
+        <input type="month" id="birthDate" min="1945-01" max="2010-12" value="1990-01" style="width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:12px;font-size:15px;color:var(--text);background:#f9fafb;font-weight:600;-webkit-appearance:none;outline:none">
+        <div class="hint-gray" style="margin-top:8px"><i class="fa-solid fa-circle-info"></i> 已按渐进式延迟退休新政（2025年起）自动计算</div>
+      </div>
+      <button class="btn-primary" onclick="calcRetireAge()"><i class="fa-solid fa-wand-magic-sparkles"></i>立即测算我的退休年龄</button>
+      <div style="display:flex;justify-content:center;gap:20px;margin-top:12px;font-size:11px;color:#9ca3af">
+        <span><i class="fa-solid fa-shield-halved" style="color:var(--success);margin-right:3px"></i>数据不留存</span>
+      </div>
+      <div id="ageResult" class="result-card" style="margin-top:16px"></div>
     </div>
+
+    <!-- ====== TAB 2: 职工养老金 ====== -->
+    <div id="tab-city" style="display:none">
+      <div class="card">
+        <div class="card-title">STEP 1 · 基本信息</div>
+        <div class="form-group"><label>所在省份</label><select id="citySelect"></select><div class="hint" id="cityBaseHint"></div></div>
+        <div id="citySubSelectGroup" class="form-group" style="display:none"><label>所在城市/区域</label><select id="citySubSelect"></select></div>
+        <div class="form-group"><label>退休年龄 <span class="val" id="cityRetireAgeVal">60岁</span></label><input type="range" id="cityRetireAge" min="50" max="70" value="60" step="1"></div>
+        <div class="form-group"><label>缴费年限 <span class="val" id="cityYearsVal">30年</span></label><input type="range" id="cityYears" min="15" max="45" value="30" step="1"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">STEP 2 · 工资信息</div>
+        <div class="form-group"><label>本人月平均缴费工资</label><input type="number" id="citySalary" value="6000" min="3000" max="50000" step="500"></div>
+        <div class="form-group"><label>个人账户余额（预估）</label><input type="number" id="cityAccount" value="120000" min="0" max="1000000" step="10000"><div class="hint-gray"><i class="fa-solid fa-circle-info"></i> 一般为月工资×8%×12×缴费年限</div></div>
+      </div>
+      <button class="btn-primary" onclick="calcCityPension()"><i class="fa-solid fa-calculator"></i>测算我的养老金</button>
+      <div id="cityResult" class="result-card" style="margin-top:16px"></div>
+    </div>
+
+    <!-- ====== TAB 3: 居民养老金 ====== -->
+    <div id="tab-rural" style="display:none">
+      <div class="card">
+        <div class="card-title">STEP 1 · 基本信息</div>
+        <div class="form-group" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div><label>所在省份</label><select id="ruralProvince"></select></div>
+          <div><label>所在城市</label><select id="ruralCity"></select></div>
+        </div>
+        <div class="hint" id="ruralCityHint"></div>
+        <div class="form-group" style="margin-top:12px"><label>当前年龄</label><select id="ruralAge"></select><div class="hint-gray" id="ageHint"></div></div>
+        <div class="form-group"><label>缴费年限 <span class="val" id="ruralYearsVal">20年</span></label><input type="range" id="ruralYears" min="15" max="45" value="20" step="1"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">STEP 2 · 缴费信息</div>
+        <div id="modeCustom">
+          <div class="form-group"><label>个人累计缴费总额</label><input type="number" id="ruralCustomTotal" value="20000" min="0" max="500000" step="1000"><div class="hint-gray">💡 可查看社保记录或拨打12333查询</div></div>
+          <div class="form-group"><label>政府补贴累计（选填）</label><input type="number" id="ruralCustomSubsidy" value="2400" min="0" max="100000" step="100"></div>
+        </div>
+        <div id="levelLink" style="margin-top:6px;padding-top:12px;border-top:1px solid #f0f0f0">
+          <a href="javascript:toggleLevelPanel()" id="levelLinkBtn" style="font-size:13px;font-weight:600;color:var(--p);text-decoration:none;display:flex;align-items:center;gap:4px">📊 不知道总额？按缴费档次算 <i class="fa-solid fa-chevron-down" style="font-size:10px"></i></a>
+        </div>
+        <div id="modeLevel" style="display:none;margin-top:12px">
+          <div class="form-group"><label>每年缴费档次</label><select id="ruralLevel"></select></div>
+          <div class="form-group"><label>政府年补贴</label><input type="number" id="ruralSubsidy" value="0" min="0" max="1000" step="10"><div class="hint-gray" id="subsidyHint"></div></div>
+          <div class="hint" id="levelCalcResult" style="display:none"></div>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="calcRuralPension()"><i class="fa-solid fa-calculator"></i>测算我的养老金</button>
+      <div id="ruralResult" class="result-card" style="margin-top:16px"></div>
+    </div>
+
+    <div class="disclaimer">⚠️ 本工具测算结果仅供参考，实际养老金以当地社保局核定为准<br>数据基于2026年政策，县级标准请咨询<strong>12333</strong></div>
+  </div>
+
+  <!-- ====== TAB 4: 测算记录 ====== -->
+  <div id="tab-history" style="display:none;padding:16px">
+    <div id="historyList"></div>
   </div>
 </div>
 
+<!-- Poster Overlay -->
+<div class="poster-overlay" id="posterOverlay">
+  <div class="poster-close" onclick="closePoster()"><i class="fa-solid fa-xmark"></i></div>
+  <canvas id="posterCanvas" width="300" height="420"></canvas>
+  <div class="poster-actions">
+    <button class="pa-save" onclick="savePoster()"><i class="fa-solid fa-download"></i>保存图片</button>
+    <button class="pa-share" onclick="sharePoster()"><i class="fa-brands fa-weixin"></i>分享好友</button>
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script src="city_data.js"></script>
 <script>
-// === 测试数据（全部原创） ===
-var questions = [
-  {q:"周末早上醒来，你的第一个念头是？",
-   opts:[
-     {t:"今天能把那个想法落地了",type:"A"},
-     {t:"终于可以睡到自然醒",type:"B"},
-     {t:"约谁出去玩呢？",type:"C"},
-     {t:"列个今日计划表",type:"D"}
-   ]},
-  {q:"朋友找你诉苦，你通常？",
-   opts:[
-     {t:"帮他分析问题出在哪",type:"D"},
-     {t:"陪他一起骂，先爽了再说",type:"C"},
-     {t:"默默听着，给个拥抱",type:"B"},
-     {t:"你上次也这样，后来我这样解决了...",type:"A"}
-   ]},
-  {q:"团队讨论时，你经常扮演的角色是？",
-   opts:[
-     {t:"提新方向的人",type:"A"},
-     {t:"活跃气氛的人",type:"C"},
-     {t:"调和矛盾的人",type:"B"},
-     {t:"把控进度的人",type:"D"}
-   ]},
-  {q:"突然给你一万块闲钱，你第一反应？",
-   opts:[
-     {t:"投到我的项目里滚雪球",type:"A"},
-     {t:"请朋友吃顿大的",type:"C"},
-     {t:"存起来，有安全感",type:"B"},
-     {t:"买课程或工具提升自己",type:"D"}
-   ]},
-  {q:"你最受不了哪种领导？",
-   opts:[
-     {t:"朝令夕改，没有方向",type:"D"},
-     {t:"管太细，让人窒息",type:"A"},
-     {t:"冷冰冰，不讲人情",type:"B"},
-     {t:"开会念稿子两小时",type:"C"}
-   ]},
-  {q:"学一个新技能，你的方式是？",
-   opts:[
-     {t:"先干起来，遇到问题再查",type:"A"},
-     {t:"找个有趣的教学视频跟着玩",type:"C"},
-     {t:"从基础开始，一步步稳扎稳打",type:"B"},
-     {t:"系统看教程，做笔记，列思维导图",type:"D"}
-   ]},
-  {q:"深夜刷手机，你最容易陷进去的是？",
-   opts:[
-     {t:"行业大佬的创业故事",type:"A"},
-     {t:"搞笑段子、脱口秀",type:"C"},
-     {t:"治愈系vlog、美食视频",type:"B"},
-     {t:"干货帖、知识科普",type:"D"}
-   ]},
-  {q:"朋友说你最大的缺点是？",
-   opts:[
-     {t:"太折腾，停不下来",type:"A"},
-     {t:"太敏感，容易内耗",type:"B"},
-     {t:"太闹腾，静不下来",type:"C"},
-     {t:"太较真，不近人情",type:"D"}
-   ]},
-  {q:"如果拍一部关于你的电影，片名会是？",
-   opts:[
-     {t:"《不服输的人》",type:"A"},
-     {t:"《温柔的力量的》",type:"B"},
-     {t:"《人间值得好玩》",type:"C"},
-     {t:"《掌控一切》",type:"D"}
-   ]},
-  {q:"十年后的理想生活状态是？",
-   opts:[
-     {t:"有自己的事业帝国，还在不断拓展",type:"A"},
-     {t:"生活安稳，有时间做自己喜欢的事",type:"B"},
-     {t:"世界各地都有朋友，走到哪都不无聊",type:"C"},
-     {t:"在某个领域成为权威，受人尊敬",type:"D"}
-   ]}
-];
+const PM={45:216,46:212,47:208,48:204,49:199,50:195,51:190,52:185,53:180,54:175,55:170,56:164,57:158,58:152,59:145,60:139,61:132,62:125,63:117,64:109,65:101,66:93,67:84,68:75,69:65,70:56};
 
-// === 结果类型 ===
-var results = {
-  A:{icon:"🚀",title:"天生的创业者",badge:"行动派",
-     scores:{action:95,create:70,social:60,strategy:75},
-     desc:"你骨子里就不是一个安分的人。别人还在犹豫的时候，你已经开干了。你不怕失败，怕的是无聊。你的行动力远超分析欲，天生适合从0到1把事情做成。\n\n你最大的武器是「先干了再说」的魄力——这个世界永远奖励先动手的人。但也要记得：偶尔停下来看看方向，别只顾着狂奔。",
-     quote:"你不是太冲动，是别人太犹豫。",
-     careers:["创业者/合伙人","自媒体/IP主理人","销售/BD负责人"],
-     traps:["容易三分钟热度，启动太多项目收不住","不喜欢做细节工作，容易虎头蛇尾","对「按部就班」的人缺乏耐心"],
-     traits:["行动力爆表","不怕冒险","天生领袖","讨厌墨迹"]},
-  B:{icon:"🌿",title:"天生的创作者",badge:"感受派",
-     scores:{action:60,create:95,social:55,strategy:50},
-     desc:"你有一颗极度敏感的心，能感知到别人忽略的细节和情绪。这种敏感不是缺点，而是你的天赋——好的内容、好的设计、好的故事，都从这种感知力中来。\n\n你不是为竞争而生的，你是为创造而生的。安静地打磨自己的手艺，你的作品会替你说话。\n\n记住：敏感是你的超能力，不是软肋。",
-     quote:"别人看到表面的热闹，你看到背后的故事。",
-     careers:["内容创作者/作者","设计师/创意工作者","心理咨询师/疗愈师"],
-     traps:["容易陷入完美主义，迟迟不敢发布","对负面评价过于敏感","容易在独处时陷入内耗"],
-     traits:["共情力强","审美在线","内心丰富","适合独立创作"]},
-  C:{icon:"🎉",title:"天生的连接者",badge:"社交派",
-     scores:{action:70,create:65,social:95,strategy:60},
-     desc:"你是天生的「人际枢纽」。有你在的场合永远不会冷场，你能把陌生人变成朋友，把尴尬化为笑声。你的价值不在具体技能，而在于你能连接谁。\n\n市场、公关、社群运营、活动策划——所有需要「搞定人」的事情，你都有天然优势。\n\n你的秘诀很简单：对人真诚，对生活有热情。这种能量会吸引资源主动来找你。",
-     quote:"你的竞争力不是技能，是你认识谁。",
-     careers:["市场/品牌营销","社群运营/KOL","活动策划/公关"],
-     traps:["容易把精力分散在太多社交上","不喜欢深度钻研，专业感不足","害怕独处，容易用社交逃避问题"],
-     traits:["社交天花板","气氛制造机","人脉资源王","天生感染力"]},
-  D:{icon:"💎",title:"天生的操盘手",badge:"策略派",
-     scores:{action:75,create:55,social:50,strategy:95},
-     desc:"你是那种让混乱变有序的人。给你一堆乱麻，你天然地就想找到线头在哪里。你的逻辑、规划能力和执行力让你成为任何团队都需要的「定海神针」。\n\n你不追求舞台上的聚光灯，你要的是「一切尽在掌握」的确定性。运营、管理、投资分析——越是复杂的系统，越能体现你的价值。\n\n你的核心竞争力：别人看到混乱，你看到结构。",
-     quote:"别人看到混乱，你看到结构。",
-     careers:["运营/项目管理","投资分析师/顾问","产品经理/技术管理"],
-     traps:["过度分析，错过最佳行动时机","对不确定性强的事情焦虑","不太擅长处理情绪化的沟通"],
-     traits:["逻辑严密","执行力强","掌控全局","天生管理者"]}
-};
+function calcDR(by,bm,oa,step){const ord=new Date(by+oa,bm-1);if(ord<=new Date(2025,0))return{age:oa,year:by+oa,month:bm,delayed:0,original:true};const md=(by+oa-2025)*12+(bm-1);const dm=Math.min(Math.floor(md/step),36);const tot=oa*12+dm;const ry=by+Math.floor(tot/12);const rm=bm+tot%12;return{age:Math.floor(tot/12),ageMonth:tot%12,year:rm>12?ry+1:ry,month:rm>12?rm-12:rm,delayed:dm,original:false}}
 
-// === 测试逻辑 ===
-var currentQ = 0;
-var scores = {A:0,B:0,C:0,D:0};
+// Tabs
+document.querySelectorAll('.tab').forEach(t=>{t.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));t.classList.add('active');document.querySelectorAll('#tab-age,#tab-city,#tab-rural,#tab-history').forEach(c=>c.style.display='none');document.getElementById('tab-'+t.dataset.tab).style.display='';if(t.dataset.tab==='history')renderHistory()}});
+document.querySelectorAll('.radio-card').forEach(c=>{c.onclick=()=>{c.parentElement.querySelectorAll('.radio-card').forEach(x=>x.classList.remove('active'));c.classList.add('active')}});
 
-function startQuiz(){
-  currentQ = 0;
-  scores = {A:0,B:0,C:0,D:0};
-  document.getElementById('page-cover').style.display='none';
-  document.getElementById('page-result').style.display='none';
-  document.getElementById('page-quiz').style.display='flex';
-  renderQuestion();
-}
+// Show sticky countdown on load if user has saved age result
+try{const saved=JSON.parse(localStorage.getItem('pension_retire_data')||'null');if(saved&&saved.year){showStickyCountdown(saved)}}catch(e){}
+function showStickyCountdown(d){const now=new Date();const rd=new Date(d.year,d.month-1);const diffMs=rd-now;if(diffMs<=0){return}
+const diffDays=Math.floor(diffMs/86400000);const dy=Math.floor(diffDays/365);const drd=diffDays%365;const dm=Math.floor(drd/30);const dd=drd%30;
+const mn=['一','二','三','四','五','六','七','八','九','十','十一','十二'];
+const el=document.getElementById('stickyCountdown');el.style.display='';el.innerHTML=`<div class="countdown-sticky"><div class="cd-sticky-close" onclick="dismissSticky()"><i class="fa-solid fa-xmark"></i></div><div class="cd-sticky-label">⏰ 距离你退休还有</div><div class="cd-sticky-main"><span class="cd-n">${dy}</span><span class="cd-u">年</span><span class="cd-n">${dm}</span><span class="cd-u">月</span><span class="cd-n">${dd}</span><span class="cd-u">天</span></div><div class="cd-sticky-sub">共 ${diffDays.toLocaleString()} 天</div><div class="cd-sticky-retire">退休时间：${d.year}年${mn[d.month-1]}月 · ${d.label||''}</div><span class="cd-sticky-redo" onclick="document.querySelector(\'.tab[data-tab=age]\').click()">重新测算 →</span></div>`}
+function dismissSticky(){document.getElementById('stickyCountdown').style.display='none'}
+function saveRetireData(d){try{localStorage.setItem('pension_retire_data',JSON.stringify(d))}catch(e){}}
 
-function renderQuestion(){
-  var q = questions[currentQ];
-  var total = questions.length;
-  var progress = ((currentQ) / total) * 100;
-  
-  document.getElementById('progressFill').style.width = progress + '%';
-  document.getElementById('progressLabel').textContent = '第 ' + (currentQ+1) + ' 题';
-  document.getElementById('progressCount').textContent = (currentQ+1) + ' / ' + total;
-  document.getElementById('qNum').textContent = '问题 ' + (currentQ+1);
-  document.getElementById('qTitle').textContent = q.q;
-  
-  var optsHtml = '';
-  var labels = ['A','B','C','D'];
-  q.opts.forEach(function(o,i){
-    optsHtml += '<div class="option" onclick="selectOption(\''+o.type+'\')">' +
-      '<div class="opt-label">'+labels[i]+'</div>' +
-      '<div class="opt-text">'+o.t+'</div>' +
-      '</div>';
-  });
-  document.getElementById('qOptions').innerHTML = optsHtml;
-}
+// Sliders
+[['cityRetireAge','cityRetireAgeVal','岁'],['cityYears','cityYearsVal','年'],['ruralYears','ruralYearsVal','年']].forEach(([id,v,u])=>{const el=document.getElementById(id);el.oninput=()=>document.getElementById(v).textContent=el.value+u});
 
-function selectOption(type){
-  scores[type]++;
-  currentQ++;
-  if(currentQ >= questions.length){
-    showResult();
-  } else {
-    // 直接渲染下一题
-    window.scrollTo(0,0);
-    renderQuestion();
+// City pension data
+let citySub=null;
+(function(){const sel=document.getElementById('citySelect');const provs=Object.keys(CITY_PENSION_DATA).sort((a,b)=>Math.max(...CITY_PENSION_DATA[b].map(i=>i.b))-Math.max(...CITY_PENSION_DATA[a].map(i=>i.b)));provs.forEach(k=>{const mx=Math.max(...CITY_PENSION_DATA[k].map(i=>i.b));const o=document.createElement('option');o.value=k;o.textContent=`${k}（${mx}元起/月）`;sel.appendChild(o)});sel.value='河南';sel.onchange=updateCitySub;updateCitySub()})();
+function updateCitySub(){const prov=document.getElementById('citySelect').value;const items=CITY_PENSION_DATA[prov]||[];const hint=document.getElementById('cityBaseHint');const g=document.getElementById('citySubSelectGroup');if(items.length<=1){g.style.display='none';citySub=null;hint.innerHTML='<i class="fa-solid fa-circle-info"></i> '+prov+'计发基数：'+(items[0]?.b||0)+'元/月'}else{g.style.display='';const ss=document.getElementById('citySubSelect');ss.innerHTML='';items.sort((a,b)=>b.b-a.b).forEach(i=>{const o=document.createElement('option');o.value=i.c;o.textContent=i.c+'（'+i.b+'元/月）';ss.appendChild(o)});ss.onchange=()=>{const it=items.find(x=>x.c===ss.value);hint.innerHTML='<i class="fa-solid fa-circle-info"></i> '+prov+'·'+ss.value+'计发基数：'+it.b+'元/月'};citySub=ss;ss.onchange()}}
+function getCityBase(){const prov=document.getElementById('citySelect').value;const items=CITY_PENSION_DATA[prov]||[];if(items.length<=1)return items[0]?.b||6738;if(citySub)return items.find(x=>x.c===citySub.value)?.b||6738;return Math.max(...items.map(i=>i.b))}
+
+// Rural province
+(function(){const sel=document.getElementById('ruralProvince');Object.keys(PENSION_DATA).sort((a,b)=>Math.max(...Object.values(PENSION_DATA[b].cities))-Math.max(...Object.values(PENSION_DATA[a].cities))).forEach(k=>{const mx=Math.max(...Object.values(PENSION_DATA[k].cities));const o=document.createElement('option');o.value=k;o.textContent=k+'（'+mx+'元起/月）';sel.appendChild(o)});sel.value='河南';sel.onchange=updateRural;updateRural()})();
+// Fill age select
+(function(){const sel=document.getElementById('ruralAge');for(let a=60;a<=85;a++){const o=document.createElement('option');o.value=a;o.textContent=a+'岁';sel.appendChild(o)}sel.value=60;sel.onchange=updateAge})();
+function updateAge(){const a=parseInt(document.getElementById('ruralAge').value);const h=document.getElementById('ageHint');if(a>=80)h.innerHTML='💡 80岁+：每月+20元高龄增发';else if(a>=65)h.innerHTML='💡 65-79岁：每月+10元高龄增发';else h.innerHTML='💡 60-64岁：暂无高龄增发'}
+function updateRural(){const prov=document.getElementById('ruralProvince').value;const d=PENSION_DATA[prov];if(!d)return;const cs=document.getElementById('ruralCity');cs.innerHTML='';Object.keys(d.cities).sort((a,b)=>d.cities[b]-d.cities[a]).forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c+'（'+d.cities[c]+'元/月）';cs.appendChild(o)});const ls=document.getElementById('ruralLevel');ls.innerHTML='';const lvs=Object.keys(d.levels).map(Number).sort((a,b)=>a-b);lvs.forEach(lv=>{const o=document.createElement('option');o.value=lv;o.textContent=lv+'元/年（补'+d.levels[lv]+'元）';ls.appendChild(o)});if(lvs.length>0)ls.value=lvs[Math.min(lvs.length-1,Math.floor(lvs.length/2))];document.getElementById('ruralCityHint').innerHTML='<i class="fa-solid fa-circle-info"></i> '+prov+'：'+Object.entries(d.cities).sort((a,b)=>b[1]-a[1]).map(([c,b])=>c+b+'元').join('、');cs.onchange=updateSubHint;updateSubHint();updateAge()}
+function updateSubHint(){const prov=document.getElementById('ruralProvince').value;const d=PENSION_DATA[prov];if(!d)return;const lv=parseInt(document.getElementById('ruralLevel').value);if(d.levels[lv]!==undefined){document.getElementById('ruralSubsidy').value=d.levels[lv];document.getElementById('subsidyHint').textContent='💡 '+prov+'交'+lv+'元→补'+d.levels[lv]+'元/年'}}
+document.getElementById('ruralLevel').onchange=()=>{updateSubHint();calcLevelTotal()};
+document.getElementById('ruralYears').oninput=()=>{document.getElementById('ruralYearsVal').textContent=document.getElementById('ruralYears').value+'年';calcLevelTotal()};
+function calcLevelTotal(){const prov=document.getElementById('ruralProvince').value;const d=PENSION_DATA[prov];if(!d)return;const lv=parseInt(document.getElementById('ruralLevel').value);if(!lv)return;const sub=d.levels[lv]||0;const yrs=parseInt(document.getElementById('ruralYears').value);const total=lv*yrs;const subTotal=sub*yrs;const el=document.getElementById('levelCalcResult');el.style.display='';el.innerHTML='<i class="fa-solid fa-circle-check"></i> 按此档次：个人缴费'+total+'元+补贴'+subTotal+'元 = 累计'+(total+subTotal)+'元（'+yrs+'年）<br>已自动填入上方总额<input type="hidden">';document.getElementById('ruralCustomTotal').value=total;document.getElementById('ruralCustomSubsidy').value=subTotal;ruralMode='custom'}
+
+let ruralMode='custom';
+function toggleLevelPanel(){const ml=document.getElementById('modeLevel');const btn=document.getElementById('levelLinkBtn');if(ml.style.display==='none'){ml.style.display='';btn.innerHTML='📊 收起档次计算 <i class="fa-solid fa-chevron-up" style="font-size:10px"></i>'}else{ml.style.display='none';btn.innerHTML='📊 不知道总额？按缴费档次算 <i class="fa-solid fa-chevron-down" style="font-size:10px"></i>'}}
+
+// ====== Calc: Retire Age ======
+function calcRetireAge(){
+  const g=document.querySelector('#tab-age .radio-card.active').dataset.gender;
+  const bi=document.getElementById('birthDate').value;if(!bi){alert('请选择出生年月');return}
+  const[by,bm]=bi.split('-').map(Number);
+  let oa,step,label;
+  if(g==='male'){oa=60;step=4;label='男职工'}
+  else if(g==='female50'){oa=50;step=2;label='女职工（原50岁）'}
+  else{oa=55;step=4;label='女干部（原55岁）'}
+  const r=calcDR(by,bm,oa,step);
+  const mn=['一月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月'];
+  const el=document.getElementById('ageResult');
+  let heroHtml,compareHtml,detailHtml;
+  if(r.original){
+    heroHtml=`<div class="result-hero"><div style="position:relative;z-index:1;text-align:center"><div class="result-badge"><i class="fa-solid fa-user"></i> ${by}年${bm}月出生 · ${label}</div><div class="result-label">你的法定退休年龄</div><div class="result-big"><span class="num">${r.age}</span><span style="color:#fff;font-size:22px;font-weight:700;align-self:flex-end;margin-bottom:8px">岁</span></div><div class="result-sub">📅 退休时间：${r.year}年${mn[r.month-1]}</div></div></div>`;
+    detailHtml=`<div class="card"><div class="section-title"><i class="fa-solid fa-list-check" style="color:var(--p)"></i>测算详情</div><div class="detail-grid"><div style="background:#f9fafb;border-radius:12px;padding:12px"><div style="font-size:11px;color:#9ca3af;margin-bottom:3px">原法定退休年龄</div><div style="font-weight:700">${oa}岁</div></div><div style="background:#f5f3ff;border-radius:12px;padding:12px"><div style="font-size:11px;color:#9ca3af;margin-bottom:3px">状态</div><div style="font-weight:700;color:var(--p)">不受影响</div></div></div></div>`;
+    compareHtml='';
+  }else{
+    const y=Math.floor(r.delayed/12),m=r.delayed%12;let ds='';if(y>0)ds+=y+'年';if(m>0)ds+=m+'个月';
+    const as=r.ageMonth>0?`${r.age}岁${r.ageMonth}个月`:`${r.age}岁`;
+    heroHtml=`<div class="result-hero"><div style="position:relative;z-index:1;text-align:center"><div class="result-badge"><i class="fa-solid fa-user"></i> ${by}年${bm}月出生 · ${label}</div><div class="result-label">你的法定退休年龄</div><div class="result-big"><span class="num">${r.age}${r.ageMonth>0?'<span style="font-size:30px">'+r.ageMonth+'个月</span>':''}</span><span style="color:#fff;font-size:22px;font-weight:700;align-self:flex-end;margin-bottom:8px">岁</span></div><div class="result-sub">📅 预计退休时间：<b>${r.year}年${mn[r.month-1]}</b></div></div></div>`;
+    // Countdown
+    const now=new Date();const retireDate=new Date(r.year,r.month-1);const diffMs=retireDate-now;
+    if(diffMs>0){const diffDays=Math.floor(diffMs/86400000);const diffYears=Math.floor(diffDays/365);const diffRemDays=diffDays%365;const diffMonths=Math.floor(diffRemDays/30);const diffRemDays2=diffRemDays%30;
+    countdownHtml=`<div class="card" style="text-align:center;background:linear-gradient(135deg,#fff5eb,#fff);border:1.5px solid #fde68a"><div style="font-size:11px;color:#9ca3af;font-weight:600;margin-bottom:6px">⏰ 距离退休还有</div><div style="display:flex;justify-content:center;gap:12px;align-items:baseline"><span style="font-size:32px;font-weight:900;color:#f59e0b;font-family:Arial">${diffYears}</span><span style="font-size:12px;color:#9ca3af">年</span><span style="font-size:32px;font-weight:900;color:#f59e0b;font-family:Arial">${diffMonths}</span><span style="font-size:12px;color:#9ca3af">月</span><span style="font-size:32px;font-weight:900;color:#f59e0b;font-family:Arial">${diffRemDays2}</span><span style="font-size:12px;color:#9ca3af">天</span></div><div style="font-size:11px;color:#9ca3af;margin-top:6px">共 ${diffDays.toLocaleString()} 天 · 坚持交社保，这些都会变成你的</div></div>`}
+    else countdownHtml='';
+    // Compare bars
+    const baseAge=r.age*12+r.ageMonth;
+    const y1=baseAge-18,m1=Math.floor(y1/12),mo1=y1%12;
+    const y2=baseAge+8,m2=Math.floor(y2/12),mo2=y2%12;
+    const maxAge=baseAge+20;
+    compareHtml=`<div class="card compare-card"><div style="font-weight:700;font-size:13px;margin-bottom:12px"><i class="fa-solid fa-ranking-star" style="color:var(--p);margin-right:4px"></i>同龄人对比</div>
+    <div class="compare-bar-row"><div class="compare-bar-label"><span style="color:#6b7280">${by-2}年出生</span><span style="font-weight:700">${m1}岁${mo1?' '+mo1+'个月':''}</span></div><div class="compare-bar"><div class="fill" style="background:var(--pl);opacity:.4;width:${(baseAge-18)/maxAge*100}%"></div></div></div>
+    <div class="compare-bar-row"><div class="compare-bar-label"><span style="color:var(--p);font-weight:700">${by}年出生（你）</span><span style="font-weight:700;color:var(--p)">${as}</span></div><div class="compare-bar"><div class="fill" style="background:var(--p);width:${baseAge/maxAge*100}%"></div></div></div>
+    <div class="compare-bar-row"><div class="compare-bar-label"><span style="color:#6b7280">${by+5}年出生</span><span style="font-weight:700">${m2}岁${mo2?' '+mo2+'个月':''}</span></div><div class="compare-bar"><div class="fill" style="background:var(--pl);opacity:.4;width:${(baseAge+8)/maxAge*100}%"></div></div></div>
+    </div>`;
+    detailHtml=`<div class="card"><div class="section-title"><i class="fa-solid fa-list-check" style="color:var(--p)"></i>测算详情</div><div class="detail-grid"><div style="background:#f9fafb;border-radius:12px;padding:12px"><div style="font-size:11px;color:#9ca3af;margin-bottom:3px">原法定退休年龄</div><div style="font-weight:700">${oa}岁</div></div><div style="background:#f9fafb;border-radius:12px;padding:12px"><div style="font-size:11px;color:#9ca3af;margin-bottom:3px">延迟月数</div><div style="font-weight:700">${r.delayed}个月</div></div><div style="background:#f5f3ff;border-radius:12px;padding:12px"><div style="font-size:11px;color:#9ca3af;margin-bottom:3px">实际退休年龄</div><div style="font-weight:700;color:var(--p)">${as}</div></div><div style="background:#f9fafb;border-radius:12px;padding:12px"><div style="font-size:11px;color:#9ca3af;margin-bottom:3px">退休年月</div><div style="font-weight:700">${r.year}年${r.month}月</div></div></div><div style="margin-top:10px;background:#f5f3ff;border-radius:12px;padding:10px;font-size:11px;color:var(--p);line-height:1.5;display:flex;gap:6px"><i class="fa-solid fa-lightbulb" style="margin-top:2px"></i><span>根据渐进式延迟退休政策（2025年起），${label}每${step}个月延迟1个月。${by}年${bm}月出生，延迟${ds}。</span></div></div>`;
   }
+  el.innerHTML=heroHtml+countdownHtml+compareHtml+detailHtml+`<div class="share-cta" style="margin-top:14px;cursor:pointer" onclick="showPoster('age',{age:'${r.age}${r.ageMonth?'.'+r.ageMonth+'m':''}',year:${r.year},month:'${mn[r.month-1]}',by:${by},bm:${bm},label:'${label}',delayed:${r.delayed}})"><div><div class="st-title">🎁 生成我的专属退休报告</div><div class="st-sub">测测你的养老金，晒出你的退休账本</div></div><div class="st-btn">立即生成</div></div>`;
+  el.classList.add('show');
+  saveHistory('退休年龄', r.age+'岁', {age:r.age,ageMonth:r.ageMonth,year:r.year,month:r.month,delayed:r.delayed,by:by,bm:bm,label:label});
+  // Save for sticky countdown
+  saveRetireData({age:r.age,ageMonth:r.ageMonth,year:r.year,month:r.month,label:label,by:by,bm:bm});
+  showStickyCountdown({age:r.age,ageMonth:r.ageMonth,year:r.year,month:r.month,label:label});
+  el.scrollIntoView({behavior:'smooth',block:'start'})
 }
 
-function showResult(){
-  var maxType = 'A', maxScore = 0;
-  for(var k in scores){
-    if(scores[k] > maxScore){maxScore = scores[k]; maxType = k;}
-  }
-  var r = results[maxType];
-  // 计算总分(0-100)
-  var total = Math.round((scores.A*r.scores.action + scores.B*r.scores.create + scores.C*r.scores.social + scores.D*r.scores.strategy) / 10);
-  total = Math.min(99, Math.max(60, total + 20));
-  
-  document.getElementById('page-quiz').style.display='none';
-  document.getElementById('page-result').style.display='flex';
-  document.getElementById('rIcon').textContent = r.icon;
-  document.getElementById('rTitle').textContent = r.title;
-  document.getElementById('rBadge').textContent = r.badge;
-  
-  // 描述
-  var descHtml = r.desc.split('\n').map(function(p){return p.trim()?'<p style="margin-bottom:10px">'+p+'</p>':''}).join('');
-  if(r.quote) descHtml += '<blockquote style="border-left:3px solid var(--primary);background:rgba(46,125,50,.06);padding:12px 16px;margin:16px 0;border-radius:0 8px 8px 0;font-style:italic;color:var(--primary-d)">「'+r.quote+'」</blockquote>';
-  document.getElementById('rDesc').innerHTML = descHtml;
-  
-  // 天赋指数
-  var scoreHtml = '<div style="font-size:14px;font-weight:700;color:var(--primary-d);margin-bottom:12px">📊 职业天赋指数</div>';
-  scoreHtml += '<div style="font-size:56px;font-weight:900;color:var(--primary);margin-bottom:4px">'+total+'<span style="font-size:18px;color:var(--text-l)">/100</span></div>';
-  scoreHtml += '<div style="font-size:12px;color:var(--text-l);margin-bottom:20px">你的综合职业天赋水平</div>';
-  // 4维度评分条
-  var dims = [{k:'action',n:'行动力'},{k:'create',n:'创造力'},{k:'social',n:'社交力'},{k:'strategy',n:'策略力'}];
-  dims.forEach(function(d){
-    var v = r.scores[d.k];
-    var label = v>=85?'极强':v>=70?'中高':v>=55?'中等':'偏弱';
-    scoreHtml += '<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px"><span style="color:var(--text);font-weight:600">'+d.n+'</span><span style="color:var(--primary);font-weight:700">'+label+' '+v+'</span></div><div style="height:6px;background:rgba(46,125,50,.1);border-radius:3px;overflow:hidden"><div style="height:100%;width:'+v+'%;background:var(--primary);border-radius:3px"></div></div></div>';
-  });
-  document.getElementById('rScores').innerHTML = scoreHtml;
-  
-  // 最适合职业
-  var careerHtml = '<div style="font-size:14px;font-weight:700;color:var(--primary-d);margin-bottom:10px">🎯 最适合你的职业方向 Top'+r.careers.length+'</div>';
-  r.careers.forEach(function(c,i){careerHtml += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span style="width:24px;height:24px;border-radius:50%;background:var(--primary);color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;font-weight:700">'+(i+1)+'</span><span style="font-size:14px;color:var(--text)">'+c+'</span></div>'});
-  document.getElementById('rCareers').innerHTML = careerHtml;
-  
-  // 职场雷区
-  var trapHtml = '<div style="font-size:14px;font-weight:700;color:#e65100;margin-bottom:10px">⚠️ 你容易踩的职场雷区</div>';
-  r.traps.forEach(function(t){trapHtml += '<div style="font-size:13px;color:#bf360c;margin-bottom:6px;padding-left:16px;position:relative"><span style="position:absolute;left:0">•</span>'+t+'</div>'});
-  document.getElementById('rTraps').innerHTML = trapHtml;
-  
-  // 特质标签
-  var traitsHtml = r.traits.map(function(t){return '<span class="r-trait">'+t+'</span>'}).join('');
-  document.getElementById('rTraits').innerHTML = traitsHtml;
+// ====== Calc: City Pension ======
+function calcCityPension(){
+  const prov=document.getElementById('citySelect').value;const ra=parseInt(document.getElementById('cityRetireAge').value);const yrs=parseInt(document.getElementById('cityYears').value);const sal=parseFloat(document.getElementById('citySalary').value);const acc=parseFloat(document.getElementById('cityAccount').value);
+  if(!sal||sal<3000){alert('请输入有效的月工资');return}
+  const base=getCityBase();const months=PM[ra]||139;
+  const idx=Math.min(Math.max(sal/base,.6),3);
+  const bp=base*(1+idx)/2*yrs*.01;const ap=acc/months;const total=bp+ap;
+  const rr=(total/sal*100).toFixed(1);
+  const region=prov+(citySub?'·'+citySub.value:'');
+  // Social comparison (pseudo-random based on total)
+  const pct=Math.min(95,Math.max(15,Math.round((total/(base*.5))*100)));
+  const bpPct=Math.round(bp/total*100),apPct=100-bpPct;
+  const dailyVal=Math.round(total/30);
+  const el=document.getElementById('cityResult');
+  saveHistory('职工养老金', '¥'+Math.round(total).toLocaleString()+'/月', {type:'city',total:Math.round(total),bp:Math.round(bp),ap:Math.round(ap),region:region,yrs:yrs,pct:pct,ra:ra});
+  el.innerHTML=`
+  <div class="result-hero"><div style="position:relative;z-index:1;text-align:center">
+    <div class="result-badge"><i class="fa-solid fa-location-dot"></i> ${region} · 缴费${yrs}年</div>
+    <div class="result-label">预计每月领取养老金</div>
+    <div class="result-big"><span class="yuan">¥</span><span class="num">${Math.round(total).toLocaleString()}</span></div>
+    <div class="result-sub">相当于每天躺赚 <b>¥${dailyVal}</b> 🎉</div>
+  </div></div>
+  <div class="card compare-card" style="display:flex;align-items:center;gap:12px">
+    <div class="compare-ring"><svg viewBox="0 0 36 36" width="60" height="60"><circle cx="18" cy="18" r="15.5" fill="none" stroke="#eef0ff" stroke-width="3"/><circle cx="18" cy="18" r="15.5" fill="none" stroke="${(typeof p==='undefined'?'#7c6cf6':'#7c6cf6')}" stroke-width="3" stroke-dasharray="${pct} 100" stroke-linecap="round"/></svg><div class="pct">${pct}%</div></div>
+    <div style="font-size:13px;line-height:1.5;color:#374151">你的养老金水平超过${prov}<b style="color:var(--p)">${pct}%</b>的同缴费年限职工 👍</div>
+  </div>
+  <div class="card"><div style="font-weight:700;font-size:13px;margin-bottom:10px"><i class="fa-solid fa-layer-group" style="color:var(--p);margin-right:4px"></i>养老金构成</div>
+    <div class="breakdown-bar"><div class="breakdown-item" style="background:var(--p);width:${bpPct}%">基础 ${bpPct}%</div><div class="breakdown-item" style="background:var(--amber);width:${apPct}%">账户 ${apPct}%</div></div>
+    <div class="breakdown-row"><span style="color:#6b7280"><span class="dot" style="background:var(--p)"></span>基础养老金</span><b>¥${Math.round(bp).toLocaleString()}/月</b></div>
+    <div class="breakdown-row"><span style="color:#6b7280"><span class="dot" style="background:var(--amber)"></span>个人账户养老金</span><b>¥${Math.round(ap).toLocaleString()}/月</b></div>
+  </div>
+  <div class="card"><div style="font-weight:700;font-size:13px;margin-bottom:10px"><i class="fa-solid fa-square-root-variable" style="color:var(--p);margin-right:4px"></i>计算过程</div>
+    <div class="calc-step"><span class="calc-step-tag">STEP1</span><span class="calc-step-text">缴费指数 = ¥${sal.toLocaleString()} ÷ ¥${base.toLocaleString()} = <b>${idx.toFixed(2)}</b></span></div>
+    <div class="calc-step"><span class="calc-step-tag">STEP2</span><span class="calc-step-text">基础养老金 = ¥${base.toLocaleString()}×(1+${idx.toFixed(2)})÷2×${yrs}年×1% = <b>¥${Math.round(bp).toLocaleString()}</b></span></div>
+    <div class="calc-step"><span class="calc-step-tag">STEP3</span><span class="calc-step-text">个人账户 = ¥${acc.toLocaleString()}÷${months}月 = <b>¥${Math.round(ap).toLocaleString()}</b></span></div>
+    <div style="background:#f5f3ff;border-radius:10px;padding:10px;margin-top:6px;font-size:13px;font-weight:700;color:var(--p)">合计：¥${Math.round(bp).toLocaleString()} + ¥${Math.round(ap).toLocaleString()} = ¥${Math.round(total).toLocaleString()}/月</div>
+  </div>
+  <div class="card"><div class="detail-grid"><div style="background:#f9fafb;border-radius:12px;padding:12px"><div style="font-size:11px;color:#9ca3af;margin-bottom:3px">养老金替代率</div><div style="font-weight:700;color:${rr<40?'#ef4444':rr>60?'#10b981':'#7c6cf6'}">${rr}%</div></div><div style="background:#f9fafb;border-radius:12px;padding:12px"><div style="font-size:11px;color:#9ca3af;margin-bottom:3px">缴费指数</div><div style="font-weight:700">${idx.toFixed(2)}</div></div></div></div>
+  <div class="share-cta" style="margin-top:14px;cursor:pointer" onclick="showPoster('city',{total:${Math.round(total)},region:'${region}',yrs:${yrs},pct:${pct},ra:${ra}})"><div><div class="st-title">🎁 生成我的养老账本海报</div><div class="st-sub">晒出你的退休底气，邀请好友一起测</div></div><div class="st-btn">立即生成</div></div>
+  <div class="action-row" style="margin-top:12px"><button class="btn-ghost" onclick="calcCityPension()"><i class="fa-solid fa-arrow-rotate-left"></i>重新测算</button><button class="btn-purple"><i class="fa-solid fa-coins"></i>测居民养老金</button></div>`;
+  el.classList.add('show');
+  el.scrollIntoView({behavior:'smooth',block:'start'})
 }
 
-function resetQuiz(){
-  document.getElementById('page-result').style.display='none';
-  document.getElementById('page-cover').style.display='flex';
+// ====== Calc: Rural Pension ======
+function calcRuralPension(){
+  const prov=document.getElementById('ruralProvince').value;const city=document.getElementById('ruralCity').value;const age=parseInt(document.getElementById('ruralAge').value);const yrs=parseInt(document.getElementById('ruralYears').value);
+  const d=PENSION_DATA[prov];if(!d)return;
+  const base=d.cities[city]||163;const region=prov+(city&&city!=='全省统一'?'·'+city:'');
+  let pTotal=parseFloat(document.getElementById('ruralCustomTotal').value)||0;let sTotal=parseFloat(document.getElementById('ruralCustomSubsidy').value)||0;
+  let accT=(pTotal+sTotal)*Math.pow(1.015,Math.min(yrs*.3,10))
+  const ap=accT/139;const exY=Math.max(0,yrs-15);const ltBonus=exY*3;
+  let ageBonus=0,ageLabel='无';if(age>=80){ageBonus=20;ageLabel='+20元（80岁以上）'}else if(age>=65){ageBonus=10;ageLabel='+10元（65-79岁）'}
+  const total=base+ap+ltBonus+ageBonus;const contrib=pTotal;const pb=contrib>0&&total>0?(contrib/(total*12)).toFixed(1):'—';
+  const el=document.getElementById('ruralResult');
+  // Build steps
+  let steps='';
+  steps+=`<div class="calc-step"><span class="calc-step-tag">第1步</span><span class="calc-step-text">基础养老金（${region}）= <b>¥${base}/月</b></span></div>`;
+  steps+=`<div class="calc-step"><span class="calc-step-tag">第2步</span><span class="calc-step-text">缴费¥${pTotal.toLocaleString()}+补贴¥${sTotal.toLocaleString()}+利息≈¥${Math.round(accT).toLocaleString()}<br>个人账户养老金 = ¥${Math.round(accT).toLocaleString()}÷139 = <b>¥${Math.round(ap)}/月</b></span></div>`
+  steps+=`<div class="calc-step"><span class="calc-step-tag">第3步</span><span class="calc-step-text">${yrs>15?'超出15年'+exY+'年×¥3=¥'+ltBonus+'/月':'未超15年，暂无长缴增发'}</span></div>`;
+  steps+=`<div class="calc-step"><span class="calc-step-tag">第4步</span><span class="calc-step-text">高龄增发：${ageLabel}</span></div>`;
+  saveHistory('居民养老金', '¥'+Math.round(total)+'/月', {type:'rural',total:Math.round(total),base:base,ap:Math.round(ap),ltBonus:ltBonus,ageBonus:ageBonus,region:region,yrs:yrs});
+  el.innerHTML=`
+  <div class="result-hero"><div style="position:relative;z-index:1;text-align:center">
+    <div class="result-badge"><i class="fa-solid fa-location-dot"></i> ${region}</div>
+    <div class="result-label">预计每月领取养老金</div>
+    <div class="result-big"><span class="yuan">¥</span><span class="num">${Math.round(total)}</span></div>
+  </div></div>
+  <div class="card"><div style="font-weight:700;font-size:13px;margin-bottom:10px"><i class="fa-solid fa-layer-group" style="color:var(--p);margin-right:4px"></i>构成明细</div>
+    <div class="breakdown-row"><span style="color:#6b7280"><span class="dot" style="background:var(--p)"></span>基础养老金</span><b>¥${base}/月</b></div>
+    <div class="breakdown-row"><span style="color:#6b7280"><span class="dot" style="background:var(--amber)"></span>个人账户养老金</span><b>¥${Math.round(ap)}/月</b></div>
+    ${ltBonus>0?`<div class="breakdown-row"><span style="color:#6b7280"><span class="dot" style="background:#34d399"></span>长缴多得</span><b>¥${ltBonus}/月</b></div>`:''}
+    ${ageBonus>0?`<div class="breakdown-row"><span style="color:#6b7280"><span class="dot" style="background:#f87171"></span>高龄增发</span><b>¥${ageBonus}/月</b></div>`:''}
+  </div>
+  <div class="card"><div style="font-weight:700;font-size:13px;margin-bottom:8px"><i class="fa-solid fa-square-root-variable" style="color:var(--p);margin-right:4px"></i>计算过程</div>${steps}<div style="background:#f5f3ff;border-radius:10px;padding:10px;margin-top:6px;font-size:13px;font-weight:700;color:var(--p)">合计：¥${base}+¥${Math.round(ap)}+¥${ltBonus}+¥${ageBonus}=¥${Math.round(total)}/月</div></div>
+  <div class="card"><div class="detail-grid">
+    <div style="background:#f9fafb;border-radius:12px;padding:12px"><div style="font-size:11px;color:#9ca3af;margin-bottom:3px">个人账户累计</div><div style="font-weight:700">¥${Math.round(accT).toLocaleString()}</div></div>
+    <div style="background:#f9fafb;border-radius:12px;padding:12px"><div style="font-size:11px;color:#9ca3af;margin-bottom:3px">实际缴费</div><div style="font-weight:700">¥${contrib.toLocaleString()}</div></div>
+    <div style="background:#f9fafb;border-radius:12px;padding:12px"><div style="font-size:11px;color:#9ca3af;margin-bottom:3px">回本周期</div><div style="font-weight:700">${pb!=='—'?'约'+pb+'年':'—'}</div></div>
+    <div style="background:#f5f3ff;border-radius:12px;padding:12px"><div style="font-size:11px;color:#9ca3af;margin-bottom:3px">高龄增发</div><div style="font-weight:700;color:var(--p)">${ageLabel}</div></div>
+  </div></div>
+  <div class="share-cta" style="margin-top:14px;cursor:pointer" onclick="showPoster('rural',{total:${Math.round(total)},region:'${region}',yrs:${yrs}})"><div><div class="st-title">🎁 生成专属养老报告</div><div class="st-sub">分享给家人一起规划</div></div><div class="st-btn">立即生成</div></div>
+  <div class="action-row" style="margin-top:12px"><button class="btn-ghost" onclick="calcRuralPension()"><i class="fa-solid fa-arrow-rotate-left"></i>重新测算</button><button class="btn-purple"><i class="fa-solid fa-coins"></i>测职工养老金</button></div>`;
+  el.classList.add('show');
+  el.scrollIntoView({behavior:'smooth',block:'start'})
 }
 
-// === 分享图生成 ===
-function showShare(){
-  var modal = document.getElementById('shareModal');
-  modal.classList.add('show');
-  drawShareCard();
-}
+// ====== History (localStorage) ======
+function saveHistory(title,val,data){try{let h=JSON.parse(localStorage.getItem('pension_history')||'[]');h.unshift({title,val,data,ts:Date.now()});h=h.slice(0,30);localStorage.setItem('pension_history',JSON.stringify(h))}catch(e){}}
+function renderHistory(){const el=document.getElementById('historyList');if(!el)return;let h=[];try{h=JSON.parse(localStorage.getItem('pension_history')||'[]')}catch(e){}
+if(h.length===0){el.innerHTML='<div class="history-empty"><i class="fa-solid fa-clock-rotate-left"></i><div>还没有测算记录</div><div style="font-size:12px;margin-top:4px">测算后会自动保存在这里</div></div>';return}
+const icons={'退休年龄':'fa-hourglass-half','职工养老金':'fa-briefcase','居民养老金':'fa-house-chimney'};const colors={'退休年龄':'#7c6cf6','职工养老金':'#f59e0b','居民养老金':'#14b8a6'};
+el.innerHTML=h.map((r,i)=>{const d=new Date(r.ts);const ds=(d.getMonth()+1)+'-'+d.getDate();const ic=icons[r.title]||'fa-calculator';const co=colors[r.title]||'#7c6cf6';return `<div class="hist-item" onclick="loadHistItem(${i})"><div class="hist-icon" style="background:${co}"><i class="fa-solid ${ic}"></i></div><div class="hist-info"><div class="hist-title">${r.title}</div><div class="hist-date">${ds}</div></div><div class="hist-val" style="color:${co}">${r.val}</div><div class="hist-del" onclick="event.stopPropagation();delHistItem(${i})"><i class="fa-solid fa-trash-can"></i></div></div>`}).join('')+'<button class="hist-clear" onclick="clearHistory()"><i class="fa-solid fa-trash"></i> 清空全部记录</button>'}
+function delHistItem(i){try{let h=JSON.parse(localStorage.getItem('pension_history')||'[]');h.splice(i,1);localStorage.setItem('pension_history',JSON.stringify(h));renderHistory()}catch(e){}}
+function clearHistory(){if(confirm('确定清空全部记录？')){localStorage.removeItem('pension_history');renderHistory()}}
+function loadHistItem(i){try{let h=JSON.parse(localStorage.getItem('pension_history')||'[]');const r=h[i];if(!r)return;if(r.title==='职工养老金')document.querySelector('.tab[data-tab=city]').click();else if(r.title==='居民养老金')document.querySelector('.tab[data-tab=rural]').click();else document.querySelector('.tab[data-tab=age]').click()}catch(e){}}
+// (history render merged into tab handler above)
 
-function closeShare(){
-  document.getElementById('shareModal').classList.remove('show');
-}
-
-function drawShareCard(){
-  var canvas = document.getElementById('shareCanvas');
-  var ctx = canvas.getContext('2d');
-  var W = 360, H = 540;
-  
-  // 背景
-  var grad = ctx.createLinearGradient(0,0,W,H);
-  grad.addColorStop(0,'#e8f5e9');
-  grad.addColorStop(0.5,'#c8e6c9');
-  grad.addColorStop(1,'#dcedc8');
-  ctx.fillStyle = grad;
-  ctx.fillRect(0,0,W,H);
-  
-  // 网格纹理
-  ctx.strokeStyle = 'rgba(129,199,132,0.12)';
-  ctx.lineWidth = 1;
-  for(var x=0;x<W;x+=30){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
-  for(var y=0;y<H;y+=30){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
-  
-  // 顶部标签
-  ctx.fillStyle = '#fff';
-  ctx.strokeStyle = '#2e7d32';
-  ctx.lineWidth = 1.5;
-  var tagText = '职业基因';
-  ctx.font = '12px sans-serif';
-  var tw = ctx.measureText(tagText).width + 24;
-  roundRect(ctx, 28, 36, tw, 26, 5);
-  ctx.fill();
-  ctx.stroke();
-  ctx.fillStyle = '#2e7d32';
-  ctx.font = 'bold 12px sans-serif';
-  ctx.fillText(tagText, 40, 53);
-  
-  ctx.fillStyle = '#388e3c';
-  ctx.font = '12px sans-serif';
-  ctx.fillText('NO.001', W-70, 53);
-  
-  // 分隔线
-  ctx.strokeStyle = '#81c784';
-  ctx.lineWidth = 1;
-  ctx.beginPath();ctx.moveTo(110,49);ctx.lineTo(W-90,49);ctx.stroke();
-  
-  // 结果图标
-  ctx.font = '56px sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText(document.getElementById('rIcon').textContent, W/2, 160);
-  
-  // "你的结果是"
-  ctx.fillStyle = '#388e3c';
-  ctx.font = '13px sans-serif';
-  ctx.fillText('你的职业基因是', W/2, 200);
-  
-  // 结果标题
-  ctx.fillStyle = '#1b5e20';
-  ctx.font = 'bold 30px sans-serif';
-  ctx.fillText(document.getElementById('rTitle').textContent, W/2, 240);
-  
-  // badge
-  ctx.fillStyle = '#2e7d32';
-  ctx.font = 'bold 12px sans-serif';
-  var badgeText = document.getElementById('rBadge').textContent;
-  var bw = ctx.measureText(badgeText).width + 24;
-  ctx.fillStyle = '#2e7d32';
-  roundRect(ctx, (W-bw)/2, 260, bw, 26, 13);
-  ctx.fill();
-  ctx.fillStyle = '#fff';
-  ctx.fillText(badgeText, W/2, 277);
-  
-  // traits
-  ctx.fillStyle = '#1b5e20';
-  ctx.font = '13px sans-serif';
-  var traits = document.getElementById('rTraits').innerText;
-  ctx.fillText(traits.replace(/\n/g,' · '), W/2, 320);
-  
-  // 描述前3行
-  var desc = document.getElementById('rDesc').textContent;
-  ctx.fillStyle = 'rgba(27,94,32,0.7)';
-  ctx.font = '13px sans-serif';
-  ctx.textAlign = 'left';
-  var lines = desc.split('\n')[0].match(/.{1,18}/g) || [];
-  lines.slice(0,4).forEach(function(line,i){
-    ctx.fillText(line, 40, 370 + i*22);
-  });
-  
-  // 二维码占位
-  ctx.fillStyle = '#fff';
-  roundRect(ctx, W/2-40, 440, 80, 80, 12);
-  ctx.fill();
-  ctx.fillStyle = '#2e7d32';
-  ctx.font = '11px sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText('扫码来测', W/2, 470);
-  ctx.font = 'bold 22px sans-serif';
-  ctx.fillText('🐾', W/2, 500);
-  
-  // 底部
-  ctx.fillStyle = 'rgba(27,94,32,0.3)';
-  ctx.font = '10px sans-serif';
-  ctx.fillText('protest.xixizai.com', W/2, 530);
-  
-  ctx.textAlign = 'left';
-}
-
-function roundRect(ctx,x,y,w,h,r){
-  ctx.beginPath();
-  ctx.moveTo(x+r,y);
-  ctx.arcTo(x+w,y,x+w,y+h,r);
-  ctx.arcTo(x+w,y+h,x,y+h,r);
-  ctx.arcTo(x,y+h,x,y,r);
-  ctx.arcTo(x,y,x+w,y,r);
-  ctx.closePath();
-}
-
-function downloadShare(){
-  var canvas = document.getElementById('shareCanvas');
-  var link = document.createElement('a');
-  link.download = '我的职业基因测试结果.png';
-  link.href = canvas.toDataURL();
-  link.click();
-}
+// ====== Poster Generation (Canvas) ======
+let posterData=null;
+function showPoster(type,data){posterData={type,...data};drawPoster();document.getElementById('posterOverlay').classList.add('show')}
+function closePoster(){document.getElementById('posterOverlay').classList.remove('show')}
+function drawPoster(){const c=document.getElementById('posterCanvas');const ctx=c.getContext('2d');const W=300,H=420;ctx.clearRect(0,0,W,H);
+// Background
+const g=ctx.createLinearGradient(0,0,W,H);g.addColorStop(0,'#7c6cf6');g.addColorStop(.5,'#a78bfa');g.addColorStop(1,'#818cf8');
+// Top section
+ctx.fillStyle=g;ctx.beginPath();ctx.roundRect(0,0,W,200,16);ctx.fill();
+// Circles decor
+ctx.fillStyle='rgba(255,255,255,0.1)';ctx.beginPath();ctx.arc(W-30,-20,60,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(80,120,30,0,Math.PI*2);ctx.fill();
+// Logo
+ctx.fillStyle='rgba(255,255,255,0.25)';ctx.beginPath();ctx.roundRect(20,24,32,32,8);ctx.fill();
+ctx.fillStyle='#fff';ctx.font='16px sans-serif';ctx.textAlign='left';ctx.fillText('🐷',24,46);
+ctx.font='bold 14px -apple-system,sans-serif';ctx.fillText('我的养老金账本',60,46);
+// Label
+ctx.font='12px -apple-system,sans-serif';ctx.fillStyle='rgba(255,255,255,0.7)';ctx.textAlign='center';
+const label=posterData.type==='age'?'你的法定退休年龄':'预计每月领取养老金';
+ctx.fillText(label,W/2,90);
+// Big number
+const d=posterData.data||posterData;
+ctx.fillStyle='#fff';ctx.font='900 52px Arial,sans-serif';
+if(posterData.type==='age'){const a=d.age||d.total||'';ctx.fillText(String(a),W/2-15,145);ctx.font='bold 18px sans-serif';ctx.fillText('岁',W/2+ctx.measureText(String(a)).width/2+0,140)}else{const v=d.total||0;ctx.font='bold 20px Arial';ctx.fillText('¥',W/2-55,140);ctx.font='900 48px Arial';ctx.fillText(String(v).toLocaleString(),W/2+10,140)}
+// Subtitle
+ctx.font='12px -apple-system,sans-serif';ctx.fillStyle='rgba(255,255,255,0.85)';
+if(posterData.type==='city'&&d.pct)ctx.fillText('超过'+d.region.split('·')[0]+' '+d.pct+'% 的同龄职工 🏆',W/2,172);else if(posterData.type==='age'&&d.delayed)ctx.fillText('预计退休：'+d.year+'年',W/2,172);else if(posterData.type==='rural')ctx.fillText('分享给家人一起规划',W/2,172);
+// White card section
+ctx.fillStyle='#fff';ctx.beginPath();ctx.roundRect(0,200,W,H-200,16);ctx.fill();
+// Info grid
+const gy=230;const items=[];
+if(posterData.type==='age'){items.push(['退休年龄',d.age?String(d.age)+'岁':'-']);items.push(['出生年份',d.by?String(d.by)+'年':'-']);items.push(['退休时间',d.year?String(d.year)+'年':'-'])}
+else if(posterData.type==='city'){items.push(['缴费年限',d.yrs?String(d.yrs)+'年':'-']);items.push(['所在地区',(d.region||'').split('·')[0]||'-']);items.push(['退休年龄',d.ra?String(d.ra)+'岁':'-'])}
+else{items.push(['缴费年限',d.yrs?String(d.yrs)+'年':'-']);items.push(['所在地区',(d.region||'').split('·')[0]||'-']);items.push(['每月领取',d.total?'¥'+String(d.total):'-'])}
+const cw=W/items.length;items.forEach((it,i)=>{const cx=cw*i+cw/2;ctx.fillStyle='#9ca3af';ctx.font='10px -apple-system,sans-serif';ctx.textAlign='center';ctx.fillText(it[0],cx,gy);ctx.fillStyle='#1e1b3a';ctx.font='bold 14px -apple-system,sans-serif';ctx.fillText(it[1],cx,gy+20);if(i>0){ctx.strokeStyle='#f3f4f6';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(cw*i,gy-10);ctx.lineTo(cw*i,gy+28);ctx.stroke()}});
+// QR placeholder
+ctx.fillStyle='#f9fafb';ctx.beginPath();ctx.roundRect(20,290,W-40,70,12);ctx.fill();
+// QR box
+ctx.fillStyle='#fff';ctx.strokeStyle='#e5e7eb';ctx.lineWidth=1;ctx.beginPath();ctx.roundRect(35,302,46,46,8);ctx.fill();ctx.stroke();
+ctx.fillStyle='#374151';ctx.font='bold 22px sans-serif';ctx.textAlign='center';ctx.fillText('📱',58,332);
+// QR text
+ctx.fillStyle='#6b7280';ctx.font='11px -apple-system,sans-serif';ctx.textAlign='left';ctx.fillText('长按扫码',95,320);ctx.fillStyle='#9ca3af';ctx.font='10px -apple-system,sans-serif';ctx.fillText('测算你的养老金',95,338);
+ctx.fillStyle='#d1d5db';ctx.font='9px sans-serif';ctx.fillText('退休金测算器',95,354);
+// Bottom tag
+ctx.fillStyle='#9ca3af';ctx.font='10px -apple-system,sans-serif';ctx.textAlign='center';ctx.fillText('数据仅供参考 · 实际以社保局核定为准',W/2,385)}
+function savePoster(){const c=document.getElementById('posterCanvas');try{const link=document.createElement('a');link.download='养老金测算海报.png';link.href=c.toDataURL('image/png');link.click()}catch(e){alert('保存失败，请截图保存')}}
+function sharePoster(){if(navigator.share){navigator.share({title:'我的养老金测算结果',text:'快来测测你的退休金吧！',url:location.href}).catch(()=>{})}else{try{navigator.clipboard.writeText(location.href);alert('链接已复制，去分享给好友吧！')}catch(e){alert('请截图保存分享')}}}
 </script>
 </body>
 </html>
