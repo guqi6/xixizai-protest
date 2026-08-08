@@ -2,538 +2,459 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>你天生该吃哪碗饭？ | 西西崽测评</title>
-<meta name="description" content="一分钟趣味心理测试，测出你天生的职业基因">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>你天生该吃哪碗饭？10道题测出你的隐藏职业基因</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-:root{
-  --bg1:#e8f5e9;--bg2:#c8e6c9;--bg3:#a5d6a7;
-  --primary:#2e7d32;--primary-d:#1b5e20;--primary-l:#4caf50;
-  --accent:#ff9800;--card-bg:rgba(255,255,255,.92);
-  --text:#1b5e20;--text-l:#388e3c;--text-d:#000;
-  --border:#81c784;--shadow:0 8px 32px rgba(46,125,50,.12);
-}
-body{
-  font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
-  min-height:100vh;color:var(--text);overflow-x:hidden;
-}
-/* 渐变网格背景 */
-.bg{position:fixed;inset:0;z-index:-1;
-  background:linear-gradient(135deg,#e8f5e9 0%,#c8e6c9 40%,#dcedc8 100%);
-}
-.bg::before{content:"";position:absolute;inset:0;
-  background-image:
-    linear-gradient(rgba(129,199,132,.15) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(129,199,132,.15) 1px,transparent 1px);
-  background-size:30px 30px;
-}
-.app{max-width:500px;margin:0 auto;min-height:100vh;position:relative}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif;background:#f0f7f0;color:#1b3a1b;overflow-x:hidden}
+:root{--primary:#2e7d32;--primary-d:#1b5e20;--primary-l:#4caf50;--gold:#f5a623;--warm:#66bb6a;--dark:#1b3a1b;--gray:#7a9a7a;--bg:#f0f7f0;--card:#fffaf5;--radius:16px}
+.wrap{max-width:480px;margin:0 auto;min-height:100vh}
 
-/* === 封面页 === */
-.cover{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:40px 24px;text-align:center}
-.cover .tag{display:inline-flex;align-items:center;gap:8px;margin-bottom:32px}
-.cover .tag-label{border:1.5px solid var(--primary);border-radius:6px;padding:3px 14px;font-size:13px;color:var(--primary);background:#fff;font-weight:600}
-.cover .tag-num{font-size:13px;color:var(--text-l);font-weight:600}
-.cover .tag-line{flex:1;width:60px;height:1px;background:var(--border)}
-.cover h1{font-size:38px;font-weight:900;color:var(--primary-d);line-height:1.3;margin-bottom:20px;letter-spacing:-1px}
-.cover .subtags{display:flex;flex-direction:column;gap:6px;margin-bottom:48px}
-.cover .subtag{font-size:15px;color:var(--text-l)}
-.cover .quote-deco{position:absolute;right:24px;bottom:120px;font-size:64px;color:rgba(46,125,50,.08);font-weight:900;line-height:1}
-.cover .footer-en{position:absolute;bottom:24px;left:0;right:0;text-align:center;font-size:11px;color:rgba(46,125,50,.35);letter-spacing:3px}
-.btn-start{
-  background:var(--primary);color:#fff;border:none;
-  padding:16px 56px;border-radius:50px;font-size:17px;font-weight:700;
-  cursor:pointer;transition:.3s;box-shadow:0 4px 20px rgba(46,125,50,.3);
-}
-.btn-start:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(46,125,50,.4);background:var(--primary-d)}
-.btn-start:active{transform:translateY(0)}
+/* 进度条 */
+.progress-bar{position:fixed;top:0;left:0;right:0;height:4px;background:#e0e8e0;z-index:100}
+.progress-fill{height:100%;background:linear-gradient(90deg,#2e7d32,#66bb6a,#f5a623);transition:width .4s ease;border-radius:0 4px 4px 0}
+.progress-text{position:fixed;top:8px;right:16px;font-size:12px;color:var(--gray);z-index:100}
 
-/* === 答题页 === */
-.quiz{display:none;flex-direction:column;min-height:100vh;padding:32px 24px}
-.quiz .progress-wrap{margin-bottom:40px}
-.quiz .progress-bar{height:6px;background:rgba(255,255,255,.5);border-radius:3px;overflow:hidden}
-.quiz .progress-fill{height:100%;background:var(--primary);border-radius:3px;transition:width .2s ease}
-.quiz .progress-text{display:flex;justify-content:space-between;margin-top:8px;font-size:12px;color:var(--text-l)}
-.quiz .q-num{font-size:13px;color:var(--primary);font-weight:600;margin-bottom:8px}
-.quiz .q-title{font-size:24px;font-weight:800;color:var(--primary-d);line-height:1.4;margin-bottom:32px}
-.quiz .options{display:flex;flex-direction:column;gap:12px}
-.quiz .option{
-  background:var(--card-bg);border:2px solid transparent;
-  border-radius:16px;padding:18px 20px;font-size:16px;color:var(--text);
-  cursor:pointer;transition:.25s;display:flex;align-items:center;gap:14px;
-  box-shadow:0 2px 12px rgba(0,0,0,.04);
-}
-.quiz .option:hover{border-color:var(--primary);transform:translateX(4px);box-shadow:var(--shadow)}
-.quiz .option:active{transform:scale(.98)}
-.quiz .option .opt-label{
-  width:36px;height:36px;border-radius:50%;flex-shrink:0;
-  display:flex;align-items:center;justify-content:center;
-  font-size:15px;font-weight:700;background:rgba(46,125,50,.1);color:var(--primary);
-  transition:.25s;
-}
-.quiz .option:hover .opt-label{background:var(--primary);color:#fff}
-.quiz .option .opt-text{flex:1;font-weight:500}
+/* 封面页 */
+.cover{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;text-align:center;background:linear-gradient(180deg,#e8f5e9 0%,#f0f7f0 50%,#fff8e1 100%)}
+.cover-deco{font-size:72px;margin-bottom:8px}
+.cover h1{font-size:34px;font-weight:900;color:var(--primary-d);line-height:1.3;margin-bottom:12px;letter-spacing:-1px}
+.cover h1 span{color:var(--gold)}
+.cover-sub{font-size:16px;color:var(--gray);line-height:1.6;margin-bottom:32px;max-width:320px}
+.cover-features{display:flex;gap:12px;margin-bottom:40px;flex-wrap:wrap;justify-content:center}
+.cover-tag{background:#fff;padding:8px 16px;border-radius:20px;font-size:13px;color:var(--dark);border:1px solid #c8e6c9;box-shadow:0 2px 8px rgba(46,125,50,0.06)}
+.cover-tag b{color:var(--primary)}
+.btn-start{background:linear-gradient(135deg,#2e7d32,#66bb6a);color:#fff;border:none;padding:16px 48px;border-radius:50px;font-size:18px;font-weight:700;cursor:pointer;box-shadow:0 8px 24px rgba(46,125,50,0.3);transition:transform .2s}
+.btn-start:active{transform:scale(0.96)}
+.cover-tip{margin-top:20px;font-size:13px;color:var(--gray)}
 
-/* === 结果页 === */
-.result{display:none;flex-direction:column;align-items:center;min-height:100vh;padding:40px 24px;text-align:center}
-.result .r-icon{font-size:72px;margin-bottom:16px;animation:bounceIn .6s ease}
-.result .r-label{font-size:14px;color:var(--text-l);margin-bottom:8px}
-.result .r-title{font-size:36px;font-weight:900;color:var(--primary-d);margin-bottom:8px;line-height:1.3}
-.result .r-badge{display:inline-block;background:var(--primary);color:#fff;font-size:12px;padding:4px 16px;border-radius:14px;margin-bottom:24px}
-.result .r-desc{
-  background:var(--card-bg);border-radius:16px;padding:24px;
-  font-size:15px;line-height:1.8;color:var(--text);margin-bottom:24px;
-  box-shadow:var(--shadow);text-align:left;
-}
-.result .r-traits{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:32px}
-.result .r-trait{background:rgba(46,125,50,.1);color:var(--primary-d);font-size:13px;padding:6px 16px;border-radius:16px;font-weight:600}
-.result .r-actions{display:flex;flex-direction:column;gap:12px;width:100%;max-width:300px;margin-bottom:24px}
-.btn-share{background:var(--accent);color:#fff;border:none;padding:14px;border-radius:50px;font-size:15px;font-weight:700;cursor:pointer;transition:.3s;box-shadow:0 4px 16px rgba(255,152,0,.3)}
-.btn-share:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(255,152,0,.4)}
-.btn-retry{background:transparent;color:var(--primary);border:2px solid var(--primary);padding:12px;border-radius:50px;font-size:14px;font-weight:600;cursor:pointer;transition:.3s}
-.btn-retry:hover{background:var(--primary);color:#fff}
+/* 答题页 */
+.quiz{display:none;padding:24px 20px 100px}
+.q-num{font-size:14px;color:var(--primary);font-weight:700;margin-bottom:8px}
+.q-num span{color:var(--gray);font-weight:400}
+.q-scene{font-size:14px;color:var(--gray);line-height:1.6;margin-bottom:20px;padding:12px 16px;background:#e8f5e9;border-radius:12px;border-left:3px solid var(--warm)}
+.q-text{font-size:22px;font-weight:700;line-height:1.5;color:var(--dark);margin-bottom:28px}
+.options{display:flex;flex-direction:column;gap:12px}
+.opt{background:#fff;border:2px solid #e0e8e0;border-radius:14px;padding:18px 20px;cursor:pointer;transition:all .2s;font-size:15px;line-height:1.5;color:var(--dark);position:relative}
+.opt:active{transform:scale(0.98);border-color:var(--primary);background:#f1f8f1}
+.opt.selected{border-color:var(--primary);background:#f1f8f1}
 
-/* 分享图弹窗 */
-.share-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:999;align-items:center;justify-content:center;padding:20px}
-.share-modal.show{display:flex}
-.share-card{
-  background:#fff;border-radius:20px;overflow:hidden;max-width:360px;width:100%;
-  box-shadow:0 20px 60px rgba(0,0,0,.3);
-}
-.share-card-img{width:100%;display:block}
-.share-card-actions{padding:16px;display:flex;gap:12px}
-.share-card-actions button{flex:1;padding:10px;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer}
-.btn-dl{background:var(--primary);color:#fff}
-.btn-close{background:#f0f0f0;color:#333}
+/* 结果页 */
+.result{display:none;padding:0 0 80px}
+.result-hero{background:linear-gradient(180deg,#2e7d32 0%,#66bb6a 60%,#f0f7f0 100%);padding:48px 24px 32px;text-align:center;color:#fff;position:relative;overflow:hidden}
+.result-hero::before{content:'';position:absolute;top:-50%;right:-30%;width:300px;height:300px;border-radius:50%;background:rgba(255,255,255,0.06)}
+.result-hero::after{content:'';position:absolute;bottom:20%;left:-20%;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,0.04)}
+.result-label{font-size:14px;opacity:0.85;margin-bottom:8px;position:relative;z-index:1}
+.result-type{font-size:36px;font-weight:900;margin-bottom:8px;position:relative;z-index:1;text-shadow:0 2px 12px rgba(0,0,0,0.1)}
+.result-badge{display:inline-block;background:rgba(255,255,255,0.25);backdrop-filter:blur(8px);font-size:13px;padding:4px 16px;border-radius:14px;margin-bottom:16px;position:relative;z-index:1;border:1px solid rgba(255,255,255,0.2)}
+.result-emoji{font-size:56px;position:relative;z-index:1;margin-bottom:8px}
 
-@keyframes bounceIn{0%{transform:scale(0);opacity:0}60%{transform:scale(1.2)}100%{transform:scale(1);opacity:1}}
-@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-.fadeIn{animation:fadeIn .2s ease}
+/* 雷达图 */
+.radar-section{padding:24px 20px;text-align:center}
+.radar-title{font-size:18px;font-weight:700;color:var(--dark);margin-bottom:16px}
+.radar-canvas-wrap{display:flex;justify-content:center}
+#radarCanvas{width:320px;height:320px}
+
+/* 结果详情 */
+.result-section{padding:20px;margin-top:8px}
+.section-title{font-size:18px;font-weight:700;color:var(--dark);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.section-title::before{content:'';width:4px;height:20px;background:var(--primary);border-radius:2px}
+.reason-card{background:#fff;border-radius:12px;padding:16px;margin-bottom:10px;border:1px solid #e8f0e8}
+.reason-card h4{font-size:15px;color:var(--primary);margin-bottom:6px}
+.reason-card p{font-size:14px;color:#3a5a3a;line-height:1.7}
+.score-bar-wrap{margin-bottom:14px}
+.score-bar-label{display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px}
+.score-bar-label span:first-child{color:var(--dark);font-weight:600}
+.score-bar-label span:last-child{color:var(--primary);font-weight:700}
+.score-bar{height:8px;background:#e0e8e0;border-radius:4px;overflow:hidden}
+.score-bar-fill{height:100%;background:linear-gradient(90deg,#66bb6a,#2e7d32);border-radius:4px;transition:width 1s ease}
+.city-tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.city-tag{background:#e8f5e9;color:var(--primary-d);padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600}
+.city-tag.warn{background:#fff3e0;color:#e65100}
+blockquote{border-left:3px solid var(--primary);background:rgba(46,125,50,0.06);padding:12px 16px;margin:10px 0;border-radius:0 8px 8px 0;font-style:italic;color:var(--primary-d);font-size:14px}
+.result-cta{margin:32px 20px;text-align:center}
+.btn-share{background:linear-gradient(135deg,#2e7d32,#66bb6a);color:#fff;border:none;padding:14px 40px;border-radius:50px;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 6px 20px rgba(46,125,50,0.25);width:100%}
+.btn-retest{background:none;border:1px solid #ddd;color:#999;padding:12px 40px;border-radius:50px;font-size:14px;cursor:pointer;margin-top:12px}
+.result-footer{font-size:12px;color:var(--gray);text-align:center;padding:20px}
 </style>
 </head>
 <body>
-<script>
-// 域名路由：pua.xixizai.com → 跳转PUA测评
-if(location.hostname==='pua.xixizai.com'&&location.pathname==='/'){
-  location.replace('/pua.html');
-}
-if(location.hostname==='talent.xixizai.com'&&location.pathname==='/'){
-  location.replace('/talent.html');
-}
-</script>
-<div class="bg"></div>
-<div class="app">
+<div class="wrap">
+<div class="progress-bar"><div class="progress-fill" id="progFill" style="width:0"></div></div>
+<div class="progress-text" id="progText" style="display:none"></div>
 
-<!-- 封面页 -->
-<div class="cover" id="page-cover">
-  <div class="tag">
-    <span class="tag-label">职业基因</span>
-    <span class="tag-line"></span>
-    <span class="tag-num">NO.001</span>
-  </div>
-  <h1>你天生该吃哪碗饭？</h1>
-  <div class="subtags">
-    <div class="subtag">⏱️ 两分钟自测</div>
-    <div class="subtag">📝 10道趣味题</div>
-    <div class="subtag">✨ 凭第一直觉选</div>
-  </div>
-  <button class="btn-start" onclick="startQuiz()">开始测试 →</button>
-  <div class="quote-deco">"</div>
-  <div class="footer-en">CAREER PERSONALITY TEST</div>
+<!-- 封面 -->
+<div class="cover" id="cover">
+<div class="cover-deco">🚀</div>
+<h1>你天生该吃<br><span>哪碗饭？</span></h1>
+<div class="cover-sub">10道趣味场景题，从你的生活本能里提取4大职业基因维度。<br>别人还在犹豫，你已经开始干了。</div>
+<div class="cover-features">
+<div class="cover-tag">🎯 <b>4维</b>职业基因</div>
+<div class="cover-tag">🏆 <b>4种</b>天赋型格</div>
+<div class="cover-tag">📊 雷达图画像</div>
+</div>
+<button class="btn-start" onclick="startQuiz()">开始测试 →</button>
+<div class="cover-tip">⏱️ 约2分钟出结果</div>
 </div>
 
-<!-- 答题页 -->
-<div class="quiz" id="page-quiz">
-  <div class="progress-wrap">
-    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
-    <div class="progress-text">
-      <span id="progressLabel">第 1 题</span>
-      <span id="progressCount">1 / 10</span>
-    </div>
-  </div>
-  <div class="q-num" id="qNum">问题 1</div>
-  <div class="q-title" id="qTitle">加载中...</div>
-  <div class="options" id="qOptions"></div>
-</div>
+<!-- 答题 -->
+<div class="quiz" id="quiz"></div>
 
-<!-- 结果页 -->
-<div class="result" id="page-result">
-  <div class="r-icon" id="rIcon">🔥</div>
-  <div class="r-label">你的职业基因是</div>
-  <div class="r-title" id="rTitle">天生的创业者</div>
-  <div class="r-badge" id="rBadge">ESTP型</div>
-  <div class="r-desc" id="rDesc"></div>
-  
-  <!-- 天赋指数+4维度评分 -->
-  <div class="r-desc" id="rScores" style="margin-bottom:16px"></div>
-  
-  <!-- 最适合职业 -->
-  <div class="r-desc" id="rCareers" style="margin-bottom:16px"></div>
-  
-  <!-- 职场雷区 -->
-  <div class="r-desc" id="rTraps" style="margin-bottom:16px"></div>
-  
-  <div class="r-traits" id="rTraits"></div>
-  <div class="r-actions">
-    <button class="btn-share" onclick="showShare()">📸 生成分享图</button>
-    <button class="btn-retry" onclick="resetQuiz()">🔄 再测一次</button>
-  </div>
-  <div style="font-size:12px;color:rgba(46,125,50,.4);margin-top:16px">更多测试请访问 protest.xixizai.com</div>
-</div>
-
-</div>
-
-<!-- 分享图弹窗 -->
-<div class="share-modal" id="shareModal">
-  <div class="share-card">
-    <canvas id="shareCanvas" class="share-card-img" width="360" height="540"></canvas>
-    <div class="share-card-actions">
-      <button class="btn-dl" onclick="downloadShare()">💾 保存图片</button>
-      <button class="btn-close" onclick="closeShare()">关闭</button>
-    </div>
-  </div>
+<!-- 结果 -->
+<div class="result" id="result"></div>
 </div>
 
 <script>
-// === 测试数据（全部原创） ===
-var questions = [
-  {q:"周末早上醒来，你的第一个念头是？",
-   opts:[
-     {t:"今天能把那个想法落地了",type:"A"},
-     {t:"终于可以睡到自然醒",type:"B"},
-     {t:"约谁出去玩呢？",type:"C"},
-     {t:"列个今日计划表",type:"D"}
-   ]},
-  {q:"朋友找你诉苦，你通常？",
-   opts:[
-     {t:"帮他分析问题出在哪",type:"D"},
-     {t:"陪他一起骂，先爽了再说",type:"C"},
-     {t:"默默听着，给个拥抱",type:"B"},
-     {t:"你上次也这样，后来我这样解决了...",type:"A"}
-   ]},
-  {q:"团队讨论时，你经常扮演的角色是？",
-   opts:[
-     {t:"提新方向的人",type:"A"},
-     {t:"活跃气氛的人",type:"C"},
-     {t:"调和矛盾的人",type:"B"},
-     {t:"把控进度的人",type:"D"}
-   ]},
-  {q:"突然给你一万块闲钱，你第一反应？",
-   opts:[
-     {t:"投到我的项目里滚雪球",type:"A"},
-     {t:"请朋友吃顿大的",type:"C"},
-     {t:"存起来，有安全感",type:"B"},
-     {t:"买课程或工具提升自己",type:"D"}
-   ]},
-  {q:"你最受不了哪种领导？",
-   opts:[
-     {t:"朝令夕改，没有方向",type:"D"},
-     {t:"管太细，让人窒息",type:"A"},
-     {t:"冷冰冰，不讲人情",type:"B"},
-     {t:"开会念稿子两小时",type:"C"}
-   ]},
-  {q:"学一个新技能，你的方式是？",
-   opts:[
-     {t:"先干起来，遇到问题再查",type:"A"},
-     {t:"找个有趣的教学视频跟着玩",type:"C"},
-     {t:"从基础开始，一步步稳扎稳打",type:"B"},
-     {t:"系统看教程，做笔记，列思维导图",type:"D"}
-   ]},
-  {q:"深夜刷手机，你最容易陷进去的是？",
-   opts:[
-     {t:"行业大佬的创业故事",type:"A"},
-     {t:"搞笑段子、脱口秀",type:"C"},
-     {t:"治愈系vlog、美食视频",type:"B"},
-     {t:"干货帖、知识科普",type:"D"}
-   ]},
-  {q:"朋友说你最大的缺点是？",
-   opts:[
-     {t:"太折腾，停不下来",type:"A"},
-     {t:"太敏感，容易内耗",type:"B"},
-     {t:"太闹腾，静不下来",type:"C"},
-     {t:"太较真，不近人情",type:"D"}
-   ]},
-  {q:"如果拍一部关于你的电影，片名会是？",
-   opts:[
-     {t:"《不服输的人》",type:"A"},
-     {t:"《温柔的力量的》",type:"B"},
-     {t:"《人间值得好玩》",type:"C"},
-     {t:"《掌控一切》",type:"D"}
-   ]},
-  {q:"十年后的理想生活状态是？",
-   opts:[
-     {t:"有自己的事业帝国，还在不断拓展",type:"A"},
-     {t:"生活安稳，有时间做自己喜欢的事",type:"B"},
-     {t:"世界各地都有朋友，走到哪都不无聊",type:"C"},
-     {t:"在某个领域成为权威，受人尊敬",type:"D"}
-   ]}
+var questions=[
+{scene:"又到周末了，你最自然的状态是——",q:"周末早上醒来，你的第一个念头是？",opts:[
+{text:"今天能把那个想法落地了，干起来！",dim:{action:3,strategy:1}},
+{text:"终于可以睡到自然醒，慢慢享受",dim:{create:2,social:-1}},
+{text:"约谁出去玩呢？约一波朋友",dim:{social:3}},
+{text:"列个今日计划表，安排得明明白白",dim:{strategy:3,action:1}}
+]},
+{scene:"朋友遇到困难找你诉苦——",q:"朋友诉苦时，你通常怎么反应？",opts:[
+{text:"帮他分析问题到底出在哪",dim:{strategy:3}},
+{text:"陪他一起骂，先爽了再说",dim:{social:3}},
+{text:"默默听着，给个拥抱",dim:{create:2,social:1}},
+{text:"你上次也这样，后来我这样解决了",dim:{action:3,strategy:1}}
+]},
+{scene:"团队讨论一个新项目——",q:"团队讨论时，你经常扮演的角色？",opts:[
+{text:"提出新方向和新思路的人",dim:{action:3,create:1}},
+{text:"活跃气氛，让讨论不那么沉闷",dim:{social:3}},
+{text:"调和矛盾，让 everyone 都舒服",dim:{create:2,social:1}},
+{text:"把控进度，确保讨论有结论",dim:{strategy:3}}
+]},
+{scene:"突然拿到一笔闲钱——",q:"给你一万块闲钱，第一反应？",opts:[
+{text:"投到我的项目里滚雪球",dim:{action:3,strategy:1}},
+{text:"请朋友吃顿大的，开心最重要",dim:{social:3}},
+{text:"存起来，有安全感",dim:{strategy:1,create:1}},
+{text:"买课程或工具提升自己",dim:{strategy:2,action:1}}
+]},
+{scene:"你最受不了的领导类型——",q:"哪种领导让你最窒息？",opts:[
+{text:"朝令夕改，没有方向感",dim:{strategy:3}},
+{text:"管太细，让人没有发挥空间",dim:{action:3}},
+{text:"冷冰冰，完全不讲人情",dim:{social:2,create:1}},
+{text:"开会念稿子两小时，废话连篇",dim:{social:2,action:1}}
+]},
+{scene:"学一个全新技能——",q:"你的学习方式是？",opts:[
+{text:"先干起来，遇到问题再查",dim:{action:3}},
+{text:"找个有趣的教程跟着玩",dim:{create:2,social:1}},
+{text:"从基础开始，一步步稳扎稳打",dim:{create:2,strategy:1}},
+{text:"系统看教程，做笔记列思维导图",dim:{strategy:3}}
+]},
+{scene:"深夜刷手机时间——",q:"你最容易陷进去看什么？",opts:[
+{text:"行业大佬的创业故事、商业分析",dim:{action:2,strategy:1}},
+{text:"搞笑段子、脱口秀、综艺",dim:{social:2}},
+{text:"治愈系vlog、美食视频、文艺内容",dim:{create:3}},
+{text:"干货帖、知识科普、深度长文",dim:{strategy:3}}
+]},
+{scene:"朋友吐槽你的缺点——",q:"朋友说你最大的缺点是？",opts:[
+{text:"太折腾了，停不下来",dim:{action:3}},
+{text:"太敏感，容易内耗想太多",dim:{create:2}},
+{text:"太闹腾，静不下来",dim:{social:3}},
+{text:"太较真，不够圆滑",dim:{strategy:2}}
+]},
+{scene:"如果拍一部关于你的电影——",q:"你的电影片名会是？",opts:[
+{text:"《不服输的人》",dim:{action:3}},
+{text:"《温柔的力量》",dim:{create:3}},
+{text:"《人间值得好玩》",dim:{social:3}},
+{text:"《掌控一切》",dim:{strategy:3}}
+]},
+{scene:"想象一下十年后——",q:"十年后的理想生活状态？",opts:[
+{text:"有自己的事业，还在不断拓展",dim:{action:3,strategy:1}},
+{text:"生活安稳，有时间做喜欢的事",dim:{create:2}},
+{text:"世界各地都有朋友，走到哪都不无聊",dim:{social:3}},
+{text:"在某个领域成为权威，受人尊敬",dim:{strategy:3}}
+]}
 ];
 
-// === 结果类型 ===
-var results = {
-  A:{icon:"🚀",title:"天生的创业者",badge:"行动派",
-     scores:{action:95,create:70,social:60,strategy:75},
-     desc:"你骨子里就不是一个安分的人。别人还在犹豫的时候，你已经开干了。你不怕失败，怕的是无聊。你的行动力远超分析欲，天生适合从0到1把事情做成。\n\n你最大的武器是「先干了再说」的魄力——这个世界永远奖励先动手的人。但也要记得：偶尔停下来看看方向，别只顾着狂奔。",
-     quote:"你不是太冲动，是别人太犹豫。",
-     careers:["创业者/合伙人","自媒体/IP主理人","销售/BD负责人"],
-     traps:["容易三分钟热度，启动太多项目收不住","不喜欢做细节工作，容易虎头蛇尾","对「按部就班」的人缺乏耐心"],
-     traits:["行动力爆表","不怕冒险","天生领袖","讨厌墨迹"]},
-  B:{icon:"🌿",title:"天生的创作者",badge:"感受派",
-     scores:{action:60,create:95,social:55,strategy:50},
-     desc:"你有一颗极度敏感的心，能感知到别人忽略的细节和情绪。这种敏感不是缺点，而是你的天赋——好的内容、好的设计、好的故事，都从这种感知力中来。\n\n你不是为竞争而生的，你是为创造而生的。安静地打磨自己的手艺，你的作品会替你说话。\n\n记住：敏感是你的超能力，不是软肋。",
-     quote:"别人看到表面的热闹，你看到背后的故事。",
-     careers:["内容创作者/作者","设计师/创意工作者","心理咨询师/疗愈师"],
-     traps:["容易陷入完美主义，迟迟不敢发布","对负面评价过于敏感","容易在独处时陷入内耗"],
-     traits:["共情力强","审美在线","内心丰富","适合独立创作"]},
-  C:{icon:"🎉",title:"天生的连接者",badge:"社交派",
-     scores:{action:70,create:65,social:95,strategy:60},
-     desc:"你是天生的「人际枢纽」。有你在的场合永远不会冷场，你能把陌生人变成朋友，把尴尬化为笑声。你的价值不在具体技能，而在于你能连接谁。\n\n市场、公关、社群运营、活动策划——所有需要「搞定人」的事情，你都有天然优势。\n\n你的秘诀很简单：对人真诚，对生活有热情。这种能量会吸引资源主动来找你。",
-     quote:"你的竞争力不是技能，是你认识谁。",
-     careers:["市场/品牌营销","社群运营/KOL","活动策划/公关"],
-     traps:["容易把精力分散在太多社交上","不喜欢深度钻研，专业感不足","害怕独处，容易用社交逃避问题"],
-     traits:["社交天花板","气氛制造机","人脉资源王","天生感染力"]},
-  D:{icon:"💎",title:"天生的操盘手",badge:"策略派",
-     scores:{action:75,create:55,social:50,strategy:95},
-     desc:"你是那种让混乱变有序的人。给你一堆乱麻，你天然地就想找到线头在哪里。你的逻辑、规划能力和执行力让你成为任何团队都需要的「定海神针」。\n\n你不追求舞台上的聚光灯，你要的是「一切尽在掌握」的确定性。运营、管理、投资分析——越是复杂的系统，越能体现你的价值。\n\n你的核心竞争力：别人看到混乱，你看到结构。",
-     quote:"别人看到混乱，你看到结构。",
-     careers:["运营/项目管理","投资分析师/顾问","产品经理/技术管理"],
-     traps:["过度分析，错过最佳行动时机","对不确定性强的事情焦虑","不太擅长处理情绪化的沟通"],
-     traits:["逻辑严密","执行力强","掌控全局","天生管理者"]}
+var results={
+A:{icon:"🚀",name:"天生的创业者",badge:"行动派",
+desc:"你骨子里就不是一个安分的人。别人还在犹豫的时候，你已经开干了。你不怕失败，怕的是无聊。\n\n你的行动力远超分析欲，天生适合从0到1把事情做成。你最大的武器是「先干了再说」的魄力——这个世界永远奖励先动手的人。",
+quote:"你不是太冲动，是别人太犹豫。",
+scores:{action:95,create:70,social:60,strategy:75},
+careers:["创业者/合伙人","自媒体/IP主理人","销售/BD负责人","项目经理"],
+traps:["容易三分钟热度，启动太多项目收不住","不喜欢做细节工作，容易虎头蛇尾","对按部就班的人缺乏耐心"],
+suggest:["把目标拆成可执行的30天计划","找一个互补的策略型搭档","定期复盘，别光顾着冲"],
+match:"跟你合拍的人：能帮你做规划和收尾的策略型选手。你负责冲，ta负责稳。"},
+
+B:{icon:"🌿",name:"天生的创作者",badge:"感受派",
+desc:"你有一颗极度敏感的心，能感知到别人忽略的细节和情绪。这种敏感不是缺点，而是你的天赋——好的内容、好的设计、好的故事，都从这种感知力中来。\n\n你不是为竞争而生的，你是为创造而生的。安静地打磨自己的手艺，你的作品会替你说话。",
+quote:"别人看到表面的热闹，你看到背后的故事。",
+scores:{action:60,create:95,social:55,strategy:50},
+careers:["内容创作者/作者","设计师/创意工作者","心理咨询师/疗愈师","独立手艺人"],
+traps:["容易陷入完美主义，迟迟不敢发布","对负面评价过于敏感","容易在独处时陷入内耗"],
+suggest:["设定「完成比完美重要」的发布标准","找到一两个深度的创作圈子","把敏感变成创作养分，而不是消耗源"],
+match:"跟你合拍的人：能帮你把作品推广出去的社交型选手。你负责创作，ta负责让世界看到。"},
+
+C:{icon:"🎉",name:"天生的连接者",badge:"社交派",
+desc:"你是天生的「人际枢纽」。有你在的场合永远不会冷场，你能把陌生人变成朋友，把尴尬化为笑声。\n\n你的价值不在具体技能，而在于你能连接谁。市场、公关、社群运营——所有需要「搞定人」的事情，你都有天然优势。",
+quote:"你的竞争力不是技能，是你认识谁。",
+scores:{action:70,create:65,social:95,strategy:60},
+careers:["市场/品牌营销","社群运营/KOL","活动策划/公关","商务拓展"],
+traps:["容易把精力分散在太多社交上","不喜欢深度钻研，专业感不足","害怕独处，容易用社交逃避问题"],
+suggest:["每月留出至少3天独处充电时间","发展一个深度专业作为社交的底座","学会说「不」，保护自己的时间"],
+match:"跟你合拍的人：有深度专业技能的创作或策略型选手。你负责连接，ta负责交付。"},
+
+D:{icon:"💎",name:"天生的操盘手",badge:"策略派",
+desc:"你是那种让混乱变有序的人。给你一堆乱麻，你天然地就想找到线头在哪里。\n\n你不追求舞台上的聚光灯，你要的是「一切尽在掌握」的确定性。越是复杂的系统，越能体现你的价值。",
+quote:"别人看到混乱，你看到结构。",
+scores:{action:75,create:55,social:50,strategy:95},
+careers:["运营/项目管理","投资分析师/顾问","产品经理/技术管理","数据分析师"],
+traps:["过度分析，错过最佳行动时机","对不确定性强的事情焦虑","不太擅长处理情绪化的沟通"],
+suggest:["给自己设一个「分析截止时间」，到点就行动","练习用感性语言沟通，别总讲逻辑","接受70%把握就可以动手"],
+match:"跟你合拍的人：行动力强的创业型选手。你负责规划和把控，ta负责冲锋陷阵。"}
 };
 
-// === 测试逻辑 ===
-var currentQ = 0;
-var scores = {A:0,B:0,C:0,D:0};
+var dimNames={action:'行动力',create:'创造力',social:'社交力',strategy:'策略力'};
+var dimKeys=['action','create','social','strategy'];
+
+var currentQ=0;
+var scores={action:0,create:0,social:0,strategy:0};
+var answers=[];
 
 function startQuiz(){
-  currentQ = 0;
-  scores = {A:0,B:0,C:0,D:0};
-  document.getElementById('page-cover').style.display='none';
-  document.getElementById('page-result').style.display='none';
-  document.getElementById('page-quiz').style.display='flex';
-  renderQuestion();
+document.getElementById('cover').style.display='none';
+document.getElementById('quiz').style.display='block';
+document.getElementById('progText').style.display='block';
+currentQ=0;
+scores={action:0,create:0,social:0,strategy:0};
+answers=[];
+renderQuestion();
 }
 
 function renderQuestion(){
-  var q = questions[currentQ];
-  var total = questions.length;
-  var progress = ((currentQ) / total) * 100;
-  
-  document.getElementById('progressFill').style.width = progress + '%';
-  document.getElementById('progressLabel').textContent = '第 ' + (currentQ+1) + ' 题';
-  document.getElementById('progressCount').textContent = (currentQ+1) + ' / ' + total;
-  document.getElementById('qNum').textContent = '问题 ' + (currentQ+1);
-  document.getElementById('qTitle').textContent = q.q;
-  
-  var optsHtml = '';
-  var labels = ['A','B','C','D'];
-  q.opts.forEach(function(o,i){
-    optsHtml += '<div class="option" onclick="selectOption(\''+o.type+'\')">' +
-      '<div class="opt-label">'+labels[i]+'</div>' +
-      '<div class="opt-text">'+o.t+'</div>' +
-      '</div>';
-  });
-  document.getElementById('qOptions').innerHTML = optsHtml;
+var q=questions[currentQ];
+var total=questions.length;
+var pct=Math.round((currentQ/total)*100);
+document.getElementById('progFill').style.width=pct+'%';
+document.getElementById('progText').textContent=(currentQ+1)+'/'+total;
+var h='';
+h+='<div class="q-num">第 '+(currentQ+1)+' 题 <span>/ '+total+'</span></div>';
+h+='<div class="q-scene">'+q.scene+'</div>';
+h+='<div class="q-text">'+q.q+'</div>';
+h+='<div class="options">';
+q.opts.forEach(function(o,i){
+h+='<div class="opt" onclick="selectOpt('+i+')" id="opt'+i+'">'+o.text+'</div>';
+});
+h+='</div>';
+document.getElementById('quiz').innerHTML=h;
 }
 
-function selectOption(type){
-  scores[type]++;
-  currentQ++;
-  if(currentQ >= questions.length){
-    showResult();
-  } else {
-    // 直接渲染下一题
-    window.scrollTo(0,0);
-    renderQuestion();
-  }
+function selectOpt(i){
+for(var j=0;j<4;j++){var el=document.getElementById('opt'+j);if(el)el.classList.remove('selected')}
+document.getElementById('opt'+i).classList.add('selected');
+var q=questions[currentQ];
+var dim=q.opts[i].dim;
+for(var k in dim){scores[k]=(scores[k]||0)+dim[k]}
+answers[currentQ]=i;
+setTimeout(function(){
+currentQ++;
+if(currentQ<questions.length){renderQuestion()}
+else{showResult()}
+},350);
 }
 
 function showResult(){
-  var maxType = 'A', maxScore = 0;
-  for(var k in scores){
-    if(scores[k] > maxScore){maxScore = scores[k]; maxType = k;}
-  }
-  var r = results[maxType];
-  // 计算总分(0-100)
-  var total = Math.round((scores.A*r.scores.action + scores.B*r.scores.create + scores.C*r.scores.social + scores.D*r.scores.strategy) / 10);
-  total = Math.min(99, Math.max(60, total + 20));
-  
-  document.getElementById('page-quiz').style.display='none';
-  document.getElementById('page-result').style.display='flex';
-  document.getElementById('rIcon').textContent = r.icon;
-  document.getElementById('rTitle').textContent = r.title;
-  document.getElementById('rBadge').textContent = r.badge;
-  
-  // 描述
-  var descHtml = r.desc.split('\n').map(function(p){return p.trim()?'<p style="margin-bottom:10px">'+p+'</p>':''}).join('');
-  if(r.quote) descHtml += '<blockquote style="border-left:3px solid var(--primary);background:rgba(46,125,50,.06);padding:12px 16px;margin:16px 0;border-radius:0 8px 8px 0;font-style:italic;color:var(--primary-d)">「'+r.quote+'」</blockquote>';
-  document.getElementById('rDesc').innerHTML = descHtml;
-  
-  // 天赋指数
-  var scoreHtml = '<div style="font-size:14px;font-weight:700;color:var(--primary-d);margin-bottom:12px">📊 职业天赋指数</div>';
-  scoreHtml += '<div style="font-size:56px;font-weight:900;color:var(--primary);margin-bottom:4px">'+total+'<span style="font-size:18px;color:var(--text-l)">/100</span></div>';
-  scoreHtml += '<div style="font-size:12px;color:var(--text-l);margin-bottom:20px">你的综合职业天赋水平</div>';
-  // 4维度评分条
-  var dims = [{k:'action',n:'行动力'},{k:'create',n:'创造力'},{k:'social',n:'社交力'},{k:'strategy',n:'策略力'}];
-  dims.forEach(function(d){
-    var v = r.scores[d.k];
-    var label = v>=85?'极强':v>=70?'中高':v>=55?'中等':'偏弱';
-    scoreHtml += '<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px"><span style="color:var(--text);font-weight:600">'+d.n+'</span><span style="color:var(--primary);font-weight:700">'+label+' '+v+'</span></div><div style="height:6px;background:rgba(46,125,50,.1);border-radius:3px;overflow:hidden"><div style="height:100%;width:'+v+'%;background:var(--primary);border-radius:3px"></div></div></div>';
-  });
-  document.getElementById('rScores').innerHTML = scoreHtml;
-  
-  // 最适合职业
-  var careerHtml = '<div style="font-size:14px;font-weight:700;color:var(--primary-d);margin-bottom:10px">🎯 最适合你的职业方向 Top'+r.careers.length+'</div>';
-  r.careers.forEach(function(c,i){careerHtml += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span style="width:24px;height:24px;border-radius:50%;background:var(--primary);color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;font-weight:700">'+(i+1)+'</span><span style="font-size:14px;color:var(--text)">'+c+'</span></div>'});
-  document.getElementById('rCareers').innerHTML = careerHtml;
-  
-  // 职场雷区
-  var trapHtml = '<div style="font-size:14px;font-weight:700;color:#e65100;margin-bottom:10px">⚠️ 你容易踩的职场雷区</div>';
-  r.traps.forEach(function(t){trapHtml += '<div style="font-size:13px;color:#bf360c;margin-bottom:6px;padding-left:16px;position:relative"><span style="position:absolute;left:0">•</span>'+t+'</div>'});
-  document.getElementById('rTraps').innerHTML = trapHtml;
-  
-  // 特质标签
-  var traitsHtml = r.traits.map(function(t){return '<span class="r-trait">'+t+'</span>'}).join('');
-  document.getElementById('rTraits').innerHTML = traitsHtml;
+document.getElementById('progFill').style.width='100%';
+document.getElementById('progText').style.display='none';
+document.getElementById('quiz').style.display='none';
+document.getElementById('result').style.display='block';
+window.scrollTo(0,0);
+
+var type=getType();
+var r=results[type];
+
+var maxScore={action:30,create:30,social:30,strategy:30};
+var pct={};
+dimKeys.forEach(function(k){
+var v=scores[k];if(v<0)v=0;
+pct[k]=Math.min(100,Math.round((v/maxScore[k])*100));
+});
+
+var h='';
+// Hero
+h+='<div class="result-hero">';
+h+='<div class="result-emoji">'+r.icon+'</div>';
+h+='<div class="result-label">你的职业基因型格</div>';
+h+='<div class="result-type">'+r.name+'</div>';
+h+='<div class="result-badge">'+r.badge+'</div>';
+h+='</div>';
+
+// 雷达图
+h+='<div class="radar-section">';
+h+='<div class="radar-title">你的4维职业基因画像</div>';
+h+='<div class="radar-canvas-wrap"><canvas id="radarCanvas" width="640" height="640"></canvas></div>';
+h+='</div>';
+
+// 描述
+h+='<div class="result-section">';
+h+='<div class="section-title">一句话概括你</div>';
+h+='<div class="reason-card"><p style="font-size:15px;line-height:1.8;color:#3a5a3a">'+r.desc.replace(/\n/g,'<br>')+'</p>';
+if(r.quote)h+='<blockquote>「'+r.quote+'」</blockquote>';
+h+='</div></div>';
+
+// 维度得分
+h+='<div class="result-section">';
+h+='<div class="section-title">维度得分详解</div>';
+dimKeys.forEach(function(k){
+var label=dimNames[k];
+var score=pct[k];
+var desc='';
+if(k==='action')desc=score>=70?'你的行动力极强，说干就干':'你更偏稳重，喜欢想清楚再动';
+if(k==='create')desc=score>=70?'你的创造力突出，对细节和美感极敏感':'你更偏务实，不太追求创意表达';
+if(k==='social')desc=score>=70?'你是社交天花板，在人群中如鱼得水':'你偏内敛，在独处中更有能量';
+if(k==='strategy')desc=score>=70?'你的策略感极强，天生的规划者和操盘手':'你更偏直觉型，不喜欢做系统性分析';
+h+='<div class="score-bar-wrap">';
+h+='<div class="score-bar-label"><span>'+label+'</span><span>'+score+'分</span></div>';
+h+='<div class="score-bar"><div class="score-bar-fill" style="width:'+score+'%"></div></div>';
+h+='<div style="font-size:12px;color:#999;margin-top:4px">'+desc+'</div>';
+h+='</div>';
+});
+h+='</div>';
+
+// 职业方向
+h+='<div class="result-section">';
+h+='<div class="section-title">最适合你的职业方向</div>';
+h+='<div class="city-tags">';
+r.careers.forEach(function(c){h+='<span class="city-tag">'+c+'</span>'});
+h+='</div></div>';
+
+// 职场雷区
+h+='<div class="result-section">';
+h+='<div class="section-title">你容易踩的职场雷区</div>';
+h+='<div class="reason-card">';
+r.traps.forEach(function(t,i){
+h+='<div style="font-size:14px;color:#e65100;margin-bottom:8px;padding-left:20px;position:relative"><span style="position:absolute;left:0">⚠️</span>'+t+'</div>';
+});
+h+='</div></div>';
+
+// 建议
+h+='<div class="result-section">';
+h+='<div class="section-title">给你的职业建议</div>';
+r.suggest.forEach(function(s,i){
+h+='<div class="reason-card"><p style="font-size:14px"><b style="color:var(--primary)">'+(i+1)+'.</b> '+s+'</p></div>';
+});
+h+='</div>';
+
+// 搭档
+h+='<div class="result-section">';
+h+='<div class="section-title">跟谁最合拍</div>';
+h+='<div class="reason-card"><p style="font-size:14px;line-height:1.7">'+r.match+'</p></div>';
+h+='</div>';
+
+// CTA
+h+='<div class="result-cta">';
+h+='<button class="btn-share" onclick="shareResult()">📤 分享给朋友测一测</button>';
+h+='<button class="btn-retest" onclick="location.reload()">🔄 再测一次</button>';
+h+='</div>';
+h+='<div class="result-footer">xixizai.com · 西西崽测评局 · NO.001</div>';
+
+document.getElementById('result').innerHTML=h;
+drawRadar(pct);
 }
 
-function resetQuiz(){
-  document.getElementById('page-result').style.display='none';
-  document.getElementById('page-cover').style.display='flex';
+function getType(){
+var a=scores.action,c=scores.create,s=scores.social,st=scores.strategy;
+if(a>=c&&a>=s&&a>=st)return 'A';
+if(c>=a&&c>=s&&c>=st)return 'B';
+if(s>=a&&s>=c&&s>=st)return 'C';
+return 'D';
 }
 
-// === 分享图生成 ===
-function showShare(){
-  var modal = document.getElementById('shareModal');
-  modal.classList.add('show');
-  drawShareCard();
+function drawRadar(pct){
+var canvas=document.getElementById('radarCanvas');
+if(!canvas)return;
+var ctx=canvas.getContext('2d');
+var cx=320,cy=320,r=200;
+var n=4;
+var labels=dimKeys.map(function(k){return dimNames[k]});
+var values=dimKeys.map(function(k){return pct[k]/100});
+
+ctx.clearRect(0,0,640,640);
+
+// 背景多边形
+for(var layer=1;layer<=5;layer++){
+ctx.beginPath();
+var rr=r*layer/5;
+for(var i=0;i<n;i++){
+var angle=-Math.PI/2+Math.PI*2*i/n;
+var x=cx+Math.cos(angle)*rr;
+var y=cy+Math.sin(angle)*rr;
+if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+}
+ctx.closePath();
+ctx.strokeStyle='rgba(46,125,50,0.12)';
+ctx.lineWidth=1;
+ctx.stroke();
 }
 
-function closeShare(){
-  document.getElementById('shareModal').classList.remove('show');
+// 轴线
+for(var i=0;i<n;i++){
+var angle=-Math.PI/2+Math.PI*2*i/n;
+ctx.beginPath();
+ctx.moveTo(cx,cy);
+ctx.lineTo(cx+Math.cos(angle)*r,cy+Math.sin(angle)*r);
+ctx.strokeStyle='rgba(46,125,50,0.08)';
+ctx.lineWidth=1;
+ctx.stroke();
 }
 
-function drawShareCard(){
-  var canvas = document.getElementById('shareCanvas');
-  var ctx = canvas.getContext('2d');
-  var W = 360, H = 540;
-  
-  // 背景
-  var grad = ctx.createLinearGradient(0,0,W,H);
-  grad.addColorStop(0,'#e8f5e9');
-  grad.addColorStop(0.5,'#c8e6c9');
-  grad.addColorStop(1,'#dcedc8');
-  ctx.fillStyle = grad;
-  ctx.fillRect(0,0,W,H);
-  
-  // 网格纹理
-  ctx.strokeStyle = 'rgba(129,199,132,0.12)';
-  ctx.lineWidth = 1;
-  for(var x=0;x<W;x+=30){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
-  for(var y=0;y<H;y+=30){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
-  
-  // 顶部标签
-  ctx.fillStyle = '#fff';
-  ctx.strokeStyle = '#2e7d32';
-  ctx.lineWidth = 1.5;
-  var tagText = '职业基因';
-  ctx.font = '12px sans-serif';
-  var tw = ctx.measureText(tagText).width + 24;
-  roundRect(ctx, 28, 36, tw, 26, 5);
-  ctx.fill();
-  ctx.stroke();
-  ctx.fillStyle = '#2e7d32';
-  ctx.font = 'bold 12px sans-serif';
-  ctx.fillText(tagText, 40, 53);
-  
-  ctx.fillStyle = '#388e3c';
-  ctx.font = '12px sans-serif';
-  ctx.fillText('NO.001', W-70, 53);
-  
-  // 分隔线
-  ctx.strokeStyle = '#81c784';
-  ctx.lineWidth = 1;
-  ctx.beginPath();ctx.moveTo(110,49);ctx.lineTo(W-90,49);ctx.stroke();
-  
-  // 结果图标
-  ctx.font = '56px sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText(document.getElementById('rIcon').textContent, W/2, 160);
-  
-  // "你的结果是"
-  ctx.fillStyle = '#388e3c';
-  ctx.font = '13px sans-serif';
-  ctx.fillText('你的职业基因是', W/2, 200);
-  
-  // 结果标题
-  ctx.fillStyle = '#1b5e20';
-  ctx.font = 'bold 30px sans-serif';
-  ctx.fillText(document.getElementById('rTitle').textContent, W/2, 240);
-  
-  // badge
-  ctx.fillStyle = '#2e7d32';
-  ctx.font = 'bold 12px sans-serif';
-  var badgeText = document.getElementById('rBadge').textContent;
-  var bw = ctx.measureText(badgeText).width + 24;
-  ctx.fillStyle = '#2e7d32';
-  roundRect(ctx, (W-bw)/2, 260, bw, 26, 13);
-  ctx.fill();
-  ctx.fillStyle = '#fff';
-  ctx.fillText(badgeText, W/2, 277);
-  
-  // traits
-  ctx.fillStyle = '#1b5e20';
-  ctx.font = '13px sans-serif';
-  var traits = document.getElementById('rTraits').innerText;
-  ctx.fillText(traits.replace(/\n/g,' · '), W/2, 320);
-  
-  // 描述前3行
-  var desc = document.getElementById('rDesc').textContent;
-  ctx.fillStyle = 'rgba(27,94,32,0.7)';
-  ctx.font = '13px sans-serif';
-  ctx.textAlign = 'left';
-  var lines = desc.split('\n')[0].match(/.{1,18}/g) || [];
-  lines.slice(0,4).forEach(function(line,i){
-    ctx.fillText(line, 40, 370 + i*22);
-  });
-  
-  // 二维码占位
-  ctx.fillStyle = '#fff';
-  roundRect(ctx, W/2-40, 440, 80, 80, 12);
-  ctx.fill();
-  ctx.fillStyle = '#2e7d32';
-  ctx.font = '11px sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText('扫码来测', W/2, 470);
-  ctx.font = 'bold 22px sans-serif';
-  ctx.fillText('🐾', W/2, 500);
-  
-  // 底部
-  ctx.fillStyle = 'rgba(27,94,32,0.3)';
-  ctx.font = '10px sans-serif';
-  ctx.fillText('protest.xixizai.com', W/2, 530);
-  
-  ctx.textAlign = 'left';
+// 数据多边形
+ctx.beginPath();
+for(var i=0;i<n;i++){
+var angle=-Math.PI/2+Math.PI*2*i/n;
+var rr=r*values[i];
+var x=cx+Math.cos(angle)*rr;
+var y=cy+Math.sin(angle)*rr;
+if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+}
+ctx.closePath();
+ctx.fillStyle='rgba(46,125,50,0.2)';
+ctx.fill();
+ctx.strokeStyle='#2e7d32';
+ctx.lineWidth=2.5;
+ctx.stroke();
+
+// 数据点
+for(var i=0;i<n;i++){
+var angle=-Math.PI/2+Math.PI*2*i/n;
+var rr=r*values[i];
+var x=cx+Math.cos(angle)*rr;
+var y=cy+Math.sin(angle)*rr;
+ctx.beginPath();
+ctx.arc(x,y,6,0,Math.PI*2);
+ctx.fillStyle='#2e7d32';
+ctx.fill();
+ctx.strokeStyle='#fff';
+ctx.lineWidth=2;
+ctx.stroke();
 }
 
-function roundRect(ctx,x,y,w,h,r){
-  ctx.beginPath();
-  ctx.moveTo(x+r,y);
-  ctx.arcTo(x+w,y,x+w,y+h,r);
-  ctx.arcTo(x+w,y+h,x,y+h,r);
-  ctx.arcTo(x,y+h,x,y,r);
-  ctx.arcTo(x,y,x+w,y,r);
-  ctx.closePath();
+// 标签
+ctx.font='600 24px PingFang SC,sans-serif';
+ctx.textAlign='center';
+ctx.textBaseline='middle';
+for(var i=0;i<n;i++){
+var angle=-Math.PI/2+Math.PI*2*i/n;
+var lr=r+36;
+var x=cx+Math.cos(angle)*lr;
+var y=cy+Math.sin(angle)*lr;
+ctx.fillStyle='#1b3a1b';
+ctx.fillText(labels[i],x,y);
+ctx.font='700 18px Arial,sans-serif';
+ctx.fillStyle='#2e7d32';
+ctx.fillText(Math.round(values[i]*100)+'',x,y+24);
+ctx.font='600 24px PingFang SC,sans-serif';
+}
 }
 
-function downloadShare(){
-  var canvas = document.getElementById('shareCanvas');
-  var link = document.createElement('a');
-  link.download = '我的职业基因测试结果.png';
-  link.href = canvas.toDataURL();
-  link.click();
+function shareResult(){
+if(navigator.share){navigator.share({title:'你天生该吃哪碗饭？',text:'我的职业基因是'+getType()+'！你也来试试',url:location.href})}
+else{navigator.clipboard.writeText(location.href).then(function(){showToast('✅ 链接已复制，去分享给朋友吧！')})}
 }
+
+function showToast(msg){var t=document.createElement('div');t.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.8);color:#fff;padding:12px 24px;border-radius:24px;font-size:14px;z-index:9999';t.textContent=msg;document.body.appendChild(t);setTimeout(function(){t.remove()},2000)}
 </script>
 </body>
 </html>
