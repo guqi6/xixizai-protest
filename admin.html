@@ -254,7 +254,10 @@ document.getElementById('fLink').textContent=p.link;
 document.getElementById('fLinkOpen').href=p.linkUrl;
 document.getElementById('fShipping').textContent=SHIPPING_INFO;
 document.getElementById('fCommentGuide').textContent=p.commentGuide||'';
-var h='';Object.keys(p.svgs).forEach(function(k){var s=p.svgs[k];h+='<div class="svg-card"><div class="svg-label">'+s.label+'</div><div class="svg-preview">'+s.svg+'</div><div class="svg-actions"><button class="dl-btn" onclick="dlOrig(\''+k+'\')">⬇️ 下载JPG</button></div></div>'});
+var h='';Object.keys(p.svgs).forEach(function(k){var s=p.svgs[k];
+h+='<div class="svg-card"><div class="svg-label">'+s.label+'</div><div class="svg-preview">'+s.svg+'</div><div class="svg-actions"><button class="dl-btn" onclick="dlOrig(\''+k+'\')">⬇️ 下载JPG</button></div>';
+if(s.imagePrompt){h+='<div style="margin-top:8px"><div class="field-label"><span>🎨 AI生图提示词</span><button class="copy-btn" onclick="copySvgPrompt(\''+k+'\')">📋复制提示词</button></div><div class="field-content" onclick="copySvgPrompt(\''+k+'\')" style="font-size:12px;color:#888;max-height:120px;overflow:auto;cursor:pointer;background:#f9f9f9;padding:8px;border-radius:6px;line-height:1.5">'+s.imagePrompt+'</div></div>'}
+h+='</div>'});
 document.getElementById('svgGrid').innerHTML=h;
 }
 function switchProduct(k,el){currentProduct=k;document.querySelectorAll('.product-chip').forEach(function(c){c.classList.remove('active')});el.classList.add('active');renderProduct();}
@@ -418,11 +421,13 @@ h+='<div class="card">';
 h+='<div class="card-title">\ud83d\udcdd 第'+(i+1)+'篇</div>';
 h+='<div class="field"><div class="field-label"><span>\ud83c\udff7\ufe0f 标题</span><button class="copy-btn" onclick="copyNote('+i+',\'title\')">\ud83d\udccb复制</button></div><div class="field-content" onclick="copyNote('+i+',\'title\')" style="font-weight:600;font-size:15px">'+n.title+'</div></div>';
 h+='<div class="field"><div class="field-label"><span>\ud83d\udcdd 正文+标签</span><button class="copy-btn" onclick="copyNote('+i+',\'body\')">\ud83d\udccb一键复制全文</button></div><div class="field-content" onclick="copyNote('+i+',\'body\')" style="max-height:400px;overflow:auto;line-height:1.8">'+n.body.replace(/\n/g,'<br>')+'</div></div>';
+if(n.imagePrompt){h+='<div class="field"><div class="field-label"><span>🎨 AI首图提示词</span><button class="copy-btn" onclick="copyNote('+i+',\'imagePrompt\')">📋复制提示词</button></div><div class="field-content" onclick="copyNote('+i+',\'imagePrompt\')" style="font-size:12px;color:#888;max-height:150px;overflow:auto;cursor:pointer;background:#f9f9f9;padding:8px;border-radius:6px;line-height:1.5">'+n.imagePrompt+'</div></div>'}
 h+='</div>';
 }
 document.getElementById('notesList').innerHTML=h;
 }
-function copyNote(i,field){var t=field==='title'?notes[i].title:notes[i].body;navigator.clipboard.writeText(t).then(function(){showToast('\u2705 \u5df2\u590d\u5236')})}
+function copySvgPrompt(k){var s=products[currentProduct].svgs[k];if(s&&s.imagePrompt){navigator.clipboard.writeText(s.imagePrompt).then(function(){showToast('✅ 已复制')})}}
+function copyNote(i,field){var t=field==='title'?notes[i].title:field==='imagePrompt'?(notes[i].imagePrompt||''):notes[i].body;navigator.clipboard.writeText(t).then(function(){showToast('✅ 已复制')})}
 
 renderProduct();
 renderNotes();
