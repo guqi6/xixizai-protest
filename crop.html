@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>图片裁剪工具</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:#1a1a2e;color:#eee;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:20px}
+h1{font-size:20px;margin-bottom:6px;font-weight:700}
+.sub{font-size:13px;color:#888;margin-bottom:24px;text-align:center}
+.upload-area{width:100%;max-width:500px;min-height:200px;border:2px dashed #444;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:.2s;margin-bottom:16px}
+.upload-area:hover{border-color:#4a90d9;background:rgba(74,144,217,0.05)}
+.upload-area.has-img{border:none;min-height:auto;padding:0;position:relative}
+.upload-icon{font-size:48px;margin-bottom:8px}
+.upload-text{font-size:14px;color:#888}
+.upload-text b{color:#4a90d9}
+#fileInput{display:none}
+.toolbar{display:none;width:100%;max-width:500px;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.toolbar.show{display:flex}
+.btn{padding:10px 20px;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:.2s}
+.btn-primary{background:#4a90d9;color:#fff}
+.btn-primary:hover{background:#3a7bc8}
+.btn-warn{background:#e74c3c;color:#fff}
+.btn-warn:hover{background:#c0392b}
+.btn-ghost{background:#333;color:#ccc;border:1px solid #444}
+.btn-ghost:hover{background:#3a3a3a}
+.btn:active{transform:scale(0.97)}
+.toolbar .hint{font-size:12px;color:#666;width:100%;margin-bottom:4px}
+#canvasWrap{position:relative;display:none;max-width:500px;overflow:hidden;border-radius:8px}
+#canvasWrap.show{display:block}
+#mainCanvas{display:block;max-width:100%;cursor:crosshair;user-select:none;-webkit-user-select:none;touch-action:none}
+#downloadLink{display:none}
+.result-area{display:none;width:100%;max-width:500px;margin-top:16px}
+.result-area.show{display:block}
+.result-area h3{font-size:14px;color:#888;margin-bottom:8px}
+#resultCanvas{max-width:100%;border-radius:8px;border:1px solid #333}
+.result-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.tip{font-size:12px;color:#555;margin-top:20px;text-align:center;max-width:400px;line-height:1.6}
+</style>
+</head>
+<body>
+
+<h1>✂️ 图片裁剪工具</h1>
+<div class="sub">上传图片 → 框选区域 → 下载截图（无水印）</div>
+
+<div class="upload-area" id="uploadArea">
+<div class="upload-icon">📎</div>
+<div class="upload-text">点击或拖拽 <b>上传图片</b></div>
+</div>
+<input type="file" id="fileInput" accept="image/*">
+
+<div class="toolbar" id="toolbar">
+<div class="hint">👆 在图片上拖拽框选你要保留的区域</div>
+<button class="btn btn-primary" id="cropBtn">📐 截取选中区域</button>
+<button class="btn btn-ghost" id="resetBtn">🔄 重新选区</button>
+<button class="btn btn-warn" id="newBtn">上传新图片</button>
+</div>
+
+<div id="canvasWrap">
+<canvas id="mainCanvas"></canvas>
+</div>
+
+<div class="result-area" id="resultArea">
+<h3>✅ 截取结果（长按或右键保存）</h3>
+<canvas id="resultCanvas"></canvas>
+<div class="result-actions">
+<button class="btn btn-primary" id="downloadBtn">⬇️ 下载图片</button>
+<button class="btn btn-ghost" id="cropAgainBtn">🔄 再截一次</button>
+</div>
+</div>
+
+<div class="tip">
+💡 提示：截取后的图片不带AI水印标识。<br>
+支持手机长按保存，电脑右键另存为。
+</div>
+
+<script>
+var uploadArea=document.getElementById('uploadArea');
+var fileInput=document.getElementById('fileInput');
+var toolbar=document.getElementById('toolbar');
+var canvasWrap=document.getElementById('canvasWrap');
+var mainCanvas=document.getElementById('mainCanvas');
+var mctx=mainCanvas.getContext('2d');
+var resultArea=document.getElementById('resultArea');
+var resultCanvas=document.getElementById('resultCanvas');
+var rctx=resultCanvas.getContext('2d');
+
+var img=null;
+var scale=1;
+var isDown=false;
+var startX=0,startY=0,endX=0,endY=0;
+var hasSel=false;
+var dpr=window.devicePixelRatio||1;
+
+uploadArea.addEventListener('click',function(){fileInput.click()});
+uploadArea.addEventListener('dragover',function(e){e.preventDefault();this.style.borderColor='#4a90d9'});
+uploadArea.addEventListener('dragleave',function(e){this.style.borderColor='#444'});
+uploadArea.addEventListener('drop',function(e){
+e.preventDefault();
+this.style.borderColor='#444';
+if(e.dataTransfer.files[0])handleFile(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change',function(){
+if(this.files[0])handleFile(this.files[0]);
+});
+
+function handleFile(file){
+if(!file.type.startsWith('image/')){alert('请上传图片文件');return}
+var reader=new FileReader();
+reader.onload=function(e){
+var i=new Image();
+i.onload=function(){
+img=i;
+showImage();
+toolbar.classList.add('show');
+resultArea.classList.remove('show');
+};
+i.src=e.target.result;
+};
+reader.readAsDataURL(file);
+}
+
+function showImage(){
+var maxW=500;
+var w=img.width,h=img.height;
+scale=Math.min(1,maxW/w);
+var dw=Math.round(w*scale);
+var dh=Math.round(h*scale);
+
+mainCanvas.width=dw;
+mainCanvas.height=dh;
+mainCanvas.style.width=dw+'px';
+mainCanvas.style.height=dh+'px';
+mctx.drawImage(img,0,0,dw,dh);
+
+canvasWrap.classList.add('show');
+uploadArea.classList.add('has-img');
+uploadArea.style.display='none';
+hasSel=false;
+}
+
+// 框选事件
+function getPos(e){
+var rect=mainCanvas.getBoundingClientRect();
+var t=e.touches?e.touches[0]:e;
+return{x:t.clientX-rect.left,y:t.clientY-rect.top};
+}
+
+function startSel(e){
+e.preventDefault();
+if(!img)return;
+var p=getPos(e);
+isDown=true;
+startX=p.x;startY=p.y;
+endX=p.x;endY=p.y;
+}
+
+function moveSel(e){
+if(!isDown)return;
+e.preventDefault();
+var p=getPos(e);
+endX=p.x;endY=p.y;
+redraw();
+}
+
+function endSel(e){
+if(!isDown)return;
+e.preventDefault();
+isDown=false;
+var x=Math.min(startX,endX);
+var y=Math.min(startY,endY);
+var w=Math.abs(endX-startX);
+var h=Math.abs(endY-startY);
+if(w>10&&h>10){hasSel=true}
+redraw();
+}
+
+mainCanvas.addEventListener('mousedown',startSel);
+mainCanvas.addEventListener('mousemove',moveSel);
+mainCanvas.addEventListener('mouseup',endSel);
+mainCanvas.addEventListener('mouseleave',endSel);
+mainCanvas.addEventListener('touchstart',startSel,{passive:false});
+mainCanvas.addEventListener('touchmove',moveSel,{passive:false});
+mainCanvas.addEventListener('touchend',endSel,{passive:false});
+
+function redraw(){
+if(!img)return;
+var w=mainCanvas.width,h=mainCanvas.height;
+mctx.clearRect(0,0,w,h);
+mctx.drawImage(img,0,0,w,h);
+
+if(isDown||hasSel){
+var x=Math.min(startX,endX);
+var y=Math.min(startY,endY);
+var sw=Math.abs(endX-startX);
+var sh=Math.abs(endY-startY);
+
+// 遮罩
+mctx.fillStyle='rgba(0,0,0,0.5)';
+mctx.fillRect(0,0,w,h);
+mctx.clearRect(x,y,sw,sh);
+mctx.drawImage(img,x/scale,y/scale,sw/scale,sh/scale,x,y,sw,sh);
+
+// 边框
+mctx.strokeStyle='#4a90d9';
+mctx.lineWidth=2;
+mctx.strokeRect(x,y,sw,sh);
+
+// 尺寸标注
+if(sw>30&&sh>20){
+mctx.fillStyle='#4a90d9';
+mctx.font='12px sans-serif';
+mctx.fillText(Math.round(sw/scale)+'×'+Math.round(sh/scale),x+4,y+16);
+}
+}
+}
+
+document.getElementById('cropBtn').addEventListener('click',function(){
+if(!hasSel){alert('请先在图片上拖拽框选区域');return}
+var x=Math.min(startX,endX)/scale;
+var y=Math.min(startY,endY)/scale;
+var sw=Math.abs(endX-startX)/scale;
+var sh=Math.abs(endY-startY)/scale;
+
+resultCanvas.width=Math.round(sw);
+resultCanvas.height=Math.round(sh);
+rctx.drawImage(img,x,y,sw,sh,0,0,sw,sh);
+resultArea.classList.add('show');
+resultArea.scrollIntoView({behavior:'smooth'});
+});
+
+document.getElementById('downloadBtn').addEventListener('click',function(){
+resultCanvas.toBlob(function(blob){
+var url=URL.createObjectURL(blob);
+var a=document.createElement('a');
+a.href=url;
+a.download='crop_'+Date.now()+'.png';
+a.click();
+URL.revokeObjectURL(url);
+},'image/png');
+});
+
+document.getElementById('resetBtn').addEventListener('click',function(){
+hasSel=false;
+isDown=false;
+redraw();
+});
+
+document.getElementById('cropAgainBtn').addEventListener('click',function(){
+resultArea.classList.remove('show');
+hasSel=false;
+redraw();
+canvasWrap.scrollIntoView({behavior:'smooth'});
+});
+
+document.getElementById('newBtn').addEventListener('click',function(){
+img=null;
+hasSel=false;
+fileInput.value='';
+uploadArea.style.display='';
+uploadArea.classList.remove('has-img');
+canvasWrap.classList.remove('show');
+toolbar.classList.remove('show');
+resultArea.classList.remove('show');
+});
+</script>
+</body>
+</html>
