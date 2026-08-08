@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>AI配图提示词生成器</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:#faf6f0;color:#3d2b1f;min-height:100vh;padding:20px}
+.wrap{max-width:600px;margin:0 auto}
+h1{font-size:22px;font-weight:900;margin-bottom:6px;text-align:center}
+.sub{font-size:13px;color:#999;margin-bottom:24px;text-align:center}
+.card{background:#fff;border-radius:14px;padding:20px;margin-bottom:16px;box-shadow:0 2px 12px rgba(0,0,0,0.05);border:1px solid #f0e6da}
+.card-title{font-size:16px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.card-title::before{content:'';width:4px;height:18px;background:#e85d2f;border-radius:2px}
+.input-group{margin-bottom:12px}
+.input-group label{display:block;font-size:13px;color:#666;margin-bottom:4px;font-weight:600}
+.input-group input,.input-group textarea,.input-group select{width:100%;padding:10px 12px;border:1px solid #e0d0c0;border-radius:8px;font-size:14px;font-family:inherit;background:#fffaf5}
+.input-group textarea{min-height:80px;resize:vertical}
+.btn{padding:12px 24px;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;transition:.2s;width:100%}
+.btn-primary{background:linear-gradient(135deg,#e85d2f,#ff7849);color:#fff;box-shadow:0 4px 12px rgba(232,93,47,0.2)}
+.btn-primary:active{transform:scale(0.98)}
+.result-card{background:#fff;border-radius:14px;padding:16px;margin-bottom:12px;border:1px solid #f0e6da;display:none}
+.result-card.show{display:block}
+.result-label{font-size:13px;font-weight:700;color:#e85d2f;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+.result-text{font-size:13px;line-height:1.7;color:#5a4a3d;background:#fffaf5;padding:12px;border-radius:8px;max-height:200px;overflow:auto;cursor:pointer}
+.copy-btn{background:#fff5eb;color:#e85d2f;border:1px solid #f5c842;padding:4px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
+.copy-btn:active{transform:scale(0.96)}
+.loading{text-align:center;padding:20px;color:#999;font-size:14px;display:none}
+.loading.show{display:block}
+.hint{font-size:12px;color:#999;margin-top:8px;line-height:1.5}
+.style-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px}
+.style-chip{padding:8px;border:1px solid #e0d0c0;border-radius:8px;font-size:12px;text-align:center;cursor:pointer;transition:.2s;background:#fffaf5}
+.style-chip.selected{border-color:#e85d2f;background:#fff0ea;color:#e85d2f;font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>🎨 AI配图提示词生成器</h1>
+<div class="sub">粘贴文章标题和摘要，自动生成每段配图的AI提示词</div>
+
+<div class="card">
+<div class="card-title">📝 文章信息</div>
+<div class="input-group">
+<label>文章标题</label>
+<input type="text" id="articleTitle" placeholder="如：在任何单位上班，请牢记：三辞，四不辞">
+</div>
+<div class="input-group">
+<label>文章段落摘要（每段一行，空行分隔）</label>
+<textarea id="articleSections" placeholder="如：&#10;1. 健康持续透支，及时止损&#10;2. 长期原地停滞，毫无提升空间就离开&#10;3. 充斥精神打压的负面环境，尽快远离"></textarea>
+</div>
+<div class="input-group">
+<label>插画风格</label>
+<div class="style-grid" id="styleGrid">
+<div class="style-chip selected" data-style="warm">暖色手绘风</div>
+<div class="style-chip" data-style="flat">扁平插画风</div>
+<div class="style-chip" data-style="guochao">国潮水墨风</div>
+<div class="style-chip" data-style="minimal">极简线条风</div>
+<div class="style-chip" data-style="cute">可爱卡通风</div>
+<div class="style-chip" data-style="realistic">写实场景风</div>
+</div>
+</div>
+<div class="input-group">
+<label>主色调（可选）</label>
+<input type="text" id="mainColor" placeholder="如：暖橙色、浅绿色、莫兰迪色系" value="暖橙色">
+</div>
+<button class="btn btn-primary" onclick="generate()">✨ 生成配图提示词</button>
+</div>
+
+<div class="loading" id="loading">⏳ 正在生成中...</div>
+<div id="results"></div>
+
+<div class="card" style="margin-top:16px">
+<div class="card-title">💡 使用说明</div>
+<div class="hint">
+1. 复制每个提示词 → 粘贴到可灵/image2/MJ等AI绘图工具<br>
+2. 生成的图片用裁剪工具去除水印（protest.xixizai.com/crop.html）<br>
+3. 在公众号编辑器中插入图片<br>
+4. 提示词已针对公众号文章配图比例优化（3:4或16:9）
+</div>
+</div>
+</div>
+
+<script>
+var selectedStyle='warm';
+document.querySelectorAll('.style-chip').forEach(function(c){
+c.addEventListener('click',function(){
+document.querySelectorAll('.style-chip').forEach(function(x){x.classList.remove('selected')});
+this.classList.add('selected');
+selectedStyle=this.dataset.style;
+});
+});
+
+var styleMap={
+warm:'暖色调手绘插画风格，柔和的橙黄棕色调，线条温暖圆润，像治愈系绘本插画，带给人安心感',
+flat:'扁平化插画风，色块分明，几何构图，现代简约，像新媒体知识科普配图',
+guochao:'中国国潮水墨插画风格，融合传统国画元素与现代设计，淡雅留白，有东方美学韵味',
+minimal:'极简线条插画风格，黑白主色调加少量点缀色，大量留白，像北欧风编辑插画',
+cute:'可爱卡通插画风格，圆润的线条和形状，柔和的马卡龙配色，有小动物或拟人化角色',
+realistic:'写实场景插画风格，光影细腻，有纵深感，像电影剧照质感，色调偏暖'
+};
+
+function generate(){
+var title=document.getElementById('articleTitle').value.trim();
+var sections=document.getElementById('articleSections').value.trim().split('\n').filter(function(s){return s.trim()});
+var color=document.getElementById('mainColor').value.trim()||'暖橙色';
+var style=styleMap[selectedStyle];
+
+if(!title){alert('请输入文章标题');return}
+if(sections.length<1){alert('请输入至少一个段落摘要');return}
+
+document.getElementById('loading').classList.add('show');
+document.getElementById('results').innerHTML='';
+
+setTimeout(function(){
+document.getElementById('loading').classList.remove('show');
+var html='';
+
+// 封面图提示词
+html+=buildCard('封面图（1.35:1横版）',
+'创作一张公众号封面图，横版1.35:1比例。'+style+'。'+color+'为主色调。画面主题围绕「'+title+'」，要有视觉冲击力，让人看了就想点击。画面中可以用中文标题文字作为设计元素，文字使用粗黑体，清晰锐利。整体构图大气，适合手机屏幕浏览，无水印。');
+
+// 每段配图提示词
+sections.forEach(function(s,i){
+var clean=s.replace(/^\d+\.\s*/,'').trim();
+html+=buildCard('段落'+(i+1)+'配图（3:4竖版）',
+'创作一张竖版3:4的中文公众号配图，'+style+'。'+color+'为主色调。画面内容表现以下场景：「'+clean+'」。要求画面有故事感，能引起读者共鸣，画面温暖有代入感。图中不要放大段文字，可以有一句简短的中文金句作为装饰（不超过12个字），使用手写体或圆体。整体风格统一，高清印刷质感，无水印。');
+});
+
+// 尾部引导GIF提示词
+html+=buildCard('尾部关注引导图（横版）',
+'创作一张横版公众号尾部引导图，'+style+'。'+color+'为主色调。画面中央放一个醒目的圆形或心形图标，配文字「关注我」或「点个赞吧」，风格温暖亲切，引导用户关注和互动。画面简洁不复杂，适合作为文章尾部的视觉引导。');
+
+document.getElementById('results').innerHTML=html;
+},800);
+}
+
+function buildCard(label,text){
+var id='r'+Math.random().toString(36).substr(2,9);
+return '<div class="result-card show" id="'+id+'">'+
+'<div class="result-label"><span>'+label+'</span><button class="copy-btn" onclick="copyText(\\''+id+'\\')">📋 复制</button></div>'+
+'<div class="result-text" onclick="copyText(\\''+id+'\\')">'+text+'</div>'+
+'</div>';
+}
+
+function copyText(id){
+var el=document.getElementById(id).querySelector('.result-text');
+navigator.clipboard.writeText(el.textContent).then(function(){
+var btn=document.getElementById(id).querySelector('.copy-btn');
+var orig=btn.textContent;
+btn.textContent='✅ 已复制';
+setTimeout(function(){btn.textContent=orig},1500);
+});
+}
+</script>
+</body>
+</html>
