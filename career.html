@@ -265,7 +265,7 @@ window.scrollTo(0,0);
 var type=getType();
 var r=results[type];
 
-var maxScore={action:30,create:30,social:30,strategy:30};
+var maxScore={action:15,create:15,social:15,strategy:15};
 var pct={};
 dimKeys.forEach(function(k){
 var v=scores[k];if(v<0)v=0;
@@ -294,21 +294,41 @@ h+='<div class="reason-card"><p style="font-size:15px;line-height:1.8;color:#3a5
 if(r.quote)h+='<blockquote>「'+r.quote+'」</blockquote>';
 h+='</div></div>';
 
-// 维度得分
+// 维度得分详解
 h+='<div class="result-section">';
-h+='<div class="section-title">维度得分详解</div>';
+h+='<div class="section-title">4维度深度解读</div>';
+var dimDetails={
+action:{
+high:'你的行动力指数极高，属于「先干了再说」的类型。别人还在纠结方案，你已经把第一版做出来了。这种特质在创业、项目管理、开拓型业务中是碾压级优势。在团队里，你是那个推动事情往前走的人。',
+mid:'你的行动力适中，能在需要的时候快速出手，但也愿意先想清楚。这种平衡感让你不容易冲动踩坑，但有时候可能会因为「再想想」而错过时机。',
+low:'你更偏稳重，喜欢在充分准备后再行动。这让你做事很少出错，但有时候需要提醒自己：完成比完美重要，先跑起来再调整。'
+},
+create:{
+high:'你的创造力指数极高，对细节、美感、情绪有天然的敏感度。别人看到表面，你能看到背后的故事。这种天赋在内容创作、设计、心理咨询等领域是核心竞争力。你的灵感来源是日常的观察和感受。',
+mid:'你的创造力适中，偶尔会有不错的灵感，但不依赖创意吃饭。你更偏向在现有框架内做事，偶尔加入自己的想法。',
+low:'你更偏务实，不太追求创意表达。你的优势在于执行和落地，而不是天马行空。适合需要稳定输出的岗位。'
+},
+social:{
+high:'你的社交力极高，是天生的「人际枢纽」。有你在的场合不会冷场，你能快速跟陌生人建立连接。市场、公关、社群运营是你的主场。你的竞争力不只在于技能，更在于你能调动多少人。',
+mid:'你的社交力适中，能跟大部分人正常相处，但不会主动去经营大范围的人脉。你更适合小而深的社交圈。',
+low:'你偏内敛，在独处中更有能量。大规模社交会消耗你。你适合独立交付型的工作，或者在信任的小团队中深度协作。'
+},
+strategy:{
+high:'你的策略力极高，天生的规划者和操盘手。给你一堆乱麻，你本能地就能找到线头。运营、项目管理、投资分析是你的核心赛道。你的竞争力在于：别人看到混乱，你看到结构。',
+mid:'你的策略力适中，能在需要的时候做规划和分析，但不是本能型的。你更适合在有明确框架的岗位上发挥。',
+low:'你更偏直觉型，不喜欢做系统性分析。你的决策更多靠感觉和经验，而不是数据和逻辑。这在创意型工作中有优势，但在需要严密逻辑的场景下可能吃力。'
+}
+};
 dimKeys.forEach(function(k){
 var label=dimNames[k];
 var score=pct[k];
-var desc='';
-if(k==='action')desc=score>=70?'你的行动力极强，说干就干':'你更偏稳重，喜欢想清楚再动';
-if(k==='create')desc=score>=70?'你的创造力突出，对细节和美感极敏感':'你更偏务实，不太追求创意表达';
-if(k==='social')desc=score>=70?'你是社交天花板，在人群中如鱼得水':'你偏内敛，在独处中更有能量';
-if(k==='strategy')desc=score>=70?'你的策略感极强，天生的规划者和操盘手':'你更偏直觉型，不喜欢做系统性分析';
-h+='<div class="score-bar-wrap">';
-h+='<div class="score-bar-label"><span>'+label+'</span><span>'+score+'分</span></div>';
-h+='<div class="score-bar"><div class="score-bar-fill" style="width:'+score+'%"></div></div>';
-h+='<div style="font-size:12px;color:#999;margin-top:4px">'+desc+'</div>';
+var level=score>=70?'high':score>=45?'mid':'low';
+var desc=dimDetails[k][level];
+var levelText=level==='high'?'🟢 天赋区':level==='mid'?'🟡 中等':level==='low'?'⚪ 待开发':'';
+h+='<div class="reason-card">';
+h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div style="font-size:15px;font-weight:700;color:#1b3a1b">'+label+' '+levelText+'</div><div style="font-size:18px;font-weight:900;color:#2e7d32">'+score+'<span style="font-size:12px;color:#999">/100</span></div></div>';
+h+='<div class="score-bar" style="margin-bottom:10px"><div class="score-bar-fill" style="width:'+score+'%"></div></div>';
+h+='<div style="font-size:13px;color:#5a7a5a;line-height:1.7">'+desc+'</div>';
 h+='</div>';
 });
 h+='</div>';
@@ -316,9 +336,29 @@ h+='</div>';
 // 职业方向
 h+='<div class="result-section">';
 h+='<div class="section-title">最适合你的职业方向</div>';
-h+='<div class="city-tags">';
-r.careers.forEach(function(c){h+='<span class="city-tag">'+c+'</span>'});
-h+='</div></div>';
+var careerDetails={
+'创业者/合伙人':'你是天生的开拓者，从0到1的过程让你兴奋。你享受不确定性，享受从无到有建起一件事的成就感。',
+'自媒体/IP主理人':'你有个人IP的潜质。你的行动力和表达欲让你天然适合做内容输出和个人品牌。',
+'销售/BD负责人':'你的目标感和人际力让你在需要搞定客户、拓展业务的岗位上碾压大多数人。',
+'项目经理':'你的行动力+策略思维让你天然适合推动复杂项目落地，是团队的发动机。',
+'内容创作者/作者':'你的感知力和表达力是你的核心武器。好的内容、好的故事，从你的敏感中来。',
+'设计师/创意工作者':'你对美感和细节的敏感度远超常人。这种天赋在设计、创意、视觉领域是核心竞争力。',
+'心理咨询师/疗愈师':'你的共情力极强，能感知到别人忽略的情绪。这种天赋在心理、教育、疗愈领域价值千金。',
+'独立手艺人':'你享受独立创作的过程，不需要团队也能产出高质量作品。适合做自由职业者。',
+'市场/品牌营销':'你天生懂人，知道怎么打动人心。品牌营销、市场推广是你的主场。',
+'社群运营/KOL':'你能把一群人聚在一起，让他们产生归属感。社群运营是你的天职。',
+'活动策划/公关':'你享受把人聚在一起的感觉，活动策划让你把社交天赋变成专业能力。',
+'商务拓展':'你的社交力+目标感让你在BD岗位上如鱼得水，能快速建立合作。',
+'运营/项目管理':'你是天生的「系统化思维者」，能把混乱变成秩序，把复杂变成简单。',
+'投资分析师/顾问':'你的逻辑和分析能力让你在数据驱动的岗位上碾压多数人。',
+'产品经理/技术管理':'你能同时理解业务和技术，是连接需求和技术团队的桥梁。',
+'数据分析师':'你享受在数据中发现规律，这种系统化思维让你在分析岗位上极有价值。'
+};
+r.careers.forEach(function(c,i){
+var detail=careerDetails[c]||'';
+h+='<div class="reason-card"><div style="display:flex;align-items:flex-start;gap:10px"><span style="width:28px;height:28px;border-radius:50%;background:#2e7d32;color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;margin-top:2px">'+(i+1)+'</span><div><div style="font-size:15px;font-weight:700;color:#1b3a1b;margin-bottom:4px">'+c+'</div><div style="font-size:13px;color:#5a7a5a;line-height:1.6">'+detail+'</div></div></div></div>';
+});
+h+='</div>';
 
 // 职场雷区
 h+='<div class="result-section">';
