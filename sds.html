@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>抑郁情绪自评 | 西西崽测评</title>
+<meta name="description" content="20道题SDS抑郁自评量表，5维度深度分析">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg-warm:#f7f4ef;--bg-mint:#eef5ee;
+  --primary:#5b8c5a;--primary-l:#8db88c;--primary-d:#3d6b3c;
+  --accent:#e8b86d;--accent-l:#f5d49a;
+  --text:#3d3d3d;--text-l:#6b6b6b;--text-d:#2a2a2a;
+  --warning:#e07b5a;--danger:#d9534f;
+  --card-bg:#ffffff;--shadow:0 4px 20px rgba(91,140,90,0.08);
+}
+body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;min-height:100vh;color:var(--text);overflow-x:hidden}
+.bg{position:fixed;inset:0;z-index:-1;background:linear-gradient(160deg,var(--bg-warm) 0%,var(--bg-mint) 100%)}
+.bg::before{content:"";position:absolute;inset:0;background-image:radial-gradient(circle at 20% 20%,rgba(91,140,90,0.05) 0%,transparent 40%),radial-gradient(circle at 80% 80%,rgba(232,184,109,0.05) 0%,transparent 40%)}
+.app{max-width:500px;margin:0 auto;min-height:100vh;position:relative}
+
+/* === 封面页 === */
+.cover{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:40px 24px;text-align:center}
+.cover .tag{display:inline-flex;align-items:center;gap:8px;margin-bottom:32px}
+.cover .tag-label{border:1.5px solid var(--primary);border-radius:6px;padding:3px 14px;font-size:13px;color:var(--primary);background:rgba(91,140,90,0.08);font-weight:600}
+.cover .tag-num{font-size:13px;color:var(--primary);font-weight:600}
+.cover .tag-line{flex:1;width:60px;height:1px;background:var(--primary-l);opacity:.4}
+.cover h1{font-size:36px;font-weight:900;color:var(--text-d);line-height:1.3;margin-bottom:16px;letter-spacing:-0.5px}
+.cover .subtitle{font-size:15px;color:var(--text-l);margin-bottom:8px}
+.cover .subtags{display:flex;flex-direction:column;gap:6px;margin-bottom:40px;margin-top:20px}
+.cover .subtag{font-size:14px;color:var(--text-l)}
+.cover .disclaimer-cover{font-size:12px;color:var(--text-l);background:rgba(91,140,90,0.06);border-radius:10px;padding:12px 16px;max-width:360px;margin-bottom:32px;line-height:1.5}
+.cover .footer-en{position:absolute;bottom:24px;left:0;right:0;text-align:center;font-size:11px;color:rgba(107,107,107,0.3);letter-spacing:3px}
+.btn-start{background:var(--primary);color:#fff;border:none;padding:16px 56px;border-radius:50px;font-size:17px;font-weight:700;cursor:pointer;transition:.3s;box-shadow:0 4px 16px rgba(91,140,90,0.3)}
+.btn-start:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(91,140,90,0.4);background:var(--primary-d)}
+.btn-start:active{transform:translateY(0)}
+
+/* === 答题页 === */
+.quiz{display:none;flex-direction:column;min-height:100vh;padding:32px 24px}
+.quiz .progress-wrap{margin-bottom:36px}
+.quiz .progress-bar{height:6px;background:rgba(91,140,90,0.12);border-radius:3px;overflow:hidden}
+.quiz .progress-fill{height:100%;background:linear-gradient(90deg,var(--primary),var(--primary-l));border-radius:3px;transition:width .3s ease}
+.quiz .progress-text{display:flex;justify-content:space-between;margin-top:8px;font-size:12px;color:var(--text-l)}
+.quiz .q-num{font-size:13px;color:var(--primary);font-weight:600;margin-bottom:8px}
+.quiz .q-title{font-size:22px;font-weight:800;color:var(--text-d);line-height:1.4;margin-bottom:28px}
+.quiz .q-hint{font-size:13px;color:var(--text-l);margin-bottom:16px}
+.quiz .options{display:flex;flex-direction:column;gap:10px}
+.quiz .option{background:var(--card-bg);border:2px solid transparent;border-radius:14px;padding:16px 18px;font-size:15px;color:var(--text);cursor:pointer;transition:.2s;display:flex;align-items:center;gap:12px;box-shadow:0 2px 8px rgba(0,0,0,0.04)}
+.quiz .option:hover{border-color:var(--primary);transform:translateX(3px);box-shadow:var(--shadow)}
+.quiz .option:active{transform:scale(.98)}
+.quiz .option .opt-label{width:32px;height:32px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;background:rgba(91,140,90,0.1);color:var(--primary);transition:.2s}
+.quiz .option:hover .opt-label{background:var(--primary);color:#fff}
+.quiz .option .opt-text{flex:1;font-weight:500}
+
+/* === 结果页 === */
+.result{display:none;flex-direction:column;align-items:center;min-height:100vh;padding:36px 24px;text-align:center}
+.result .r-icon{font-size:60px;margin-bottom:12px;animation:bounceIn .6s ease}
+.result .r-label{font-size:14px;color:var(--text-l);margin-bottom:6px}
+.result .r-title{font-size:28px;font-weight:900;color:var(--text-d);margin-bottom:6px;line-height:1.3}
+.result .r-badge{display:inline-block;font-size:13px;padding:4px 16px;border-radius:14px;margin-bottom:24px;font-weight:600}
+
+.r-card{background:var(--card-bg);border-radius:14px;padding:18px;margin-bottom:12px;box-shadow:var(--shadow);text-align:left;width:100%}
+
+/* 分数仪表盘 */
+.gauge-wrap{position:relative;width:100%;display:flex;flex-direction:column;align-items:center;padding:8px 0}
+.gauge-svg{width:260px;height:140px}
+.gauge-score{font-size:36px;font-weight:900;line-height:1;margin-top:-50px}
+.gauge-label{font-size:13px;color:var(--text-l);margin-top:4px}
+
+/* 维度评分 */
+.dim-row{margin-bottom:10px}
+.dim-row:last-child{margin-bottom:0}
+.dim-head{display:flex;justify-content:space-between;margin-bottom:4px;align-items:center}
+.dim-name{font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:6px}
+.dim-val{font-size:12px;color:var(--text-l)}
+.dim-bar{height:6px;background:#f0ede8;border-radius:3px;overflow:hidden}
+.dim-fill{height:100%;border-radius:3px;transition:width .8s ease}
+
+/* 雷达图容器 */
+.radar-wrap{display:flex;justify-content:center;padding:8px 0}
+.radar-svg{width:280px;height:280px}
+
+/* 维度详情 */
+.dim-detail{margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid #f0ede8}
+.dim-detail:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+.dim-detail-head{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.dim-detail-icon{font-size:20px}
+.dim-detail-name{font-size:15px;font-weight:700;color:var(--text-d)}
+.dim-detail-level{font-size:11px;padding:2px 10px;border-radius:10px;font-weight:600;margin-left:auto}
+.dim-detail-desc{font-size:14px;line-height:1.7;color:var(--text);margin-bottom:8px}
+.dim-detail-tip{font-size:13px;color:var(--primary-d);background:rgba(91,140,90,0.06);padding:8px 12px;border-radius:8px;line-height:1.5}
+
+/* 引用 */
+.r-quote{border-left:3px solid var(--primary);background:rgba(91,140,90,0.05);padding:10px 14px;margin:8px 0;border-radius:0 8px 8px 0;font-style:italic;color:var(--primary-d);font-size:14px;line-height:1.6}
+
+/* 建议列表 */
+.tip-item{display:flex;align-items:flex-start;gap:8px;margin-bottom:6px;font-size:14px;line-height:1.5;color:var(--text)}
+.tip-dot{width:6px;height:6px;border-radius:50%;background:var(--primary);flex-shrink:0;margin-top:7px}
+
+/* 免责声明 */
+.disclaimer-box{background:rgba(91,140,90,0.06);border:1px solid rgba(91,140,90,0.15);border-radius:12px;padding:16px;margin-bottom:16px;width:100%}
+.disclaimer-title{font-size:14px;font-weight:700;color:var(--primary-d);margin-bottom:8px}
+.disclaimer-text{font-size:13px;color:var(--text-l);line-height:1.6;margin-bottom:10px}
+.hotline-box{background:#fff;border:1px solid var(--primary-l);border-radius:8px;padding:12px;text-align:center}
+.hotline-label{font-size:12px;color:var(--text-l);margin-bottom:4px}
+.hotline-num{font-size:18px;font-weight:800;color:var(--primary-d);letter-spacing:1px}
+.hotline-desc{font-size:11px;color:var(--text-l);margin-top:4px}
+
+/* 行动按钮 */
+.r-actions{display:flex;flex-direction:column;gap:10px;width:100%;max-width:300px;margin-bottom:20px}
+.btn-retry{background:transparent;color:var(--primary);border:2px solid var(--primary-l);padding:12px;border-radius:50px;font-size:14px;font-weight:600;cursor:pointer;transition:.3s}
+.btn-retry:hover{background:var(--primary);color:#fff;border-color:var(--primary)}
+
+.section-title{font-size:14px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px;color:var(--text-d)}
+.section-title .st-icon{font-size:16px}
+
+@keyframes bounceIn{0%{transform:scale(0);opacity:0}60%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.fadeIn{animation:fadeIn .25s ease}
+</style>
+</head>
+<body>
+<div class="bg"></div>
+<div class="app">
+
+<!-- 封面页 -->
+<div class="cover" id="page-cover">
+  <div class="tag">
+    <span class="tag-label">情绪自评</span>
+    <span class="tag-line"></span>
+    <span class="tag-num">NO.006</span>
+  </div>
+  <h1>你最近的状态还好吗？</h1>
+  <p class="subtitle">SDS抑郁自评量表 · 5维度深度分析</p>
+  <div class="subtags">
+    <div class="subtag">⏱️ 五分钟自测</div>
+    <div class="subtag">📝 20道专业量表题</div>
+    <div class="subtag">📊 5维度雷达图分析</div>
+    <div class="subtag">💡 个性化调节建议</div>
+  </div>
+  <div class="disclaimer-cover">
+    ⚠️ 本测评基于SDS抑郁自评量表，仅供自我了解参考，不能替代专业医疗诊断。如果你正在经历严重的情绪困扰，请及时寻求专业帮助。
+  </div>
+  <button class="btn-start" onclick="startQuiz()">开始测评 →</button>
+  <div class="footer-en">SELF-RATING DEPRESSION SCALE</div>
+</div>
+
+<!-- 答题页 -->
+<div class="quiz" id="page-quiz">
+  <div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-text">
+      <span id="progressLabel">第 1 题</span>
+      <span id="progressCount">1 / 20</span>
+    </div>
+  </div>
+  <div class="q-num" id="qNum">问题 1</div>
+  <div class="q-title" id="qTitle">加载中...</div>
+  <div class="q-hint">请根据<strong>过去一周</strong>的真实感受选择</div>
+  <div class="options" id="qOptions"></div>
+</div>
+
+<!-- 结果页 -->
+<div class="result" id="page-result">
+  <div class="r-icon" id="rIcon">☀️</div>
+  <div class="r-label">你的情绪状态</div>
+  <div class="r-title" id="rTitle">阳光状态</div>
+  <div class="r-badge" id="rBadge">SDS标准分：—</div>
+
+  <!-- 分数仪表盘 -->
+  <div class="r-card" id="rGauge"></div>
+  <!-- 雷达图 -->
+  <div class="r-card" id="rRadar"></div>
+  <!-- 维度详情 -->
+  <div class="r-card" id="rDimensions"></div>
+  <!-- 温暖解读 -->
+  <div class="r-card" id="rDesc"></div>
+  <!-- 专属建议 -->
+  <div class="r-card" id="rTips"></div>
+  <!-- 免责声明 + 热线 -->
+  <div class="disclaimer-box">
+    <div class="disclaimer-title">⚠️ 重要提醒</div>
+    <div class="disclaimer-text">本测评基于SDS抑郁自评量表，仅供自我了解参考，不能替代专业医疗诊断。如果你正在经历严重的情绪困扰，请一定寻求专业帮助。</div>
+    <div class="hotline-box">
+      <div class="hotline-label">🆘 心理援助热线</div>
+      <div class="hotline-num">12356</div>
+      <div class="hotline-desc">全国心理援助热线 · 24小时</div>
+      <div style="height:8px"></div>
+      <div class="hotline-num" style="font-size:16px">010-82951332</div>
+      <div class="hotline-desc">北京心理危机研究与干预中心</div>
+    </div>
+  </div>
+
+  <div class="r-actions">
+    <button class="btn-retry" onclick="resetQuiz()">🔄 再测一次</button>
+  </div>
+  <div style="font-size:12px;color:rgba(107,107,107,0.3);margin-top:8px;margin-bottom:20px">更多测试请访问 protest.xixizai.com</div>
+</div>
+
+</div>
+
+<script>
+// === SDS 20题数据 ===
+// reverse: true 表示反向计分题(A=4,B=3,C=2,D=1)
+var questions = [
+  {q:"我觉得闷闷不乐，情绪低沉",dim:"mood",reverse:false},
+  {q:"我觉得一天之中早晨最好",dim:"motivation",reverse:true},
+  {q:"我想要哭或觉得想哭",dim:"mood",reverse:false},
+  {q:"我晚上睡眠不好",dim:"body",reverse:false},
+  {q:"我吃得跟平常一样多",dim:"body",reverse:true},
+  {q:"我与亲密的人接触时和以往一样感到愉快",dim:"social",reverse:true},
+  {q:"我发觉自己的体重在下降",dim:"body",reverse:false},
+  {q:"我有便秘的苦恼",dim:"body",reverse:false},
+  {q:"我的心跳比平时快",dim:"body",reverse:false},
+  {q:"我无缘无故地感到疲劳",dim:"body",reverse:false},
+  {q:"我的头脑跟平常一样清楚",dim:"cognitive",reverse:true},
+  {q:"我觉得经常做的事情也没有困难",dim:"cognitive",reverse:true},
+  {q:"我觉得不安而平静不下来",dim:"social",reverse:false},
+  {q:"我对未来抱有希望",dim:"motivation",reverse:true},
+  {q:"我比平常容易生气激动",dim:"mood",reverse:false},
+  {q:"我觉得做决定是容易的",dim:"cognitive",reverse:true},
+  {q:"我觉得自己是有用的、不可缺少的人",dim:"motivation",reverse:true},
+  {q:"我的生活很有意义",dim:"motivation",reverse:true},
+  {q:"我认为如果我死了别人会生活得更好",dim:"social",reverse:false},
+  {q:"平常感兴趣的事我仍然感兴趣",dim:"motivation",reverse:true}
+];
+
+var optLabels = [
+  {t:"没有或很少时间",short:"没有"},
+  {t:"少部分时间",short:"有时"},
+  {t:"相当多时间",short:"经常"},
+  {t:"绝大部分或全部时间",short:"总是"}
+];
+
+// === 5维度定义 ===
+var dims = {
+  mood:{
+    name:"情绪状态",icon:"💝",
+    items:[0,2,14], // question indices (0-based)
+    desc:"你是否经常感到低落、想哭、易怒",
+    low:{label:"良好",color:"#6bab6b",desc:"你的情绪状态比较稳定，没有明显的低落或波动。这是一个好信号，说明你目前的情绪管理系统运转良好。"},
+    mid:{label:"关注",color:"#e8b86d",desc:"你最近可能有些情绪波动。也许是压力、疲劳或者一些还没消化的事情在影响你。不是你矫情，是情绪在提醒你该关注自己了。"},
+    high:{label:"预警",color:"#e07b5a",desc:"你的情绪似乎在持续亮红灯。闷闷不乐、想哭、易怒——这些不是软弱，是身体在替你求救。请认真对待这些信号。"}
+  },
+  body:{
+    name:"躯体反应",icon:"🌿",
+    items:[3,4,6,7,8,9],
+    desc:"你的身体是否在替你承受压力",
+    low:{label:"良好",color:"#6bab6b",desc:"你的身体状态良好，没有明显的躯体不适。这说明你的压力还没有累积到影响身体的程度。"},
+    mid:{label:"关注",color:"#e8b86d",desc:"身体已经开始发出信号了。睡眠不好、容易疲劳、心跳加快——这些都是压力的躯体表达。身体比大脑更诚实，它在提醒你该休息了。"},
+    high:{label:"预警",color:"#e07b5a",desc:"你的身体在持续承受压力的冲击。失眠、体重变化、心跳加速、持续疲劳——这些不是「忍忍就好」的事，是身体在拉警报。"}
+  },
+  cognitive:{
+    name:"认知功能",icon:"🧠",
+    items:[10,11,15],
+    desc:"你的思维是否清晰、能否集中注意力",
+    low:{label:"良好",color:"#6bab6b",desc:"你的思维清晰，决策能力良好，日常事务处理没有困难。大脑在正常运转。"},
+    mid:{label:"关注",color:"#e8b86d",desc:"最近可能有些「脑雾」——注意力不太集中，做决定变得犹豫，觉得脑子转不动。这通常是短期压力或疲劳的表现。"},
+    high:{label:"预警",color:"#e07b5a",desc:"认知功能明显受到影响，连日常的事情都觉得困难。这通常是长期高压或抑郁状态的表现，不是你变笨了，是大脑需要被照顾。"}
+  },
+  motivation:{
+    name:"动力与希望",icon:"🌅",
+    items:[1,13,16,17,19],
+    desc:"你对未来是否还有期待、是否觉得有意义",
+    low:{label:"良好",color:"#6bab6b",desc:"你对生活有期待，觉得自己有价值，对未来充满希望。这是很好的状态，继续保持。"},
+    mid:{label:"关注",color:"#e8b86d",desc:"可能最近有些丧。感觉做的事情没意义，对原来感兴趣的事提不起劲，对未来有些迷茫。这是很常见的，大多数人都会经历这样的阶段。"},
+    high:{label:"预警",color:"#e07b5a",desc:"动力系统的灯在闪红。觉得没意义、没价值、看不到未来——请相信，这不是事实，是抑郁在骗你。这种状态下最需要的是外部支持。"}
+  },
+  social:{
+    name:"人际与自评",icon:"🤝",
+    items:[5,12,18],
+    desc:"你与他人的关系、你如何看待自己",
+    low:{label:"良好",color:"#6bab6b",desc:"你的人际关系良好，对自己有积极的评价，没有自我否定的倾向。"},
+    mid:{label:"关注",color:"#e8b86d",desc:"可能有些不安感。在人际关系中有些焦虑，或者偶尔会否定自己的价值。这可能跟最近的人际互动或压力有关。"},
+    high:{label:"预警",color:"#e07b5a",desc:"你在人际和自我评价方面亮了红灯。特别是如果你觉得自己不重要、甚至觉得没有你会更好——请相信，这不是事实，是症状在骗你。你比想象中重要得多。"}
+  }
+};
+
+// === 维度建议 ===
+var dimTips = {
+  mood:{
+    mid:["每天给自己15分钟「情绪时间」，把感受写下来或者说出来","找一个你觉得安全的人聊聊最近的感受","允许自己有不开心的时候，不需要强颜欢笑"],
+    high:["请认真考虑找一位心理咨询师聊聊，哪怕只是一次","如果持续两周以上情绪低落，建议去专业机构做一次评估","情绪不是敌人，它是信使。它在告诉你：有些事需要改变了"]
+  },
+  body:{
+    mid:["今晚试试比平时早30分钟放下手机","做10分钟深呼吸或轻度拉伸","减少咖啡因摄入，尤其是下午之后","规律三餐，不要因为忙就不吃"],
+    high:["持续失眠或躯体不适超过两周，建议去医院检查","做个基础体检排除器质性问题","建立固定的作息时间表，让身体找回节律","适度运动，哪怕只是每天散步20分钟"]
+  },
+  cognitive:{
+    mid:["把大任务拆成小步骤，每步只专注一件事","用笔记或备忘录减轻大脑的记忆负担","给自己允许「做不到完美」的标准"],
+    high:["认知功能下降是抑郁的核心症状之一，建议寻求专业评估","暂时避免做重大人生决策","用清单和日程表代替大脑记忆"]
+  },
+  motivation:{
+    mid:["做一件小小的、有明确反馈的事（哪怕只是收拾桌面）","重新接触一个你曾经热爱的爱好","设定一个「本周小目标」，不要太大，完成了就夸自己"],
+    high:["如果你有「不想活了」的想法，请立即拨打心理援助热线 12356","请尽快预约精神心理科门诊","告诉身边信任的人你的真实感受，不要独自承受","哪怕什么都不做，能撑过这一天就已经很棒了"]
+  },
+  social:{
+    mid:["跟一个让你觉得舒服的人待一会儿","写三件你今天做到的事，哪怕很小","减少让你焦虑的社交，增加让你舒服的社交"],
+    high:["如果你觉得身边没有可以倾诉的人，拨打心理援助热线也是一种勇敢","专业的心理支持可以帮助你重新看到自己的价值","你在别人生命中比你以为的重要得多"]
+  }
+};
+
+// === 总体结果 ===
+var overallResults = {
+  sunny:{icon:"☀️",title:"阳光状态",color:"#5b8c5a",badgeBg:"rgba(91,140,90,0.12)",badgeColor:"#3d6b3c",
+    desc:"好消息！你目前的心理状态比较健康，没有明显的抑郁倾向。\n\n这不代表你永远不会难过——而是说明你目前有足够的心理韧性来应对生活中的波动。\n\n继续保持好的生活习惯和社交连接。如果偶尔心情不好，那是正常的，不用紧张。"},
+  cloudy:{icon:"🌤️",title:"轻微阴天",color:"#e8b86d",badgeBg:"rgba(232,184,109,0.15)",badgeColor:"#a87726",
+    desc:"你最近可能承受了一些压力，出现了一些轻微的情绪信号。\n\n这很常见——大多数人都会在人生的某些阶段经历这样的状态。它不是你的错，也不是「矫情」。\n\n好消息是：这个阶段是可以通过自我调节来改善的。关键是：不要忽视它，也不要恐慌。"},
+  cloudy2:{icon:"🌧️",title:"乌云笼罩",color:"#6b8db5",badgeBg:"rgba(107,141,181,0.15)",badgeColor:"#3d6b8c",
+    desc:"你最近的状态不太轻松。情绪、身体、思维可能都在给你发信号。\n\n请认真对待这些信号。它们不是要击垮你，而是在提醒你：你需要被照顾了——尤其是被你自己照顾。\n\n这个阶段，仅靠自己硬扛可能会比较辛苦。考虑寻求专业支持，这不是软弱，是勇敢。"},
+  storm:{icon:"⛈️",title:"暴雨预警",color:"#d9534f",badgeBg:"rgba(217,83,79,0.12)",badgeColor:"#a9302d",
+    desc:"你现在可能正处于一段比较艰难的时期。\n\n首先，请知道：你不是一个人。这些感受虽然强烈，但它们是可以被改善的。很多人经历过类似的状态并且走了出来。\n\n请你一定要寻求专业的帮助。不是因为你不够坚强，而是因为你值得被专业地对待。一个电话、一次门诊，可能就是转折点。\n\n你已经撑到了现在，这本身就很了不起。"}
+};
+
+// === 测试逻辑 ===
+var currentQ = 0;
+var rawAnswers = []; // 存储每题原始选项(0-3)
+var dimRawScores = {mood:0,body:0,cognitive:0,motivation:0,social:0};
+var dimNormScores = {mood:0,body:0,cognitive:0,motivation:0,social:0}; // 标准化0-100
+
+function startQuiz(){
+  currentQ = 0;
+  rawAnswers = [];
+  dimRawScores = {mood:0,body:0,cognitive:0,motivation:0,social:0};
+  document.getElementById('page-cover').style.display='none';
+  document.getElementById('page-result').style.display='none';
+  document.getElementById('page-quiz').style.display='flex';
+  window.scrollTo(0,0);
+  renderQuestion();
+}
+
+function renderQuestion(){
+  var q = questions[currentQ];
+  var total = questions.length;
+  var progress = (currentQ / total) * 100;
+
+  document.getElementById('progressFill').style.width = progress + '%';
+  document.getElementById('progressLabel').textContent = '第 ' + (currentQ+1) + ' 题';
+  document.getElementById('progressCount').textContent = (currentQ+1) + ' / ' + total;
+  document.getElementById('qNum').textContent = '问题 ' + (currentQ+1) + ' / ' + total;
+  document.getElementById('qTitle').textContent = q.q;
+
+  var labels = ['A','B','C','D'];
+  var html = '';
+  optLabels.forEach(function(o,i){
+    html += '<div class="option fadeIn" onclick="selectOption('+i+')">' +
+      '<div class="opt-label">'+labels[i]+'</div>' +
+      '<div class="opt-text">'+o.t+'</div></div>';
+  });
+  document.getElementById('qOptions').innerHTML = html;
+}
+
+function selectOption(optIndex){
+  var q = questions[currentQ];
+  rawAnswers.push({qIndex:currentQ, opt:optIndex, dim:q.dim, reverse:q.reverse});
+
+  // 计算该题得分（1-4）
+  var score;
+  if(q.reverse){
+    score = 4 - optIndex; // A(0)->4, B(1)->3, C(2)->2, D(3)->1
+  } else {
+    score = optIndex + 1; // A(0)->1, B(1)->2, C(2)->3, D(3)->4
+  }
+  dimRawScores[q.dim] += score;
+
+  currentQ++;
+  if(currentQ >= questions.length){
+    calculateResult();
+  } else {
+    window.scrollTo(0,0);
+    renderQuestion();
+  }
+}
+
+function calculateResult(){
+  // 标准化各维度到0-100
+  // 每题范围1-4，所以维度最大=题数*4, 最小=题数*1
+  for(var k in dims){
+    var itemCount = dims[k].items.length;
+    var rawMin = itemCount * 1;
+    var rawMax = itemCount * 4;
+    dimNormScores[k] = Math.round((dimRawScores[k] - rawMin) / (rawMax - rawMin) * 100);
+  }
+
+  // SDS标准总分 = 所有题原始分之和 × 1.25
+  var totalRaw = 0;
+  rawAnswers.forEach(function(a){
+    var q = questions[a.qIndex];
+    var s = q.reverse ? (4 - a.opt) : (a.opt + 1);
+    totalRaw += s;
+  });
+  var standardScore = Math.round(totalRaw * 1.25);
+
+  showResult(standardScore);
+}
+
+function getDimLevel(score){
+  if(score < 34) return 'low';
+  if(score < 67) return 'mid';
+  return 'high';
+}
+
+function getOverall(score){
+  if(score < 53) return 'sunny';
+  if(score <= 62) return 'cloudy';
+  if(score <= 72) return 'cloudy2';
+  return 'storm';
+}
+
+function showResult(score){
+  document.getElementById('page-quiz').style.display='none';
+  document.getElementById('page-result').style.display='flex';
+  window.scrollTo(0,0);
+
+  var level = getOverall(score);
+  var r = overallResults[level];
+
+  document.getElementById('rIcon').textContent = r.icon;
+  document.getElementById('rTitle').textContent = r.title;
+  var badge = document.getElementById('rBadge');
+  badge.textContent = 'SDS标准分：' + score;
+  badge.style.background = r.badgeBg;
+  badge.style.color = r.badgeColor;
+
+  // 1. 分数仪表盘
+  var gaugeColor = r.color;
+  var gaugeHtml = '<div class="section-title"><span class="st-icon">📊</span>你的得分</div>';
+  gaugeHtml += '<div class="gauge-wrap">';
+  // SVG半圆仪表盘
+  var pct = Math.min(score / 100, 1);
+  var arcAngle = 180 * pct; // 0-180度
+  var r_r = 110, cx = 130, cy = 120;
+  // 背景弧
+  var bgPath = describeArc(cx, cy, r_r, 0, 180);
+  // 数据弧
+  var dataPath = describeArc(cx, cy, r_r, 0, arcAngle);
+  gaugeHtml += '<svg class="gauge-svg" viewBox="0 0 260 140">';
+  gaugeHtml += '<path d="' + bgPath + '" fill="none" stroke="#e8e5e0" stroke-width="12" stroke-linecap="round"/>';
+  gaugeHtml += '<path d="' + dataPath + '" fill="none" stroke="' + gaugeColor + '" stroke-width="12" stroke-linecap="round"/>';
+  gaugeHtml += '</svg>';
+  gaugeHtml += '<div class="gauge-score" style="color:' + gaugeColor + '">' + score + '</div>';
+  gaugeHtml += '<div class="gauge-label">标准分 · 满分100（分值越低越好）</div>';
+  // 分值参考
+  gaugeHtml += '<div style="display:flex;gap:12px;margin-top:12px;font-size:11px;color:var(--text-l);flex-wrap:wrap;justify-content:center">';
+  gaugeHtml += '<span><span style="color:#5b8c5a;font-weight:600">&lt;53</span> 阳光</span>';
+  gaugeHtml += '<span><span style="color:#e8b86d;font-weight:600">53-62</span> 轻微阴天</span>';
+  gaugeHtml += '<span><span style="color:#6b8db5;font-weight:600">63-72</span> 乌云</span>';
+  gaugeHtml += '<span><span style="color:#d9534f;font-weight:600">&gt;72</span> 暴雨</span>';
+  gaugeHtml += '</div></div>';
+  document.getElementById('rGauge').innerHTML = gaugeHtml;
+
+  // 2. 雷达图
+  var radarHtml = '<div class="section-title"><span class="st-icon">🎯</span>五维度雷达图</div><div class="radar-wrap">';
+  radarHtml += buildRadarSVG(dimNormScores);
+  radarHtml += '</div></div>';
+  document.getElementById('rRadar').innerHTML = radarHtml;
+
+  // 3. 各维度详情
+  var dimHtml = '<div class="section-title"><span class="st-icon">📋</span>维度详细分析</div>';
+  var dimOrder = ['mood','body','cognitive','motivation','social'];
+  // 按分数从高到低排序（高分=问题更严重）
+  dimOrder.sort(function(a,b){return dimNormScores[b] - dimNormScores[a]});
+
+  dimOrder.forEach(function(key){
+    var d = dims[key];
+    var score = dimNormScores[key];
+    var lv = getDimLevel(score);
+    var lvData = d[lv];
+    var rawScore = dimRawScores[key];
+    var maxScore = d.items.length * 4;
+
+    dimHtml += '<div class="dim-detail">';
+    dimHtml += '<div class="dim-detail-head">';
+    dimHtml += '<span class="dim-detail-icon">'+d.icon+'</span>';
+    dimHtml += '<span class="dim-detail-name">'+d.name+'</span>';
+    dimHtml += '<span class="dim-detail-level" style="background:'+lvData.color+'20;color:'+lvData.color+'">'+lvData.label+'</span>';
+    dimHtml += '</div>';
+    dimHtml += '<div class="dim-detail-desc">'+lvData.desc+'</div>';
+    // 进度条
+    dimHtml += '<div class="dim-bar" style="margin-top:6px"><div class="dim-fill" style="width:'+score+'%;background:'+lvData.color+'"></div></div>';
+    dimHtml += '<div style="font-size:11px;color:var(--text-l);margin-top:4px">得分指数：'+score+' · 原始分：'+rawScore+'/'+maxScore+'</div>';
+    dimHtml += '</div>';
+  });
+  document.getElementById('rDimensions').innerHTML = dimHtml;
+
+  // 4. 温暖解读
+  var descHtml = '<div class="section-title"><span class="st-icon">💌</span>给你的话</div>';
+  r.desc.split('\n').forEach(function(p){
+    if(p.trim()) descHtml += '<p style="font-size:14px;line-height:1.8;color:var(--text);margin-bottom:8px">'+p+'</p>';
+  });
+
+  // 金句
+  var quotes = {
+    sunny:'情绪稳定不是没有波动，而是知道怎么面对波动。',
+    cloudy:'有些信号不是要击垮你，是在提醒你：该关注自己了。',
+    cloudy2:'你不需要一个人扛着。寻求帮助不是软弱，是勇敢。',
+    storm:'你已经撑到了现在。能撑到现在的人，已经很了不起了。'
+  };
+  descHtml += '<div class="r-quote">「'+quotes[level]+'」</div>';
+  document.getElementById('rDesc').innerHTML = descHtml;
+
+  // 5. 专属建议（取最高分的2个维度）
+  var topDims = dimOrder.slice(0, 2);
+  var tipsHtml = '<div class="section-title"><span class="st-icon">💡</span>给你的建议</div>';
+  tipsHtml += '<p style="font-size:13px;color:var(--text-l);margin-bottom:12px">基于你最需要关注的 '+topDims.length+' 个维度</p>';
+
+  topDims.forEach(function(key){
+    var d = dims[key];
+    var score = dimNormScores[key];
+    var lv = getDimLevel(score);
+    var tips = dimTips[key][lv === 'low' ? 'mid' : lv]; // 低分也给一般建议
+
+    tipsHtml += '<div style="margin-bottom:14px">';
+    tipsHtml += '<div style="font-size:13px;font-weight:700;color:'+d[lv].color+';margin-bottom:6px">'+d.icon+' '+d.name+'</div>';
+    if(tips){
+      tips.forEach(function(t){
+        tipsHtml += '<div class="tip-item"><span class="tip-dot" style="background:'+d[lv].color+'"></span>'+t+'</div>';
+      });
+    }
+    tipsHtml += '</div>';
+  });
+
+  // 通用建议
+  tipsHtml += '<div style="margin-top:12px;padding-top:12px;border-top:1px solid #f0ede8">';
+  tipsHtml += '<div style="font-size:13px;font-weight:700;color:var(--primary);margin-bottom:6px">🌱 给每个人的建议</div>';
+  tipsHtml += '<div class="tip-item"><span class="tip-dot"></span>保持规律的作息和适度运动</div>';
+  tipsHtml += '<div class="tip-item"><span class="tip-dot"></span>与信任的人保持交流，不要孤立自己</div>';
+  tipsHtml += '<div class="tip-item"><span class="tip-dot"></span>允许自己有情绪，不苛责自己</div>';
+  tipsHtml += '<div class="tip-item"><span class="tip-dot"></span>如果状态持续不好转，及时寻求专业帮助</div>';
+  tipsHtml += '</div>';
+
+  document.getElementById('rTips').innerHTML = tipsHtml;
+}
+
+// === SVG 工具函数 ===
+function polarToCart(cx, cy, r, angleDeg){
+  var rad = (angleDeg - 90) * Math.PI / 180;
+  return {x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad)};
+}
+
+function describeArc(cx, cy, r, startAngle, endAngle){
+  var start = polarToCart(cx, cy, r, endAngle);
+  var end = polarToCart(cx, cy, r, startAngle);
+  var largeArc = endAngle - startAngle > 180 ? 1 : 0;
+  return 'M ' + start.x + ' ' + start.y + ' A ' + r + ' ' + r + ' 0 ' + largeArc + ' 0 ' + end.x + ' ' + end.y;
+}
+
+function buildRadarSVG(scores){
+  var cx = 140, cy = 140, R = 100;
+  var keys = ['mood','body','cognitive','motivation','social'];
+  var n = keys.length;
+
+  // 背景多边形（4层）
+  var bgPolygons = '';
+  for(var layer = 1; layer <= 4; layer++){
+    var lr = R * (layer / 4);
+    var pts = [];
+    for(var i = 0; i < n; i++){
+      var angle = (360 / n) * i;
+      var p = polarToCart(cx, cy, lr, angle);
+      pts.push(p.x + ',' + p.y);
+    }
+    bgPolygons += '<polygon points="' + pts.join(' ') + '" fill="none" stroke="#e0ddd8" stroke-width="1"/>';
+  }
+
+  // 轴线
+  var axes = '';
+  var labels = '';
+  for(var i = 0; i < n; i++){
+    var angle = (360 / n) * i;
+    var p = polarToCart(cx, cy, R, angle);
+    axes += '<line x1="'+cx+'" y1="'+cy+'" x2="'+p.x+'" y2="'+p.y+'" stroke="#e0ddd8" stroke-width="1"/>';
+    // 标签位置
+    var lp = polarToCart(cx, cy, R + 22, angle);
+    var icon = dims[keys[i]].icon;
+    var name = dims[keys[i]].name;
+    labels += '<text x="'+lp.x+'" y="'+lp.y+'" text-anchor="middle" dominant-baseline="middle" font-size="11" fill="#3d3d3d" font-weight="600">'+icon+' '+name+'</text>';
+  }
+
+  // 数据多边形
+  var dataPts = [];
+  for(var i = 0; i < n; i++){
+    var angle = (360 / n) * i;
+    var val = scores[keys[i]] / 100;
+    var p = polarToCart(cx, cy, R * val, angle);
+    dataPts.push(p.x + ',' + p.y);
+  }
+  var dataPoly = '<polygon points="' + dataPts.join(' ') + '" fill="rgba(91,140,90,0.15)" stroke="#5b8c5a" stroke-width="2"/>';
+
+  // 数据点圆点
+  var dataDots = '';
+  for(var i = 0; i < n; i++){
+    var angle = (360 / n) * i;
+    var val = scores[keys[i]] / 100;
+    var p = polarToCart(cx, cy, R * val, angle);
+    var dotColor = dims[keys[i]][getDimLevel(scores[keys[i]])].color;
+    dataDots += '<circle cx="'+p.x+'" cy="'+p.y+'" r="4" fill="'+dotColor+'"/>';
+  }
+
+  var svg = '<svg class="radar-svg" viewBox="0 0 280 280">';
+  svg += bgPolygons + axes;
+  svg += dataPoly + dataDots;
+  svg += labels;
+  svg += '</svg>';
+  return svg;
+}
+
+function resetQuiz(){
+  document.getElementById('page-result').style.display='none';
+  document.getElementById('page-cover').style.display='flex';
+  window.scrollTo(0,0);
+}
+</script>
+</body>
+</html>';
