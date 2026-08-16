@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MBTI心智阶位测评 | 西西崽测评</title>
+<meta name="description" content="16型人格心智阶位测评：你的MBTI处于未觉醒、低阶、中阶还是高阶？5维度深度解析+专属升阶路径">
+<meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg1:#0b0a1e;--bg2:#171238;
+  --primary:#8b5cf6;--primary-l:#a78bfa;--primary-d:#6d28d9;
+  --gold:#f5c842;--gold-l:#fde68a;
+  --text:#eceafd;--text-l:#a5a3c7;--text-d:#ffffff;
+  --card:rgba(255,255,255,0.055);--card-border:rgba(139,92,246,0.22);
+  --shadow:0 4px 24px rgba(0,0,0,0.35);
+}
+body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;min-height:100vh;color:var(--text);overflow-x:hidden;background:var(--bg1)}
+.bg{position:fixed;inset:0;z-index:-1;background:linear-gradient(165deg,var(--bg1) 0%,var(--bg2) 100%)}
+.bg::after{content:"";position:absolute;inset:0;background-image:radial-gradient(1.5px 1.5px at 12% 22%,rgba(255,255,255,.55) 0%,transparent 100%),radial-gradient(1px 1px at 32% 68%,rgba(255,255,255,.35) 0%,transparent 100%),radial-gradient(1.8px 1.8px at 55% 15%,rgba(245,200,66,.5) 0%,transparent 100%),radial-gradient(1px 1px at 72% 45%,rgba(255,255,255,.4) 0%,transparent 100%),radial-gradient(1.4px 1.4px at 88% 78%,rgba(167,139,250,.55) 0%,transparent 100%),radial-gradient(1px 1px at 44% 88%,rgba(255,255,255,.3) 0%,transparent 100%),radial-gradient(1.3px 1.3px at 8% 82%,rgba(255,255,255,.4) 0%,transparent 100%),radial-gradient(1px 1px at 64% 92%,rgba(245,200,66,.35) 0%,transparent 100%),radial-gradient(1.6px 1.6px at 93% 12%,rgba(255,255,255,.5) 0%,transparent 100%),radial-gradient(1px 1px at 22% 42%,rgba(255,255,255,.3) 0%,transparent 100%)}
+.app{max-width:500px;margin:0 auto;min-height:100vh;position:relative}
+
+/* ===== 封面页 ===== */
+.cover{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:40px 24px 32px;text-align:center}
+.cover .tag{display:inline-flex;align-items:center;gap:8px;margin-bottom:28px}
+.cover .tag-label{border:1.5px solid var(--primary);border-radius:6px;padding:3px 14px;font-size:13px;color:var(--primary-l);background:rgba(139,92,246,0.12);font-weight:600}
+.cover .tag-num{font-size:13px;color:var(--gold);font-weight:700}
+.cover h1{font-size:34px;font-weight:900;color:var(--text-d);line-height:1.35;margin-bottom:14px;letter-spacing:-0.5px}
+.cover h1 .hl{color:var(--gold)}
+.cover .subtitle{font-size:14px;color:var(--text-l);margin-bottom:6px;line-height:1.7}
+.cover .pill-row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:20px 0 26px}
+.cover .pill{font-size:12px;padding:4px 12px;border-radius:12px;background:rgba(139,92,246,0.14);border:1px solid var(--card-border);color:var(--primary-l);font-weight:600}
+/* 人格选择 */
+.type-select{width:100%;background:var(--card);border:1px solid var(--card-border);border-radius:16px;padding:18px 16px;margin-bottom:22px;backdrop-filter:blur(8px)}
+.type-select .ts-title{font-size:15px;font-weight:700;margin-bottom:4px;color:var(--text-d)}
+.type-select .ts-sub{font-size:12px;color:var(--text-l);margin-bottom:14px}
+.type-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.type-cell{padding:10px 2px;border-radius:10px;background:rgba(255,255,255,0.04);border:1.5px solid transparent;font-size:14px;font-weight:800;color:var(--text);cursor:pointer;transition:.2s;letter-spacing:.5px}
+.type-cell:hover{border-color:var(--primary-l)}
+.type-cell.selected{background:linear-gradient(135deg,var(--primary-d),var(--primary));color:#fff;border-color:var(--primary-l);box-shadow:0 0 14px rgba(139,92,246,0.45)}
+.type-cell.unknown{color:var(--gold);font-size:12px;padding:10px 2px}
+.cover .btn-start{background:linear-gradient(135deg,var(--primary-d),var(--primary));color:#fff;border:none;padding:16px 52px;border-radius:50px;font-size:17px;font-weight:700;cursor:pointer;transition:.3s;box-shadow:0 4px 20px rgba(139,92,246,0.4)}
+.cover .btn-start:disabled{opacity:.35;cursor:not-allowed;box-shadow:none}
+.cover .btn-start:not(:disabled):hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(139,92,246,0.55)}
+.cover .note{font-size:11px;color:var(--text-l);margin-top:18px;line-height:1.6;opacity:.75}
+.cover .footer-en{margin-top:26px;font-size:11px;color:rgba(165,163,199,0.35);letter-spacing:3px}
+
+/* ===== 答题页 ===== */
+.quiz{display:none;flex-direction:column;min-height:100vh;padding:32px 24px}
+.quiz .progress-wrap{margin-bottom:32px}
+.quiz .progress-bar{height:6px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden}
+.quiz .progress-fill{height:100%;background:linear-gradient(90deg,var(--primary),var(--gold));border-radius:3px;transition:width .3s ease}
+.quiz .progress-text{display:flex;justify-content:space-between;margin-top:8px;font-size:12px;color:var(--text-l)}
+.quiz .progress-text .my-type{color:var(--gold);font-weight:700}
+.quiz .q-num{font-size:13px;color:var(--primary-l);font-weight:600;margin-bottom:8px;letter-spacing:1px}
+.quiz .q-title{font-size:21px;font-weight:800;color:var(--text-d);line-height:1.45;margin-bottom:26px}
+.quiz .q-hint{font-size:12px;color:var(--text-l);margin-bottom:14px}
+.quiz .options{display:flex;flex-direction:column;gap:10px}
+.quiz .option{background:var(--card);border:2px solid transparent;border-radius:14px;padding:15px 16px;font-size:15px;color:var(--text);cursor:pointer;transition:.2s;display:flex;align-items:center;gap:12px;backdrop-filter:blur(6px)}
+.quiz .option:hover{border-color:var(--primary);transform:translateX(3px)}
+.quiz .option:active{transform:scale(.98)}
+.quiz .option .opt-label{width:30px;height:30px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;background:rgba(139,92,246,0.16);color:var(--primary-l);transition:.2s}
+.quiz .option:hover .opt-label{background:var(--primary);color:#fff}
+
+/* ===== 结果页 ===== */
+.result{display:none;flex-direction:column;align-items:center;min-height:100vh;padding:36px 20px 40px;text-align:center}
+.result .r-icon{font-size:58px;margin-bottom:10px;animation:bounceIn .7s ease}
+.result .r-label{font-size:13px;color:var(--text-l);margin-bottom:4px}
+.result .r-title{font-size:27px;font-weight:900;color:var(--text-d);margin-bottom:6px;line-height:1.3}
+.result .r-badge{display:inline-block;font-size:13px;padding:4px 16px;border-radius:14px;margin-bottom:6px;font-weight:700}
+.result .r-percent{font-size:13px;color:var(--gold);font-weight:600;margin-bottom:22px}
+.r-card{background:var(--card);border:1px solid var(--card-border);border-radius:16px;padding:18px;margin-bottom:14px;box-shadow:var(--shadow);text-align:left;width:100%;backdrop-filter:blur(8px)}
+.r-card .rc-title{font-size:15px;font-weight:800;color:var(--text-d);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.r-card .rc-title .rc-icon{font-size:17px}
+.r-quote{border-left:3px solid var(--gold);background:rgba(245,200,66,0.07);padding:10px 14px;margin:10px 0;border-radius:0 10px 10px 0;font-style:italic;color:var(--gold-l);font-size:14px;line-height:1.7}
+.radar-wrap{display:flex;justify-content:center;padding:6px 0}
+.radar-svg{width:280px;height:280px}
+.dim-detail{margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,0.07)}
+.dim-detail:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+.dim-detail-head{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.dim-detail-icon{font-size:19px}
+.dim-detail-name{font-size:15px;font-weight:700;color:var(--text-d)}
+.dim-detail-score{font-size:12px;color:var(--text-l);margin-left:2px}
+.dim-detail-level{font-size:11px;padding:2px 10px;border-radius:10px;font-weight:700;margin-left:auto}
+.lv-high{background:rgba(245,200,66,0.15);color:var(--gold)}
+.lv-mid{background:rgba(139,92,246,0.18);color:var(--primary-l)}
+.lv-low{background:rgba(96,165,250,0.14);color:#7dd3fc}
+.dim-detail-desc{font-size:13.5px;line-height:1.75;color:var(--text);margin-bottom:8px;opacity:.92}
+.dim-detail-tip{font-size:12.5px;color:var(--gold-l);background:rgba(245,200,66,0.06);border:1px solid rgba(245,200,66,0.15);padding:8px 12px;border-radius:10px;line-height:1.6}
+.dim-detail-tip b{color:var(--gold)}
+.type-block{margin-bottom:12px}
+.type-block .tb-head{font-size:16px;font-weight:900;color:var(--gold);margin-bottom:8px}
+.type-block .tb-row{margin-bottom:10px}
+.type-block .tb-label{font-size:12.5px;font-weight:700;color:var(--primary-l);margin-bottom:4px;letter-spacing:.5px}
+.type-block .tb-text{font-size:13.5px;line-height:1.75;color:var(--text);opacity:.92}
+.btn-retry{background:transparent;color:var(--primary-l);border:1.5px solid var(--card-border);padding:12px;border-radius:50px;font-size:14px;font-weight:600;cursor:pointer;transition:.3s;width:100%;max-width:300px}
+.btn-retry:hover{background:var(--primary);color:#fff}
+.r-disclaimer{font-size:11px;color:var(--text-l);opacity:.6;margin-top:14px;line-height:1.6;text-align:center}
+@keyframes bounceIn{0%{transform:scale(0);opacity:0}60%{transform:scale(1.12)}100%{transform:scale(1);opacity:1}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.fadeIn{animation:fadeIn .3s ease}
+</style>
+</head>
+<body>
+<div class="bg"></div>
+<div class="app">
+
+<!-- 封面 -->
+<div class="cover" id="cover">
+  <div class="tag"><span class="tag-label">西西崽测评</span><span class="tag-num">NO.008</span></div>
+  <h1>你的MBTI<br><span class="hl">到底几阶了？</span></h1>
+  <div class="subtitle">同一个型号，活的版本完全不同<br>未觉醒 / 低阶 / 中阶 / 高阶 —— 15题测出你的心智阶位</div>
+  <div class="pill-row"><span class="pill">🧭 阶位判定</span><span class="pill">📊 5维雷达图</span><span class="pill">🗝️ 专属升阶路径</span></div>
+  <div class="type-select">
+    <div class="ts-title">① 先选择你的人格类型</div>
+    <div class="ts-sub">不知道自己型号？选「不确定」，测完再回来对照～</div>
+    <div class="type-grid" id="typeGrid"></div>
+  </div>
+  <button class="btn-start" id="btnStart" disabled>② 开始测阶位 →</button>
+  <div class="note">阶位 ≠ 好坏，只反映你当前的心智成熟度版本<br>每个型号都能升到高阶，路径各不相同</div>
+  <div class="footer-en">MIND TIER ASSESSMENT</div>
+</div>
+
+<!-- 答题 -->
+<div class="quiz" id="quiz">
+  <div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-text"><span id="progressNum">1 / 15</span><span class="my-type" id="quizType"></span></div>
+  </div>
+  <div class="q-num" id="qNum"></div>
+  <div class="q-title" id="qTitle"></div>
+  <div class="q-hint">凭第一反应选，别美化自己</div>
+  <div class="options" id="options"></div>
+</div>
+
+<!-- 结果 -->
+<div class="result" id="result"></div>
+
+</div>
+<script>
+/* ============ 数据 ============ */
+const TYPES = {
+  INTJ:{n:"建筑师",high:"偏执收敛成笃定，不再需要用「我早知道」证明自己。学会在坚持与倾听间切换，让计划带着别人走，而不是自己硬扛。",path:"允许失控。世界不会按你的图纸运行，而最好的版本恰恰藏在意外里。"},
+  INTP:{n:"逻辑学家",high:"思考不再空转——想到就能做，做完就能放下。不再死磕「最优解」，接受「够好的解」，大脑终于从辩论场变成生产线。",path:"给想法设截止日期。你的大脑不缺点子，缺的是把点子寄出生产的产道。"},
+  ENTJ:{n:"指挥官",high:"赢不再等于一切。效率依旧碾压，但开始在意人的感受——这不是软弱，是更高级的掌控力，让人心甘情愿跟你走。",path:"偶尔示弱。让别人有机会靠近你，而不是只服从你。"},
+  ENTP:{n:"辩论家",high:"杠精毕业成战略家。不再为赢而辩，开始为成事而辩。发散依旧，但装上了收敛的开关，灵感能落地成结果。",path:"让别人把话说完。你缺的不是反应速度，是倾听。"},
+  INFJ:{n:"提倡者",high:"不再拯救所有人。洞察力还在，但学会了关门——该帮的帮，该放的手。理想落地成项目，而不是内耗成执念。",path:"把「懂别人」的分一半去「要自己想要的」。你的需求也重要。"},
+  INFP:{n:"调停者",high:"不再逼自己「社会化」，而是把敏感炼成洞察——一眼看穿他人的需求与伪装，却依然选择温柔。撒贝宁式的收放自如。",path:"少一点内心戏，多一点外部行动。你的直觉已经够准了，缺的是落地的那一步。"},
+  ENFJ:{n:"主人公",high:"不再当所有人的情绪充电宝。共情能力升级成领导力——不是替别人扛，而是带别人飞，身边人因你变得更好。",path:"练习课题分离。别人的课题，还给别人。"},
+  ENFP:{n:"竞选者",high:"三分钟热度炼成「快速试错引擎」。热情还在，但学会了完成。开始把最好的灵感留给最重要的事。",path:"一次只开一个头。你的开始太多，完成太少。"},
+  ISTJ:{n:"物流师",high:"稳定不再是枷锁而是底盘。规则内是可靠的专家，规则外也敢临时变通，不再用「应该」绑架自己。",path:"练习说「不」。你的尽职经常被人当免费劳动力。"},
+  ISFJ:{n:"守卫者",high:"温柔长出牙齿。依然照顾人，但先照顾自己；依然付出，但开始计价。别人反而更尊重你。",path:"停止用付出换安全感。被喜欢不是你的义务。"},
+  ESTJ:{n:"总经理",high:"控制升级为托举。不再要求所有人按你的方式做事，开始用规则赋能而非压人，团队因你而稳。",path:"把「我是对的」换成「怎样最有用」。对错之外还有效果。"},
+  ESFJ:{n:"执政官",high:"不再需要所有人满意。依然热心肠，但有了筛选：值得的人赴汤蹈火，越界的人温柔拒绝。",path:"练习被讨厌。不是所有人都要喜欢你，这不是失败。"},
+  ISTP:{n:"鉴赏家",high:"独来独往依然，但不再抵触长期关系与承诺。手艺更精，话更少，关键场合一击即中。",path:"把「懒得解释」换成「说清楚一次」。孤独是选择，不该是误会。"},
+  ISFP:{n:"探险家",high:"审美变成生产力。不再等「对的时机」，直接用作品说话。情绪来了会处理，而不是消失三天。",path:"建立最小习惯。自由需要骨架，才不会散架。"},
+  ESTP:{n:"企业家",high:"冲动炼成魄力。依然快准狠，但开始算三步之后的风险。行动力终于配上了刹车系统。",path:"每周留一天无聊。你的成长发生在暂停里。"},
+  ESFP:{n:"表演者",high:"快乐不再依赖观众。一个人也能嗨，热闹里也能走心。开始用魅力做成事，而不只是暖场。",path:"练习深度。你的走心时刻，比搞笑时刻更圈粉。"}
+};
+
+/* 题目：s=1未觉醒 2低阶 3中阶 4高阶 */
+const QUESTIONS = [
+{dim:"self",t:"当有人说「你其实很在意别人的看法」，你会——",o:[
+  {t:"立刻反驳：我根本不在乎",s:1},
+  {t:"嘴上说没有，心里难受一晚上",s:2},
+  {t:"知道自己在意，也知道为什么在意，还在练",s:3},
+  {t:"承认在意，但分得清哪些该在意哪些不该",s:4}]},
+{dim:"self",t:"深夜突然emo，你通常——",o:[
+  {t:"不知道自己怎么了，就是烦",s:1},
+  {t:"知道emo了，但说不清原因，刷手机到凌晨",s:2},
+  {t:"能定位原因：是累了/委屈了/焦虑了，还在学怎么处理",s:3},
+  {t:"能定位原因，然后对症处理：睡觉/倾诉/写下来",s:4}]},
+{dim:"self",t:"你对自己的了解程度——",o:[
+  {t:"没想过这个问题，活得挺自然",s:1},
+  {t:"知道自己的优缺点，但说不出具体场景",s:2},
+  {t:"能说出自己的一些应激模式，但不确定准不准",s:3},
+  {t:"能说出自己3个以上应激模式（被否定时会怎样、压力大时会怎样）",s:4}]},
+{dim:"emotion",t:"被领导当众批评，你的第一反应——",o:[
+  {t:"大脑瞬间空白，事后反刍一整周",s:1},
+  {t:"表面点头，内心已经上演辞职大戏",s:2},
+  {t:"当下压住，下班后找朋友吐槽消化",s:3},
+  {t:"能当场剥离「事」和「评价」，只记有用的信息",s:4}]},
+{dim:"emotion",t:"和人吵完架，你——",o:[
+  {t:"脑子里反复重播吵架画面，越想越气",s:1},
+  {t:"气消了，但下次见面还是别扭",s:2},
+  {t:"会复盘：我们各自的需求是什么，下次怎么沟通",s:4},
+  {t:"能主动翻篇，该干嘛干嘛",s:3}]},
+{dim:"emotion",t:"压力大到快撑不住时，你——",o:[
+  {t:"报喜不报忧，崩溃也要挑没人看见的地方",s:1},
+  {t:"和朋友疯狂吐槽，但不说真正的事",s:2},
+  {t:"找信任的人说清楚处境，主动求援",s:3},
+  {t:"有自己的压力释放系统：运动/写下来/咨询，定期清空",s:4}]},
+{dim:"boundary",t:"同事把活儿甩给你，你——",o:[
+  {t:"接了，然后回家生闷气",s:1},
+  {t:"接了，但边做边抱怨",s:2},
+  {t:"委婉拒绝或谈条件：这次可以，下次提前说",s:3},
+  {t:"清楚自己的职责范围，一句话挡回去还不伤关系",s:4}]},
+{dim:"boundary",t:"家人/伴侣过度干涉你的生活，你——",o:[
+  {t:"心里不舒服，但忍了",s:1},
+  {t:"发脾气吵一架，但下次还是管不住",s:2},
+  {t:"表达过不舒服，效果一般，还在拉锯",s:3},
+  {t:"立过明确规矩，温和但坚定地执行",s:4}]},
+{dim:"boundary",t:"群消息轰炸、已读不回焦虑，你——",o:[
+  {t:"每条都怕错过，秒回，很累",s:1},
+  {t:"不想回但又焦虑「不回不好」，拖着",s:2},
+  {t:"设定了自己的社交规则：谁能秒回、谁可以晚点回",s:4},
+  {t:"按自己节奏回，接受别人可能不高兴",s:3}]},
+{dim:"flex",t:"需要你上台发言/高强度社交的场合——",o:[
+  {t:"能躲就躲，躲不掉就煎熬",s:1},
+  {t:"能完成，但需要很久才能恢复",s:2},
+  {t:"该e的时候能e，结束后用独处充电，收放自如",s:4},
+  {t:"能应对，还摸索出了自己的方法",s:3}]},
+{dim:"flex",t:"计划突然被打乱，你——",o:[
+  {t:"焦虑爆炸，感觉一天都毁了",s:1},
+  {t:"心烦，勉强调整",s:2},
+  {t:"快速重排优先级",s:3},
+  {t:"早有心理预期：「计划外」本来就是计划的一部分",s:4}]},
+{dim:"flex",t:"面对和你完全相反的人（比如你很i他巨e），你——",o:[
+  {t:"看不惯，觉得他吵",s:1},
+  {t:"能相处，但内心评判「这么活不累吗」",s:2},
+  {t:"能欣赏对方的模式，甚至借来用在自己需要的场景",s:4},
+  {t:"尊重差异，偶尔还能学到东西",s:3}]},
+{dim:"growth",t:"看到同龄人比你成功，你——",o:[
+  {t:"酸，然后emo",s:1},
+  {t:"酸，但会自我安慰「各人有各命」",s:2},
+  {t:"有自己的节奏感，真心祝福+选择性学习",s:4},
+  {t:"能把刺痛转化成具体行动参考",s:3}]},
+{dim:"growth",t:"过去一年，你——",o:[
+  {t:"感觉在原地打转",s:1},
+  {t:"想改变，但不知道从哪开始",s:2},
+  {t:"在某方面有意识地突破过自己",s:3},
+  {t:"定期复盘迭代，能说出去年到现在自己的3个变化",s:4}]},
+{dim:"growth",t:"你目前的人生状态——",o:[
+  {t:"被生活推着走",s:1},
+  {t:"想拿回主动权，心有余力不足",s:2},
+  {t:"大部分主动：知道自己要什么，正在路上",s:4},
+  {t:"部分主动：重要的事自己说了算",s:3}]}
+];
+
+const DIMS = {
+  self:{name:"自我觉察",icon:"🔍",levels:{
+    low:{lv:"起步区",d:"你对自己的了解，大多来自别人的反馈——而且听到时第一反应是否认。情绪来了就是来了，你很少问「它从哪来」。这不是你的错，只是没人教过你往内看。"},
+    mid:{lv:"觉察中",d:"你看得见自己的一部分模式了——知道自己在意什么、怕什么。但还有些自动反应，总是在事后才被你发现。觉察像手电筒，你有了，只是光还不够稳。"},
+    high:{lv:"清醒者",d:"你对自己的应激模式如数家珍：被否定时会怎样、压力大时会怎样。这份「自我说明书」让你在关系和职场里少踩了很多坑，同类型中这是稀缺能力。"}},
+    key:"每晚睡前问一句：今天我最强烈的情绪是什么？它想告诉我什么？"},
+  emotion:{name:"情绪管理",icon:"🌊",levels:{
+    low:{lv:"被带走",d:"情绪来了，你基本是被冲走的那一个——反刍、爆发、或者假装没事。你不是没感觉，是感觉太满没有出口，身体常常替情绪买单：失眠、暴食、莫名的累。"},
+    mid:{lv:"能接住",d:"你能接住情绪的大多数——会压一压、会找人聊、能睡一觉翻篇。但极端情况下（被当众否定、被亲近的人伤害），你还是会宕机。"},
+    high:{lv:"驭浪者",d:"你已经能和情绪共处：它来，你看着它来；它走，你目送它走。吵架能复盘，崩溃有预案。这份稳定感，是别人愿意靠近你的原因。"}},
+    key:"给情绪一个物理出口——运动、写下来、哭一场都行。情绪要的是流动，不是消灭。"},
+  boundary:{name:"边界感",icon:"🛡️",levels:{
+    low:{lv:"无界",d:"你的口头禅是「算了」。别人越界，你忍；自己的事被插手，你也忍。忍到一定程度不是爆发就是消失。你的善良，经常被当成免费资源。"},
+    mid:{lv:"立界中",d:"你知道自己的边界在哪，也在试着维护——表达过、拒绝过，但效果时好时坏，遇到强势的人还是容易让步。"},
+    high:{lv:"护城河",d:"你的边界清晰而温和：能挡住越界的人，还不伤关系。你早就明白——先照顾好自己，才有能力照顾别人。"}},
+    key:"练习说一次「这次不行」，不用解释理由，说完就走。"},
+  flex:{name:"功能整合",icon:"⚖️",levels:{
+    low:{lv:"单模式",d:"你基本只用熟悉的那一面活着——i人从不主动社交，计划被打乱就崩溃。不是不能，是「那样不像我」。可惜世界不按你的型号出牌。"},
+    mid:{lv:"能切换",d:"需要的时候你能切换——该上场的上场，该配合的配合。但切换很耗电，事后需要大量回血。你还在「能」和「自如」之间。"},
+    high:{lv:"收放自如",d:"该e时能点亮全场，散场后能安静回血；计划被打乱，顺手就重排。你不被「型号」定义——型号只是你的默认设置，不是天花板。"}},
+    key:"本月做一件「不像你」的事：装一次e、即兴一次、开口求助一次。"},
+  growth:{name:"成长思维",icon:"🌱",levels:{
+    low:{lv:"待点火",d:"回头看，这几年好像在原地打转。想改变的念头总被「算了」掐灭。你不是没能力，是主动权一直在别人手里——公司、家人、惯性。"},
+    mid:{lv:"在路上了",d:"你在某些方面已经突破过自己——那次转行、那次开口、那次坚持。但整体节奏还是「被动+偶尔反击」。你知道自己在变好，只是还不够稳。"},
+    high:{lv:"掌舵人",d:"你定期复盘、持续迭代，能清楚说出自己去年的三个变化。你掌着自己的舵——哪怕慢，方向是自己定的。同类型中这是前15%。"}},
+    key:"选一件小事，完全按自己的意思做成它。主动权是从最小的胜利里长出来的。"}
+};
+
+const TIERS = [
+  {min:46,max:60,icon:"👑",name:"高阶",title:"觉醒者",color:"#f5c842",pct:"前15%",
+   quote:"你身上有一种罕见的诚实——对自己的诚实。",
+   desc:"你不是没有情绪和软肋，而是已经能看见它们、使用它们。你的答案里几乎没有「假装没事」和「骗自己」，这份自我诚实就是高阶的门票。同类型中只有约15%的人走到这里。",
+   next:"你的下一步不是继续向上，而是向下——去带人、去托举。高阶的尽头，是成为别人的阶梯。"},
+  {min:32,max:45,icon:"⭐",name:"中阶",title:"进化中",color:"#a78bfa",pct:"占同类型约65%",
+   quote:"你已经上路了，只是还在爬坡。",
+   desc:"你不是不够好，是还差几次「抓到自己现行」的经验。你能看见自己的大部分模式，但还有些自动反应，在你没察觉时就接管了你。",
+   next:"这一阶最大的坑叫「已经不错了」——它会让进化停在半山腰。保持自问，别让舒适偷走你的下一阶。"},
+  {min:23,max:31,icon:"🧭",name:"低阶",title:"蓄力期",color:"#7dd3fc",pct:"占同类型约20%",
+   quote:"低阶不等于差劲，它只说明你的能量还压在潜意识里。",
+   desc:"不是没有觉察，是还没开始用。同类型中约20%的人在这里——这不是落后，是还没点火。",
+   next:"你最大的优势：从低阶到中阶的路径极其清晰。每一次「我为什么这么做」的自问，都是实打实的升级点。升阶比你想象的快。"},
+  {min:15,max:22,icon:"🌱",name:"未觉醒",title:"隐藏款",color:"#9ca3af",pct:"全网不到2%",
+   quote:"看到这个结果的瞬间，觉察已经开始了。",
+   desc:"全网不到2%的人会打开这个结果——要么你诚实到可怕，要么你正处于人生的疲惫期。无论是哪种，都不是终点。",
+   next:"看见即改变。今天这个结果，就是你升阶的第一步。"}
+];
+
+/* ============ 逻辑 ============ */
+let selectedType = null, answers = [], curQ = 0;
+const $ = id => document.getElementById(id);
+
+(function initTypes(){
+  const codes = Object.keys(TYPES);
+  const grid = $("typeGrid");
+  codes.forEach(c=>{
+    const d = document.createElement("div");
+    d.className = "type-cell"; d.textContent = c;
+    d.onclick = ()=>{ selectedType = c; document.querySelectorAll(".type-cell").forEach(x=>x.classList.remove("selected")); d.classList.add("selected"); $("btnStart").disabled = false; };
+    grid.appendChild(d);
+  });
+  const u = document.createElement("div");
+  u.className = "type-cell unknown"; u.textContent = "不确定";
+  u.style.gridColumn = "span 2";
+  u.onclick = ()=>{ selectedType = "未知型"; document.querySelectorAll(".type-cell").forEach(x=>x.classList.remove("selected")); u.classList.add("selected"); $("btnStart").disabled = false; };
+  grid.appendChild(u);
+})();
+
+$("btnStart").onclick = ()=>{ $("cover").style.display="none"; $("quiz").style.display="flex"; curQ=0; answers=[]; showQ(); };
+
+function showQ(){
+  const q = QUESTIONS[curQ];
+  $("progressFill").style.width = ((curQ)/15*100)+"%";
+  $("progressNum").textContent = (curQ+1)+" / 15";
+  $("quizType").textContent = selectedType;
+  $("qNum").textContent = "Q"+(curQ+1)+" · "+DIMS[q.dim].icon+" "+DIMS[q.dim].name;
+  $("qTitle").textContent = q.t;
+  const box = $("options"); box.innerHTML="";
+  q.o.forEach((opt,i)=>{
+    const d = document.createElement("div");
+    d.className = "option fadeIn";
+    d.innerHTML = '<div class="opt-label">'+"ABCD"[i]+'</div><div class="opt-text">'+opt.t+'</div>';
+    d.onclick = ()=>{ answers[curQ]=opt.s; curQ++; if(curQ>=15){renderResult();}else{showQ();} };
+    box.appendChild(d);
+  });
+}
+
+function renderResult(){
+  $("quiz").style.display="none";
+  $("result").style.display="flex";
+  const total = answers.reduce((a,b)=>a+b,0);
+  const T = TIERS.find(t=>total>=t.min && total<=t.max);
+  /* 维度分 */
+  const dimScores = {};
+  Object.keys(DIMS).forEach(k=>dimScores[k]=0);
+  QUESTIONS.forEach((q,i)=>dimScores[q.dim]+=answers[i]);
+  /* 同型对比伪百分比 */
+  const beat = Math.min(97, Math.max(8, Math.round(total/60*100)));
+  const typeData = TYPES[selectedType];
+  const typeName = typeData ? selectedType+" · "+typeData.n : selectedType;
+
+  let html = '<div class="r-icon">'+T.icon+'</div>';
+  html += '<div class="r-label">'+typeName+' 的心智阶位</div>';
+  html += '<div class="r-title">'+T.name+' · '+T.title+'</div>';
+  html += '<div class="r-badge" style="background:'+T.color+'22;color:'+T.color+';border:1px solid '+T.color+'55">'+T.pct+' · 综合得分 '+total+'/60</div>';
+  html += '<div class="r-percent">超过了同类型约 '+beat+'% 的人</div>';
+
+  /* 阶位解读 */
+  html += '<div class="r-card fadeIn"><div class="rc-title"><span class="rc-icon">📜</span>阶位解读</div>';
+  html += '<div class="r-quote">'+(T.quote||"每一个阶位，都藏着它的礼物。")+'</div>';
+  html += '<div class="dim-detail-desc">'+T.desc+'</div>';
+  html += '<div class="dim-detail-tip"><b>▸ 下一阶的方向：</b>'+T.next+'</div></div>';
+
+  /* 雷达图 */
+  html += '<div class="r-card fadeIn"><div class="rc-title"><span class="rc-icon">📊</span>五维心智雷达</div><div class="radar-wrap">'+buildRadar(dimScores)+'</div></div>';
+
+  /* 维度详情 */
+  html += '<div class="r-card fadeIn"><div class="rc-title"><span class="rc-icon">🔬</span>维度深度解析</div>';
+  Object.keys(DIMS).forEach(k=>{
+    const dim = DIMS[k], sc = dimScores[k];
+    const pct = Math.round((sc-3)/9*100);
+    const lvKey = sc>=10?"high":(sc>=7?"mid":"low");
+    const lv = dim.levels[lvKey];
+    html += '<div class="dim-detail">';
+    html += '<div class="dim-detail-head"><span class="dim-detail-icon">'+dim.icon+'</span><span class="dim-detail-name">'+dim.name+'</span><span class="dim-detail-score">'+sc+'/12</span><span class="dim-detail-level lv-'+lvKey+'">'+lv.lv+'</span></div>';
+    html += '<div class="dim-detail-desc">'+lv.d+'</div>';
+    html += '<div class="dim-detail-tip"><b>🗝️ 升阶钥匙：</b>'+dim.key+'</div>';
+    html += '</div>';
+  });
+  html += '</div>';
+
+  /* 型号专属 */
+  if(typeData){
+    html += '<div class="r-card fadeIn type-block">';
+    html += '<div class="tb-head">'+T.icon+' '+selectedType+' 型的升阶地图</div>';
+    html += '<div class="tb-row"><div class="tb-label">◆ 你的高阶画像</div><div class="tb-text">'+typeData.high+'</div></div>';
+    html += '<div class="tb-row"><div class="tb-label">◆ 你的升阶关键</div><div class="tb-text">'+typeData.path+'</div></div>';
+    html += '</div>';
+  } else {
+    html += '<div class="r-card fadeIn type-block"><div class="tb-head">🧩 下一步</div><div class="tb-text">先去测出自己的MBTI型号，再回来重测一次——不同型号的升阶路径完全不同，找到你的专属地图。</div></div>';
+  }
+
+  /* 弱项提示 */
+  const weakest = Object.keys(dimScores).sort((a,b)=>dimScores[a]-dimScores[b])[0];
+  html += '<div class="r-card fadeIn"><div class="rc-title"><span class="rc-icon">⚡</span>你的突破口</div><div class="dim-detail-desc">五个维度中，<b style="color:'+T.color+'">'+DIMS[weakest].name+'</b>是你目前拖后腿的一项。先攻它——一个维度的提升会带动整体阶位上涨，这是最快的路径。</div></div>';
+
+  html += '<button class="btn-retry" onclick="location.reload()">↻ 重新测评</button>';
+  html += '<div class="r-disclaimer">本测评基于心智成熟度行为学框架，结果仅供自我探索参考<br>© 西西崽测评 NO.008 · MBTI心智阶位</div>';
+  $("result").innerHTML = html;
+  window.scrollTo(0,0);
+}
+
+function buildRadar(dimScores){
+  const cx=140, cy=140, R=100;
+  const keys = Object.keys(DIMS);
+  const N = keys.length;
+  let svg = '<svg class="radar-svg" viewBox="0 0 280 280">';
+  for(let ring=1; ring<=4; ring++){
+    const r = R*ring/4;
+    let pts=[];
+    for(let i=0;i<N;i++){ const ang = -Math.PI/2 + i*2*Math.PI/N; pts.push((cx+r*Math.cos(ang)).toFixed(1)+","+(cy+r*Math.sin(ang)).toFixed(1)); }
+    svg += '<polygon points="'+pts.join(" ")+'" fill="none" stroke="rgba(139,92,246,0.18)" stroke-width="1"/>';
+  }
+  for(let i=0;i<N;i++){ const ang = -Math.PI/2 + i*2*Math.PI/N;
+    svg += '<line x1="'+cx+'" y1="'+cy+'" x2="'+(cx+R*Math.cos(ang)).toFixed(1)+'" y2="'+(cy+R*Math.sin(ang)).toFixed(1)+'" stroke="rgba(139,92,246,0.18)" stroke-width="1"/>';
+    const lx = cx+(R+18)*Math.cos(ang), ly = cy+(R+16)*Math.sin(ang);
+    svg += '<text x="'+lx.toFixed(1)+'" y="'+ly.toFixed(1)+'" fill="#a5a3c7" font-size="10.5" text-anchor="middle" dominant-baseline="middle">'+DIMS[keys[i]].name+'</text>';
+  }
+  let pts=[];
+  keys.forEach((k,i)=>{ const ang = -Math.PI/2 + i*2*Math.PI/N; const r = R*(dimScores[k]-3)/9; pts.push((cx+r*Math.cos(ang)).toFixed(1)+","+(cy+r*Math.sin(ang)).toFixed(1)); });
+  svg += '<polygon points="'+pts.join(" ")+'" fill="rgba(245,200,66,0.25)" stroke="#f5c842" stroke-width="2" stroke-linejoin="round"/>';
+  pts.forEach(p=>{ const xy=p.split(","); svg += '<circle cx="'+xy[0]+'" cy="'+xy[1]+'" r="3" fill="#f5c842"/>'; });
+  svg += '</svg>';
+  return svg;
+}
+</script>
+</body>
+</html>
