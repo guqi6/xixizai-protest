@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>脑雾浓度自测 | 西西崽测评</title>
+<meta name="description" content="18道题脑雾浓度自评，6维度雷达图深度分析，附原因排查与散雾指南">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg-mist:#f2f4f8;--bg-lav:#e9edf5;
+  --primary:#6478a8;--primary-l:#9db0d4;--primary-d:#46567c;
+  --accent:#e8985e;--accent-l:#f5c9a0;
+  --clear:#5a9e8f;--thin:#7da2c9;--thick:#8b7bb8;--storm:#d9534f;
+  --text:#3d3d3d;--text-l:#6b6b6b;--text-d:#2a2a2a;
+  --card-bg:#ffffff;--shadow:0 4px 20px rgba(100,120,168,0.10);
+}
+body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;min-height:100vh;color:var(--text);overflow-x:hidden}
+.bg{position:fixed;inset:0;z-index:-1;background:linear-gradient(160deg,var(--bg-mist) 0%,var(--bg-lav) 100%)}
+.bg::before{content:"";position:absolute;inset:0;background-image:radial-gradient(circle at 20% 20%,rgba(100,120,168,0.07) 0%,transparent 40%),radial-gradient(circle at 80% 80%,rgba(232,152,94,0.05) 0%,transparent 40%)}
+.app{max-width:500px;margin:0 auto;min-height:100vh;position:relative}
+
+/* === 封面页 === */
+.cover{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:40px 24px;text-align:center}
+.cover .tag{display:inline-flex;align-items:center;gap:8px;margin-bottom:32px}
+.cover .tag-label{border:1.5px solid var(--primary);border-radius:6px;padding:3px 14px;font-size:13px;color:var(--primary);background:rgba(100,120,168,0.08);font-weight:600}
+.cover .tag-num{font-size:13px;color:var(--primary);font-weight:600}
+.cover .tag-line{flex:1;width:60px;height:1px;background:var(--primary-l);opacity:.4}
+.cover h1{font-size:34px;font-weight:900;color:var(--text-d);line-height:1.35;margin-bottom:16px;letter-spacing:-0.5px}
+.cover .subtitle{font-size:15px;color:var(--text-l);margin-bottom:8px}
+.cover .subtags{display:flex;flex-direction:column;gap:6px;margin-bottom:36px;margin-top:20px}
+.cover .subtag{font-size:14px;color:var(--text-l)}
+.cover .disclaimer-cover{font-size:12px;color:var(--text-l);background:rgba(100,120,168,0.06);border-radius:10px;padding:12px 16px;max-width:360px;margin-bottom:32px;line-height:1.5}
+.cover .footer-en{position:absolute;bottom:24px;left:0;right:0;text-align:center;font-size:11px;color:rgba(107,107,107,0.3);letter-spacing:3px}
+.btn-start{background:var(--primary);color:#fff;border:none;padding:16px 56px;border-radius:50px;font-size:17px;font-weight:700;cursor:pointer;transition:.3s;box-shadow:0 4px 16px rgba(100,120,168,0.35)}
+.btn-start:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(100,120,168,0.45);background:var(--primary-d)}
+.btn-start:active{transform:translateY(0)}
+
+/* === 答题页 === */
+.quiz{display:none;flex-direction:column;min-height:100vh;padding:32px 24px}
+.quiz .progress-wrap{margin-bottom:36px}
+.quiz .progress-bar{height:6px;background:rgba(100,120,168,0.12);border-radius:3px;overflow:hidden}
+.quiz .progress-fill{height:100%;background:linear-gradient(90deg,var(--primary),var(--primary-l));border-radius:3px;transition:width .3s ease}
+.quiz .progress-text{display:flex;justify-content:space-between;margin-top:8px;font-size:12px;color:var(--text-l)}
+.quiz .q-num{font-size:13px;color:var(--primary);font-weight:600;margin-bottom:8px}
+.quiz .q-title{font-size:22px;font-weight:800;color:var(--text-d);line-height:1.4;margin-bottom:28px}
+.quiz .q-hint{font-size:13px;color:var(--text-l);margin-bottom:16px}
+.quiz .options{display:flex;flex-direction:column;gap:10px}
+.quiz .option{background:var(--card-bg);border:2px solid transparent;border-radius:14px;padding:16px 18px;font-size:15px;color:var(--text);cursor:pointer;transition:.2s;display:flex;align-items:center;gap:12px;box-shadow:0 2px 8px rgba(0,0,0,0.04)}
+.quiz .option:hover{border-color:var(--primary);transform:translateX(3px);box-shadow:var(--shadow)}
+.quiz .option:active{transform:scale(.98)}
+.quiz .option .opt-label{width:32px;height:32px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;background:rgba(100,120,168,0.1);color:var(--primary);transition:.2s}
+.quiz .option:hover .opt-label{background:var(--primary);color:#fff}
+.quiz .option .opt-text{flex:1;font-weight:500}
+
+/* === 结果页 === */
+.result{display:none;flex-direction:column;align-items:center;min-height:100vh;padding:36px 24px;text-align:center}
+.result .r-icon{font-size:60px;margin-bottom:12px;animation:bounceIn .6s ease}
+.result .r-label{font-size:14px;color:var(--text-l);margin-bottom:6px}
+.result .r-title{font-size:28px;font-weight:900;color:var(--text-d);margin-bottom:6px;line-height:1.3}
+.result .r-badge{display:inline-block;font-size:13px;padding:4px 16px;border-radius:14px;margin-bottom:24px;font-weight:600}
+
+.r-card{background:var(--card-bg);border-radius:14px;padding:18px;margin-bottom:12px;box-shadow:var(--shadow);text-align:left;width:100%}
+
+.gauge-wrap{position:relative;width:100%;display:flex;flex-direction:column;align-items:center;padding:8px 0}
+.gauge-svg{width:260px;height:140px}
+.gauge-score{font-size:36px;font-weight:900;line-height:1;margin-top:-50px}
+.gauge-label{font-size:13px;color:var(--text-l);margin-top:4px}
+
+.dim-row{margin-bottom:10px}
+.dim-row:last-child{margin-bottom:0}
+.dim-head{display:flex;justify-content:space-between;margin-bottom:4px;align-items:center}
+.dim-name{font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:6px}
+.dim-val{font-size:12px;color:var(--text-l)}
+.dim-bar{height:6px;background:#eceef3;border-radius:3px;overflow:hidden}
+.dim-fill{height:100%;border-radius:3px;transition:width .8s ease}
+
+.radar-wrap{display:flex;justify-content:center;padding:8px 0}
+.radar-svg{width:280px;height:280px}
+
+.dim-detail{margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid #eceef3}
+.dim-detail:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+.dim-detail-head{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.dim-detail-icon{font-size:20px}
+.dim-detail-name{font-size:15px;font-weight:700;color:var(--text-d)}
+.dim-detail-level{font-size:11px;padding:2px 10px;border-radius:10px;font-weight:600;margin-left:auto}
+.dim-detail-desc{font-size:14px;line-height:1.7;color:var(--text);margin-bottom:8px}
+.dim-detail-tip{font-size:13px;color:var(--primary-d);background:rgba(100,120,168,0.06);padding:8px 12px;border-radius:8px;line-height:1.5}
+
+.r-quote{border-left:3px solid var(--primary);background:rgba(100,120,168,0.05);padding:10px 14px;margin:8px 0;border-radius:0 8px 8px 0;font-style:italic;color:var(--primary-d);font-size:14px;line-height:1.6}
+
+.tip-item{display:flex;align-items:flex-start;gap:8px;margin-bottom:6px;font-size:14px;line-height:1.5;color:var(--text);text-align:left}
+.tip-dot{width:6px;height:6px;border-radius:50%;background:var(--primary);flex-shrink:0;margin-top:7px}
+
+/* 原因自查 */
+.cause-item{display:flex;align-items:flex-start;gap:10px;padding:12px;border-radius:12px;border:1.5px solid #eceef3;margin-bottom:8px;cursor:pointer;transition:.2s;background:#fff}
+.cause-item:hover{border-color:var(--primary-l)}
+.cause-item.checked{border-color:var(--primary);background:rgba(100,120,168,0.06)}
+.cause-check{width:20px;height:20px;border-radius:6px;border:2px solid #c8cede;flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;transition:.2s}
+.cause-item.checked .cause-check{background:var(--primary);border-color:var(--primary)}
+.cause-body{flex:1;text-align:left}
+.cause-name{font-size:14px;font-weight:700;color:var(--text-d)}
+.cause-desc{font-size:12px;color:var(--text-l);line-height:1.5;margin-top:2px}
+.cause-summary{font-size:13px;color:var(--primary-d);background:rgba(100,120,168,0.08);border-radius:10px;padding:10px 14px;line-height:1.6;margin-top:10px;text-align:left}
+
+.disclaimer-box{background:rgba(100,120,168,0.06);border:1px solid rgba(100,120,168,0.15);border-radius:12px;padding:16px;margin-bottom:16px;width:100%;text-align:left}
+.disclaimer-title{font-size:14px;font-weight:700;color:var(--primary-d);margin-bottom:8px}
+.disclaimer-text{font-size:13px;color:var(--text-l);line-height:1.6;margin-bottom:10px}
+.hotline-box{background:#fff;border:1px solid var(--primary-l);border-radius:8px;padding:12px;text-align:center}
+.hotline-label{font-size:12px;color:var(--text-l);margin-bottom:4px}
+.hotline-num{font-size:18px;font-weight:800;color:var(--primary-d);letter-spacing:1px}
+.hotline-desc{font-size:11px;color:var(--text-l);margin-top:4px}
+
+.r-actions{display:flex;flex-direction:column;gap:10px;width:100%;max-width:300px;margin-bottom:20px}
+.btn-retry{background:transparent;color:var(--primary);border:2px solid var(--primary-l);padding:12px;border-radius:50px;font-size:14px;font-weight:600;cursor:pointer;transition:.3s}
+.btn-retry:hover{background:var(--primary);color:#fff;border-color:var(--primary)}
+
+.section-title{font-size:14px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px;color:var(--text-d)}
+.section-title .st-icon{font-size:16px}
+
+@keyframes bounceIn{0%{transform:scale(0);opacity:0}60%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.fadeIn{animation:fadeIn .25s ease}
+</style>
+</head>
+<body>
+<div class="bg"></div>
+<div class="app">
+
+<!-- 封面页 -->
+<div class="cover" id="page-cover">
+  <div class="tag">
+    <span class="tag-label">脑雾自评</span>
+    <span class="tag-line"></span>
+    <span class="tag-num">NO.007</span>
+  </div>
+  <h1>你的大脑里<br>今天有多少雾？</h1>
+  <p class="subtitle">脑雾浓度自评 · 6维度深度分析</p>
+  <div class="subtags">
+    <div class="subtag">⏱️ 三分钟自测</div>
+    <div class="subtag">📝 18道真实场景题</div>
+    <div class="subtag">📊 6维度雷达图分析</div>
+    <div class="subtag">🔍 雾源自查 + 散雾指南</div>
+  </div>
+  <div class="disclaimer-cover">
+    ⚠️ 脑雾不是一种疾病诊断，而是一组「大脑卡顿」症状的通俗说法。本测评供自我了解参考，不能替代专业医疗诊断。如症状严重或持续，请及时就医。
+  </div>
+  <button class="btn-start" onclick="startQuiz()">开始测评 →</button>
+  <div class="footer-en">BRAIN FOG SELF-CHECK</div>
+</div>
+
+<!-- 答题页 -->
+<div class="quiz" id="page-quiz">
+  <div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-text">
+      <span id="progressLabel">第 1 题</span>
+      <span id="progressCount">1 / 18</span>
+    </div>
+  </div>
+  <div class="q-num" id="qNum">问题 1</div>
+  <div class="q-title" id="qTitle">加载中...</div>
+  <div class="q-hint">请根据<strong>最近两周</strong>的真实状态选择</div>
+  <div class="options" id="qOptions"></div>
+</div>
+
+<!-- 结果页 -->
+<div class="result" id="page-result">
+  <div class="r-icon" id="rIcon">🌫️</div>
+  <div class="r-label">你的脑雾浓度</div>
+  <div class="r-title" id="rTitle">浓雾笼罩</div>
+  <div class="r-badge" id="rBadge">雾浓度指数：—</div>
+
+  <div class="r-card" id="rGauge"></div>
+  <div class="r-card" id="rRadar"></div>
+  <div class="r-card" id="rDimensions"></div>
+  <div class="r-card" id="rDesc"></div>
+  <div class="r-card" id="rCauses"></div>
+  <div class="r-card" id="rTips"></div>
+
+  <div class="disclaimer-box">
+    <div class="disclaimer-title">⚠️ 重要提醒</div>
+    <div class="disclaimer-text">脑雾是症状体验的通俗描述，不是医学诊断。本测评仅供自我了解参考。如果脑雾持续超过两周、明显影响工作生活，或伴随持续情绪低落，建议前往<b>神经内科 / 内分泌科 / 精神心理科</b>就诊，可查甲状腺功能、维生素B12、铁蛋白、维生素D等基础指标。若出现突发剧烈头痛、视物模糊、肢体麻木，请立即就医。</div>
+    <div class="hotline-box">
+      <div class="hotline-label">🆘 心理援助热线</div>
+      <div class="hotline-num">12356</div>
+      <div class="hotline-desc">全国心理援助热线 · 24小时</div>
+    </div>
+  </div>
+
+  <div class="r-actions">
+    <button class="btn-retry" onclick="resetQuiz()">🔄 再测一次</button>
+  </div>
+  <div style="font-size:12px;color:rgba(107,107,107,0.3);margin-top:8px;margin-bottom:20px">更多测试请访问 protest.xixizai.com</div>
+</div>
+
+</div>
+
+<script>
+// === 脑雾 18题（症状均来自真实用户描述） ===
+var questions = [
+  {q:"看书、看文档，五分钟就开始走神，效率特别低",dim:"focus"},
+  {q:"别人跟我说话，听到了声音，但大脑不做反应，左耳进右耳出",dim:"focus"},
+  {q:"做着事情会突然放空，回过神来才发现过了好久",dim:"focus"},
+  {q:"刚要做的事，一转身就忘，一点印象都没有",dim:"memory"},
+  {q:"熟人的名字、很常用的词，卡在嘴边就是想不起来",dim:"memory"},
+  {q:"想不起来昨天发生了什么，今天像昨天，这周像上周",dim:"memory"},
+  {q:"看一段文字要读好几遍，才能理解它在说什么",dim:"thinking"},
+  {q:"反应总慢半拍，做个小决定都特别纠结",dim:"thinking"},
+  {q:"简单的问题也想不动，深度思考完全做不到",dim:"thinking"},
+  {q:"说话说着说着突然卡住，忘了自己要说什么",dim:"express"},
+  {q:"心里明明明白，但就是说不出来，组织不出完整的句子",dim:"express"},
+  {q:"打字频繁出错，一段话的逻辑理了好几遍还是乱",dim:"express"},
+  {q:"前额或太阳穴发胀发闷，头一整天都昏昏沉沉",dim:"body"},
+  {q:"睡了很久也还是没有清爽感，像脑袋灌了铅",dim:"body"},
+  {q:"眼球沉重发胀，容易眼干、看东西模糊不聚焦",dim:"body"},
+  {q:"除了无脑刷手机，什么都不想干",dim:"emotion"},
+  {q:"提不起兴趣，看什么都灰蒙蒙的，很难感受到开心",dim:"emotion"},
+  {q:"容易烦躁，总在苛责自己「怎么变笨了」",dim:"emotion"}
+];
+
+var optLabels = [
+  {t:"完全没有",short:"从不"},
+  {t:"偶尔这样",short:"偶尔"},
+  {t:"经常这样",short:"经常"},
+  {t:"几乎总是",short:"总是"}
+];
+
+// === 6维度定义 ===
+var dims = {
+  focus:{
+    name:"注意力涣散",icon:"🎯",
+    items:[0,1,2],
+    desc:"你的专注力是否还锁得住",
+    low:{label:"在线",color:"#5a9e8f",desc:"你的注意力基本在线，能比较稳定地专注于手头的事。大脑的「聚光灯」工作正常。"},
+    mid:{label:"涣散",color:"#7da2c9",desc:"注意力开始锁不住了。五分钟走神、听不进别人说话——这往往不是你不想专注，是大脑的注意力资源被多任务和信息流切得太碎了。"},
+    high:{label:"失焦",color:"#8b7bb8",desc:"你的注意力处于严重透支状态。频繁放空、别人说话进不了脑子——这是大脑在强制降频保护自己。它需要的是减载，不是自责。"}
+  },
+  memory:{
+    name:"记忆断电",icon:"💾",
+    items:[3,4,5],
+    desc:"你的短期记忆是否还在服务区",
+    low:{label:"在线",color:"#5a9e8f",desc:"记忆力状态良好，转身就忘的情况很少。大脑的「内存」运转正常。"},
+    mid:{label:"掉线",color:"#7da2c9",desc:"记忆开始频繁掉线：刚要做的事转身就忘，熟人的名字卡在嘴边。这通常是睡眠不足或压力过载的表现，不是记忆力的永久衰退。"},
+    high:{label:"断电",color:"#8b7bb8",desc:"你的短期记忆在亮红灯。日子糊成一片、回忆像别人的故事——这多半是长期睡眠债+高压的叠加结果。好消息是：它大多可逆，把睡眠和压力补回来，记忆会跟着回来。"}
+  },
+  thinking:{
+    name:"思维卡顿",icon:"🧠",
+    items:[6,7,8],
+    desc:"你的思考是否还在正常转速",
+    low:{label:"流畅",color:"#5a9e8f",desc:"思维转速正常，理解、判断、做决定都不费劲。大脑CPU运转良好。"},
+    mid:{label:"卡顿",color:"#7da2c9",desc:"思维开始出现卡顿。文字要读好几遍、决定迟迟做不了——就像手机开了太多后台程序。大脑需要的不是更努力，是清理后台。"},
+    high:{label:"死机",color:"#8b7bb8",desc:"你的思维转速明显下降，深度思考几乎做不了。这不是你变笨了——是大脑长期过载后进入的低功耗模式。它是自我保护，也是该认真休息的信号。"}
+  },
+  express:{
+    name:"表达失灵",icon:"💬",
+    items:[9,10,11],
+    desc:"你的语言输出是否还顺畅",
+    low:{label:"顺畅",color:"#5a9e8f",desc:"语言表达顺畅，想说的话能完整说出来。输入输出模块工作正常。"},
+    mid:{label:"卡壳",color:"#7da2c9",desc:"表达开始卡壳：话到嘴边断片、心里明白说不出来。语言是最耗认知资源的功能之一，它先卡，说明认知余量已经不多了。"},
+    high:{label:"乱码",color:"#8b7bb8",desc:"你的语言系统在乱码边缘。词穷、语无伦次、打字理不清逻辑——很多人这时候会怀疑自己「提前痴呆」，其实大概率是脑雾。把睡眠和营养补上，它会慢慢恢复。"}
+  },
+  body:{
+    name:"躯体信号",icon:"🌫️",
+    items:[12,13,14],
+    desc:"你的身体是否在替大脑报警",
+    low:{label:"清爽",color:"#5a9e8f",desc:"头部体感清爽，没有明显的昏沉胀痛。身体没有在报警。"},
+    mid:{label:"发沉",color:"#7da2c9",desc:"身体开始发信号了：头胀、昏沉、睡不醒、眼球发胀。这些常常和久坐低头、颈肩僵硬、用眼过度有关——脑供血在悄悄变差。"},
+    high:{label:"超载",color:"#8b7bb8",desc:"你的躯体信号已经很密集。头重脚轻、睡再多也不清爽——注意颈椎和供血问题，也别忽略熬夜、缺水和营养不良的长期消耗。持续加重请就医检查。"}
+  },
+  emotion:{
+    name:"情绪钝化",icon:"🌤️",
+    items:[15,16,17],
+    desc:"你的感受力是否被雾罩住了",
+    low:{label:"明亮",color:"#5a9e8f",desc:"你的情绪感受力良好，能感受到兴趣和愉悦。心里的太阳还在。"},
+    mid:{label:"蒙灰",color:"#7da2c9",desc:"世界开始蒙上一层灰：提不起劲、只能靠刷手机刺激多巴胺、容易烦躁。脑雾和情绪低落经常互相喂养——情绪差会加重脑雾，脑雾又让人更emo。"},
+    high:{label:"失色",color:"#8b7bb8",desc:"你的情绪感受力在明显钝化，还伴随着对自己的苛责。请注意：长期脑雾+情绪低落是抑郁和焦虑的常见伴生状态。这不是矫情，值得被认真对待，必要时请寻求专业帮助。"}
+  }
+};
+
+// === 维度专属建议 ===
+var dimTips = {
+  focus:{
+    mid:["一次只做一件事，关掉不必要的通知，给大脑「降载」","每天给大脑几分钟留白：不刷手机、不听播客，什么都不做","把大任务切成25-45分钟的小块，块间休息5-10分钟"],
+    high:["少刷短视频：高频刺激会拉低大脑对正常节奏的耐受","用纸笔或备忘录卸载记忆压力，别什么都靠脑子记","连续一周睡够7-8小时，注意力会先回来"]
+  },
+  memory:{
+    mid:["重要的事当场记下来，别考验自己的「内存」","睡前复盘三件今天做的事，帮大脑归档","试试「地点联想」：把要做的事和一个固定位置绑定"],
+    high:["优先还睡眠债：深睡眠是大脑清理和存档的时间","减少一心多用，边聊边记边想是记忆的天敌","如持续超过两周且影响工作，建议查甲状腺功能、B12和铁蛋白"]
+  },
+  thinking:{
+    mid:["需要理解的内容，读出声比默读更省认知资源","做决定前先写下选项，让大脑从「持有」切换到「处理」","午后犯卡时，20分钟快走比一杯咖啡更顶用"],
+    high:["暂缓重大决策：低功耗模式下的大脑不适合做人生决定","用清单和框架代替自由发挥，给思考搭脚手架","持续卡顿伴情绪低落，考虑精神心理科评估"]
+  },
+  express:{
+    mid:["先说关键词再连成句，允许自己说慢一点","重要表达前花30秒打腹稿，别即兴考验自己","发消息前读一遍再发，出错率会明显下降"],
+    high:["把想说的先扔给备忘录或语音转文字，再整理","降低对自己的要求：卡壳≠变笨，是资源不够","表达恢复是脑雾好转最慢的一项，给它时间"]
+  },
+  body:{
+    mid:["每45分钟起身活动，抬头远眺3分钟","屏幕上沿与视线平齐，别长时间低头","多喝水：轻度脱水就会加重头昏"],
+    high:["试试风池穴按压+眼球转动操（上下左右各4次）+深呼吸3次","每周3次20分钟以上的有氧运动，快走慢跑都算","持续头胀晕沉请就医排查颈椎和脑供血问题"]
+  },
+  emotion:{
+    mid:["白天晒太阳10-20分钟，是最便宜的「情绪充电」","做一件小而有明确反馈的事：收拾桌面、做顿饭","允许自己状态不好，减少自我攻击"],
+    high:["情绪持续低落两周以上，请考虑心理咨询或精神科评估","和信任的人说出真实状态，不要独自消化","如果你有伤害自己的想法，请立即拨打心理援助热线 12356"]
+  }
+};
+
+// === 总体结果 ===
+var overallResults = {
+  clear:{icon:"☀️",title:"清澈大脑",color:"#5a9e8f",badgeBg:"rgba(90,158,143,0.12)",badgeColor:"#3d7a6e",
+    desc:"好消息！你的大脑目前能见度很高，没有明显的脑雾困扰。\n\n这不代表你永远不会累——而是说明你的睡眠、压力和用脑方式目前处在一个比较健康的平衡里。\n\n继续保持规律作息。偶尔的状态波动是正常的，不用紧张。"},
+  thin:{icon:"🌤️",title:"薄雾预警",color:"#7da2c9",badgeBg:"rgba(125,162,201,0.15)",badgeColor:"#4d74a3",
+    desc:"你的大脑上空飘着一层薄雾——还不太影响生活，但你能感觉到自己和「满血状态」有差距。\n\n这是最好的干预时机。脑雾的可怕之处在于它会慢慢加重而不被察觉，而薄雾阶段，往往调整睡眠和压力就能散掉。\n\n别等雾变浓才行动。"},
+  thick:{icon:"🌫️",title:"浓雾笼罩",color:"#8b7bb8",badgeBg:"rgba(139,123,184,0.15)",badgeColor:"#63538f",
+    desc:"你的大脑已经在浓雾里运转一段时间了。\n\n转身就忘、话到嘴边断片、看字要读好几遍——你可能已经偷偷怀疑过自己「是不是提前痴呆」。大概率不是，是脑雾：睡眠债、慢性压力、信息过载在联手给你的大脑降频。\n\n好消息是它大多可逆。先做下面的雾源自查，再照着散雾指南执行两周，很多人会感到明显变化。"},
+  storm:{icon:"⛈️",title:"暴雾警报",color:"#d9534f",badgeBg:"rgba(217,83,79,0.12)",badgeColor:"#a9302d",
+    desc:"你现在的大脑，可能像隔着一层毛玻璃在生活。\n\n所有维度都在报警，这不是你不够努力，也不是你变笨了——是大脑在用最低功耗保护自己。长期的透支需要系统性的修复，不是一晚上早睡能解决的。\n\n请认真对待两件事：一是把下面的散雾指南当处方执行（尤其是睡眠和饮食）；二是如果伴随持续情绪低落，或已经明显影响工作生活，请去医院做一次基础检查（甲状腺、B12、铁蛋白、维D），别硬扛。\n\n你的大脑陪你工作了一辈子，它值得被认真检修一次。"}
+};
+
+// === 原因自查清单 ===
+var causes = [
+  {name:"睡眠债",desc:"平均睡眠不到7小时，或入睡难、多梦、早醒，白天靠咖啡续命"},
+  {name:"慢性压力",desc:"长期高压紧绷，焦虑是底色，大脑很少真正放松过"},
+  {name:"信息过载",desc:"每天刷短视频2小时以上，或多任务切换成了常态"},
+  {name:"营养缺口",desc:"饮食偏碳水（面条、包子、奶茶），蛋白质吃得少"},
+  {name:"久坐供血不足",desc:"长时间低头看屏幕，颈肩僵硬，后脑勺发麻发胀"},
+  {name:"激素波动",desc:"经期/孕期/产后/更年期，或有甲状腺方面的问题"},
+  {name:"疾病或药物",desc:"抑郁焦虑史、新冠/流感后遗留，或正在服用抗抑郁/抗过敏等药物"}
+];
+
+// === 测试逻辑 ===
+var currentQ = 0;
+var rawAnswers = [];
+var dimRawScores = {focus:0,memory:0,thinking:0,express:0,body:0,emotion:0};
+var dimNormScores = {focus:0,memory:0,thinking:0,express:0,body:0,emotion:0};
+var fogIndex = 0;
+
+function startQuiz(){
+  currentQ = 0;
+  rawAnswers = [];
+  dimRawScores = {focus:0,memory:0,thinking:0,express:0,body:0,emotion:0};
+  document.getElementById('page-cover').style.display='none';
+  document.getElementById('page-result').style.display='none';
+  document.getElementById('page-quiz').style.display='flex';
+  window.scrollTo(0,0);
+  renderQuestion();
+}
+
+function renderQuestion(){
+  var q = questions[currentQ];
+  var total = questions.length;
+  var progress = (currentQ / total) * 100;
+
+  document.getElementById('progressFill').style.width = progress + '%';
+  document.getElementById('progressLabel').textContent = '第 ' + (currentQ+1) + ' 题';
+  document.getElementById('progressCount').textContent = (currentQ+1) + ' / ' + total;
+  document.getElementById('qNum').textContent = '问题 ' + (currentQ+1) + ' / ' + total;
+  document.getElementById('qTitle').textContent = q.q;
+
+  var labels = ['A','B','C','D'];
+  var html = '';
+  optLabels.forEach(function(o,i){
+    html += '<div class="option fadeIn" onclick="selectOption('+i+')">' +
+      '<div class="opt-label">'+labels[i]+'</div>' +
+      '<div class="opt-text">'+o.t+'</div></div>';
+  });
+  document.getElementById('qOptions').innerHTML = html;
+}
+
+function selectOption(optIndex){
+  var q = questions[currentQ];
+  rawAnswers.push({qIndex:currentQ, opt:optIndex, dim:q.dim});
+  dimRawScores[q.dim] += optIndex + 1;
+
+  currentQ++;
+  if(currentQ >= questions.length){
+    calculateResult();
+  } else {
+    window.scrollTo(0,0);
+    renderQuestion();
+  }
+}
+
+function calculateResult(){
+  for(var k in dims){
+    var itemCount = dims[k].items.length;
+    var rawMin = itemCount * 1;
+    var rawMax = itemCount * 4;
+    dimNormScores[k] = Math.round((dimRawScores[k] - rawMin) / (rawMax - rawMin) * 100);
+  }
+  var totalRaw = 0;
+  rawAnswers.forEach(function(a){ totalRaw += a.opt + 1; });
+  // 雾浓度指数：18题总分18-72 → 0-100
+  fogIndex = Math.round((totalRaw - 18) / (72 - 18) * 100);
+  showResult();
+}
+
+function getDimLevel(score){
+  if(score < 34) return 'low';
+  if(score < 67) return 'mid';
+  return 'high';
+}
+
+function getOverall(idx){
+  if(idx < 20) return 'clear';
+  if(idx < 45) return 'thin';
+  if(idx < 70) return 'thick';
+  return 'storm';
+}
+
+function showResult(){
+  document.getElementById('page-quiz').style.display='none';
+  document.getElementById('page-result').style.display='flex';
+  window.scrollTo(0,0);
+
+  var level = getOverall(fogIndex);
+  var r = overallResults[level];
+
+  document.getElementById('rIcon').textContent = r.icon;
+  document.getElementById('rTitle').textContent = r.title;
+  var badge = document.getElementById('rBadge');
+  badge.textContent = '雾浓度指数：' + fogIndex;
+  badge.style.background = r.badgeBg;
+  badge.style.color = r.badgeColor;
+
+  // 1. 雾浓度仪表盘
+  var gaugeColor = r.color;
+  var gaugeHtml = '<div class="section-title"><span class="st-icon">📊</span>你的雾浓度</div>';
+  gaugeHtml += '<div class="gauge-wrap">';
+  var pct = Math.min(fogIndex / 100, 1);
+  var arcAngle = 180 * pct;
+  var r_r = 110, cx = 130, cy = 120;
+  var bgPath = describeArc(cx, cy, r_r, 0, 180);
+  var dataPath = describeArc(cx, cy, r_r, 0, Math.max(arcAngle, 2));
+  gaugeHtml += '<svg class="gauge-svg" viewBox="0 0 260 140">';
+  gaugeHtml += '<path d="' + bgPath + '" fill="none" stroke="#e8eaf0" stroke-width="12" stroke-linecap="round"/>';
+  gaugeHtml += '<path d="' + dataPath + '" fill="none" stroke="' + gaugeColor + '" stroke-width="12" stroke-linecap="round"/>';
+  gaugeHtml += '</svg>';
+  gaugeHtml += '<div class="gauge-score" style="color:' + gaugeColor + '">' + fogIndex + '</div>';
+  gaugeHtml += '<div class="gauge-label">雾浓度指数 · 0-100（越低越好）</div>';
+  gaugeHtml += '<div style="display:flex;gap:10px;margin-top:12px;font-size:11px;color:var(--text-l);flex-wrap:wrap;justify-content:center">';
+  gaugeHtml += '<span><span style="color:#5a9e8f;font-weight:600">&lt;20</span> ☀️清澈</span>';
+  gaugeHtml += '<span><span style="color:#7da2c9;font-weight:600">20-44</span> 🌤️薄雾</span>';
+  gaugeHtml += '<span><span style="color:#8b7bb8;font-weight:600">45-69</span> 🌫️浓雾</span>';
+  gaugeHtml += '<span><span style="color:#d9534f;font-weight:600">≥70</span> ⛈️暴雾</span>';
+  gaugeHtml += '</div></div>';
+  document.getElementById('rGauge').innerHTML = gaugeHtml;
+
+  // 2. 雷达图
+  var radarHtml = '<div class="section-title"><span class="st-icon">🎯</span>六维度雷达图</div><div class="radar-wrap">';
+  radarHtml += buildRadarSVG(dimNormScores);
+  radarHtml += '</div></div>';
+  document.getElementById('rRadar').innerHTML = radarHtml;
+
+  // 3. 各维度详情（按严重度排序）
+  var dimHtml = '<div class="section-title"><span class="st-icon">📋</span>维度详细分析</div>';
+  var dimOrder = ['focus','memory','thinking','express','body','emotion'];
+  dimOrder.sort(function(a,b){return dimNormScores[b] - dimNormScores[a]});
+
+  dimOrder.forEach(function(key){
+    var d = dims[key];
+    var score = dimNormScores[key];
+    var lv = getDimLevel(score);
+    var lvData = d[lv];
+    var rawScore = dimRawScores[key];
+    var maxScore = d.items.length * 4;
+
+    dimHtml += '<div class="dim-detail">';
+    dimHtml += '<div class="dim-detail-head">';
+    dimHtml += '<span class="dim-detail-icon">'+d.icon+'</span>';
+    dimHtml += '<span class="dim-detail-name">'+d.name+'</span>';
+    dimHtml += '<span class="dim-detail-level" style="background:'+lvData.color+'20;color:'+lvData.color+'">'+lvData.label+'</span>';
+    dimHtml += '</div>';
+    dimHtml += '<div class="dim-detail-desc">'+lvData.desc+'</div>';
+    dimHtml += '<div class="dim-bar" style="margin-top:6px"><div class="dim-fill" style="width:'+score+'%;background:'+lvData.color+'"></div></div>';
+    dimHtml += '<div style="font-size:11px;color:var(--text-l);margin-top:4px">雾度指数：'+score+' · 原始分：'+rawScore+'/'+maxScore+'</div>';
+    dimHtml += '</div>';
+  });
+  document.getElementById('rDimensions').innerHTML = dimHtml;
+
+  // 4. 给你的话
+  var descHtml = '<div class="section-title"><span class="st-icon">💌</span>给你的话</div>';
+  r.desc.split('\n').forEach(function(p){
+    if(p.trim()) descHtml += '<p style="font-size:14px;line-height:1.8;color:var(--text);margin-bottom:8px">'+p+'</p>';
+  });
+  var quotes = {
+    clear:'脑子清爽的时候，记得记住这种感觉——那是你身体的满格信号。',
+    thin:'薄雾阶段散雾最容易：早睡一周，比什么补品都管用。',
+    thick:'你不是变笨了，是大脑在低功耗运行。它需要休息，不是苛责。',
+    storm:'大脑陪你工作了这么多年，它值得被认真检修一次。'
+  };
+  descHtml += '<div class="r-quote">「'+quotes[level]+'」</div>';
+  document.getElementById('rDesc').innerHTML = descHtml;
+
+  // 5. 雾源自查（可勾选）
+  var causeHtml = '<div class="section-title"><span class="st-icon">🔍</span>你的雾从哪来？自查一下</div>';
+  causeHtml += '<p style="font-size:13px;color:var(--text-l);margin-bottom:12px">点选符合你情况的项目，找出最可能的雾源👇</p>';
+  causes.forEach(function(c,i){
+    causeHtml += '<div class="cause-item" id="cause'+i+'" onclick="toggleCause('+i+')">';
+    causeHtml += '<div class="cause-check" id="causeCheck'+i+'">✓</div>';
+    causeHtml += '<div class="cause-body"><div class="cause-name">'+c.name+'</div><div class="cause-desc">'+c.desc+'</div></div>';
+    causeHtml += '</div>';
+  });
+  causeHtml += '<div class="cause-summary" id="causeSummary">勾选后，这里会告诉你下一步该做什么</div>';
+  document.getElementById('rCauses').innerHTML = causeHtml;
+
+  // 6. 散雾指南（最高2个维度的建议 + 通用指南）
+  var topDims = dimOrder.slice(0, 2);
+  var tipsHtml = '<div class="section-title"><span class="st-icon">💡</span>散雾指南</div>';
+  tipsHtml += '<p style="font-size:13px;color:var(--text-l);margin-bottom:12px">优先修复你最浓的两个维度</p>';
+
+  topDims.forEach(function(key){
+    var d = dims[key];
+    var score = dimNormScores[key];
+    var lv = getDimLevel(score);
+    var lvKey = lv === 'low' ? 'mid' : lv;
+    var tips = dimTips[key][lvKey];
+
+    tipsHtml += '<div style="margin-bottom:14px">';
+    tipsHtml += '<div style="font-size:13px;font-weight:700;color:'+d[lv].color+';margin-bottom:6px">'+d.icon+' '+d.name+'</div>';
+    if(tips){
+      tips.forEach(function(t){
+        tipsHtml += '<div class="tip-item"><span class="tip-dot" style="background:'+d[lv].color+'"></span>'+t+'</div>';
+      });
+    }
+    tipsHtml += '</div>';
+  });
+
+  tipsHtml += '<div style="margin-top:12px;padding-top:12px;border-top:1px solid #eceef3">';
+  tipsHtml += '<div style="font-size:13px;font-weight:700;color:var(--primary);margin-bottom:6px">🌱 雾天生存法则（每个人都适用）</div>';
+  tipsHtml += '<div class="tip-item"><span class="tip-dot"></span><span><b>睡眠第一</b>：连续一周固定时间睡够7-8小时，是散雾性价比最高的事</span></div>';
+  tipsHtml += '<div class="tip-item"><span class="tip-dot"></span><span><b>换个吃饭顺序</b>：先吃蔬菜→再吃蛋白质（蛋奶肉）→主食放最后，精制碳水和糖会「喂养」脑雾</span></div>';
+  tipsHtml += '<div class="tip-item"><span class="tip-dot"></span><span><b>每天动一动</b>：20分钟快走、慢跑或跳舞，运动后的大脑会短暂「开雾」</span></div>';
+  tipsHtml += '<div class="tip-item"><span class="tip-dot"></span><span><b>微休息</b>：每45分钟闭眼转眼球（上下左右各4次）+深呼吸3次（吸4秒呼6秒）+指腹梳头</span></div>';
+  tipsHtml += '<div class="tip-item"><span class="tip-dot"></span><span><b>白天晒太阳</b>：10-20分钟日照帮你校准生物钟，比睡前刷手机管用一百倍</span></div>';
+  tipsHtml += '<div class="tip-item"><span class="tip-dot"></span><span><b>给大脑留白</b>：每天几分钟什么都不做，不刷手机不听播客，让大脑自己整理后台</span></div>';
+  tipsHtml += '</div>';
+
+  document.getElementById('rTips').innerHTML = tipsHtml;
+}
+
+// === 原因自查交互 ===
+var causeChecked = {};
+function toggleCause(i){
+  causeChecked[i] = !causeChecked[i];
+  var item = document.getElementById('cause'+i);
+  if(causeChecked[i]){ item.classList.add('checked'); }
+  else { item.classList.remove('checked'); }
+  updateCauseSummary();
+}
+
+function updateCauseSummary(){
+  var checkedNames = [];
+  causes.forEach(function(c,i){
+    if(causeChecked[i]) checkedNames.push({name:c.name,idx:i});
+  });
+  var el = document.getElementById('causeSummary');
+  if(checkedNames.length === 0){
+    el.innerHTML = '勾选后，这里会告诉你下一步该做什么';
+    return;
+  }
+  var html = '<b>你勾了 '+checkedNames.length+' 项</b>——这些可能就是你的雾源。<br><br>';
+  var has = {};
+  checkedNames.forEach(function(c){ has[c.name] = true; });
+  if(has['睡眠债']) html += '😴 睡眠债是脑雾第一大来源。先把固定睡眠时间当成处方执行两周。<br>';
+  if(has['慢性压力']) html += '😮‍💨 高压会把皮质醇长期拉高，直接侵蚀记忆和思维。每天给自己10分钟真正的放松时间。<br>';
+  if(has['信息过载']) html += '📱 大脑被短视频训练成了「浅层注意力」。试试把刷手机时间砍一半，一周后感受差别。<br>';
+  if(has['营养缺口']) html += '🥚 把吃饭顺序换成「蔬菜→蛋白质→主食」，再把蛋白质吃够（大约每公斤体重1.2克）。很多雾友反馈这招立竿见影。<br>';
+  if(has['久坐供血不足']) html += '🪑 低头久坐会压迫椎动脉，让后脑供血变差。屏幕抬高到视线平齐，每45分钟起身活动。<br>';
+  if(has['激素波动']) html += '🦋 激素类脑雾建议查一次甲状腺功能（T3/T4/TSH），这个经常被忽略。<br>';
+  if(has['疾病或药物']) html += '💊 如果正在服药，别自己停药——带着这份自查去和医生聊，看是否可以调整方案。<br>';
+  html += '<br>如果自查+调整两周后雾还没散，建议去医院做一次基础检查（甲状腺功能、维生素B12、铁蛋白、维生素D）。';
+  el.innerHTML = html;
+}
+
+// === SVG 工具函数 ===
+function polarToCart(cx, cy, r, angleDeg){
+  var rad = (angleDeg - 90) * Math.PI / 180;
+  return {x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad)};
+}
+
+function describeArc(cx, cy, r, startAngle, endAngle){
+  var start = polarToCart(cx, cy, r, endAngle);
+  var end = polarToCart(cx, cy, r, startAngle);
+  var largeArc = endAngle - startAngle > 180 ? 1 : 0;
+  return 'M ' + start.x + ' ' + start.y + ' A ' + r + ' ' + r + ' 0 ' + largeArc + ' 0 ' + end.x + ' ' + end.y;
+}
+
+function buildRadarSVG(scores){
+  var cx = 140, cy = 140, R = 96;
+  var keys = ['focus','memory','thinking','express','body','emotion'];
+  var n = keys.length;
+
+  var bgPolygons = '';
+  for(var layer = 1; layer <= 4; layer++){
+    var lr = R * (layer / 4);
+    var pts = [];
+    for(var i = 0; i < n; i++){
+      var angle = (360 / n) * i;
+      var p = polarToCart(cx, cy, lr, angle);
+      pts.push(p.x + ',' + p.y);
+    }
+    bgPolygons += '<polygon points="' + pts.join(' ') + '" fill="none" stroke="#e2e5ec" stroke-width="1"/>';
+  }
+
+  var axes = '';
+  var labels = '';
+  for(var i = 0; i < n; i++){
+    var angle = (360 / n) * i;
+    var p = polarToCart(cx, cy, R, angle);
+    axes += '<line x1="'+cx+'" y1="'+cy+'" x2="'+p.x+'" y2="'+p.y+'" stroke="#e2e5ec" stroke-width="1"/>';
+    var lp = polarToCart(cx, cy, R + 26, angle);
+    var icon = dims[keys[i]].icon;
+    var name = dims[keys[i]].name;
+    labels += '<text x="'+lp.x+'" y="'+lp.y+'" text-anchor="middle" dominant-baseline="middle" font-size="10.5" fill="#3d3d3d" font-weight="600">'+icon+' '+name+'</text>';
+  }
+
+  var dataPts = [];
+  for(var i = 0; i < n; i++){
+    var angle = (360 / n) * i;
+    var val = scores[keys[i]] / 100;
+    var p = polarToCart(cx, cy, Math.max(R * val, 4), angle);
+    dataPts.push(p.x + ',' + p.y);
+  }
+  var dataPoly = '<polygon points="' + dataPts.join(' ') + '" fill="rgba(100,120,168,0.18)" stroke="#6478a8" stroke-width="2"/>';
+
+  var dataDots = '';
+  for(var i = 0; i < n; i++){
+    var angle = (360 / n) * i;
+    var val = scores[keys[i]] / 100;
+    var p = polarToCart(cx, cy, Math.max(R * val, 4), angle);
+    var dotColor = dims[keys[i]][getDimLevel(scores[keys[i]])].color;
+    dataDots += '<circle cx="'+p.x+'" cy="'+p.y+'" r="4" fill="'+dotColor+'"/>';
+  }
+
+  var svg = '<svg class="radar-svg" viewBox="0 0 280 280">';
+  svg += bgPolygons + axes;
+  svg += dataPoly + dataDots;
+  svg += labels;
+  svg += '</svg>';
+  return svg;
+}
+
+function resetQuiz(){
+  document.getElementById('page-result').style.display='none';
+  document.getElementById('page-cover').style.display='flex';
+  window.scrollTo(0,0);
+}
+</script>
+</body>
+</html>
